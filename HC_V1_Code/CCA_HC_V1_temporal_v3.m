@@ -46,8 +46,8 @@ current_date = datestr(now, 'yyyy_mm_dd');
 save_path    = fullfile(data_dir, sprintf('Temporal_CCA_v3_%s.mat', current_date));
 
 % --- Binning ---
-target_bin_ms          = 50;         % 50 ms bins (smooth velocity, dense PCA)
-half_window_bins       = 5;          % +-5 bins -> 11-bin window (550 ms)
+target_bin_ms          = 25;         % 50 ms bins (smooth velocity, dense PCA)
+half_window_bins       = 8;          % +-5 bins -> 11-bin window (550 ms)
 window_bins            = -half_window_bins:half_window_bins;
 n_window               = numel(window_bins);
 
@@ -79,7 +79,7 @@ n_shuffles             = 5;          % light null per bin
 %                Destroys Y's autocorrelation as well as the alignment.
 %                Stronger null; tests "any relationship at all" rather
 %                than "any temporal alignment." Faster, simpler.
-shuffle_type           = 'rowshift';
+shuffle_type           = 'random';
 
 % --- Hard cap on PCA dimensionality per region ---
 % Window is 11 bins; canoncorr requires n_window > k1 + k2 and full rank
@@ -87,7 +87,7 @@ shuffle_type           = 'rowshift';
 % (generically fine even for sparse regions like CA3 with 8 units at 50 ms).
 % Bump to 4 if you want more signal capacity at the cost of more
 % rank-deficient windows.
-max_k_per_region       = 3;          % k1 + k2 <= 6 << n_window=11
+max_k_per_region       = 4;          % k1 + k2 <= 6 << n_window=11
 
 % --- Epochs ---
 n_trials_epoch         = 10;
