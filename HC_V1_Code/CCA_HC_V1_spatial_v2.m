@@ -17,9 +17,15 @@ learning_file = 'animal_behaviour.mat';
 current_date = datestr(now, 'yyyy_mm_dd');
 save_path = fullfile(data_dir, sprintf('Spatial_CCA_Results_%s.mat', current_date));
 % --- PCA Parameters ---
-pca_selection_method = 'variance'; 
-pca_variance_threshold = 90;       
-n_components_reduced = 4;          
+pca_selection_method = 'variance';
+pca_variance_threshold = 90;
+n_components_reduced = 4;
+% Hard cap on PCA dimensionality per region. Without a cap, the 90%
+% variance threshold can keep tens of PCs and the small-window canoncorr
+% becomes heavily upward-biased. Cap to 10 so the within-window fits have
+% comfortable degrees of freedom (window has 7 bins x num_trials samples
+% on the trial path, 7 bins x 7 trials on the bin path -> 49+ samples).
+max_k_per_region = 10;
 % --- Analysis Parameters ---
 num_ccs_analyze = 3;         
 n_trials_window = -3:3;      
@@ -39,13 +45,11 @@ n_pairs = size(area_pairs_to_analyze, 1);
 if isempty(gcp('nocreate'))
     parpool; 
 end
-
 % Set to true to ignore saved files and re-run CCA
 force_reprocess = true; 
 %% 2. LOAD & YOKE LEARNING POINTS 
 file_list = dir(fullfile(data_dir, file_pattern));
 n_animals = length(file_list);
-
 lp_path = fullfile(data_dir, learning_file);
 if exist(lp_path, 'file')
     dat_lp = load(lp_path);
@@ -58,11 +62,9 @@ else
     warning('Learning file not found. Alignment will be skipped.');
     learning_points = nan(n_animals, 1);
 end
-
 if length(learning_points) < n_animals
     learning_points(end+1:n_animals) = nan;
 end
-
 is_learner = ~isnan(learning_points);
 if any(is_learner)
     mean_lp = mean(learning_points(is_learner));
@@ -70,45 +72,46 @@ if any(is_learner)
 else
     mean_lp = NaN; 
 end
-
 analysis_lp = learning_points;
 analysis_lp(~is_learner) = round(mean_lp); 
-
 fprintf('Identified %d Learners and %d Non-Learners. Mean LP used for yoking: %d\n', ...
     sum(is_learner), sum(~is_learner), mean_lp);
-
 %% 3. INITIALIZE RESULTS STRUCTURE
-group_results = struct('pair_name', cell(n_pairs, 1), ...
-                       'all_bins_corr', cell(n_pairs, 1), ...
-                       'all_bins_corr_shuff', cell(n_pairs, 1), ...
-                       'all_bins_precession_idx', cell(n_pairs, 1), ...
-                       'all_bins_precession_idx_shuff', cell(n_pairs, 1), ...
-                       'all_bins_precession_curve', cell(n_pairs, 1), ...
-                       'all_bins_precession_curve_shuff', cell(n_pairs, 1), ...
-                       'trial_corr_early', cell(n_pairs, 1), ...
-                       'trial_corr_pre', cell(n_pairs, 1), ...
-                       'trial_corr_post', cell(n_pairs, 1), ...
-                       'trial_corr_early_shuff', cell(n_pairs, 1), ...
-                       'trial_corr_pre_shuff', cell(n_pairs, 1), ...
-                       'trial_corr_post_shuff', cell(n_pairs, 1), ...
-                       'trial_precession_early_idx', cell(n_pairs, 1), ... 
-                       'trial_precession_pre_idx', cell(n_pairs, 1), ...   
-                       'trial_precession_post_idx', cell(n_pairs, 1), ...
-                       'trial_precession_early_idx_shuff', cell(n_pairs, 1), ...
-                       'trial_precession_pre_idx_shuff', cell(n_pairs, 1), ...
-                       'trial_precession_post_idx_shuff', cell(n_pairs, 1), ...
-                       'trial_precession_early_curve', cell(n_pairs, 1), ... 
-                       'trial_precession_pre_curve', cell(n_pairs, 1), ...   
-                       'trial_precession_post_curve', cell(n_pairs, 1), ...
-                       'trial_precession_early_curve_shuff', cell(n_pairs, 1), ...
-                       'trial_precession_pre_curve_shuff', cell(n_pairs, 1), ...
-                       'trial_precession_post_curve_shuff', cell(n_pairs, 1));
-                   
+group_results = struct();
 for ipair = 1:n_pairs
     group_results(ipair).pair_name = sprintf('%s-%s', area_pairs_to_analyze{ipair, 1}, area_pairs_to_analyze{ipair, 2});
+    
+    % Initialize identically as empty cell arrays to prevent bracing errors
+    group_results(ipair).all_bins_corr = cell(n_animals, 1);
+    group_results(ipair).all_bins_corr_shuff = cell(n_animals, 1);
+    group_results(ipair).all_bins_precession_idx = cell(n_animals, 1);
+    group_results(ipair).all_bins_precession_idx_shuff = cell(n_animals, 1);
+    group_results(ipair).all_bins_precession_curve = cell(n_animals, 1);
+    group_results(ipair).all_bins_precession_curve_shuff = cell(n_animals, 1);
+    
+    group_results(ipair).trial_corr_early = cell(n_animals, 1);
+    group_results(ipair).trial_corr_pre = cell(n_animals, 1);
+    group_results(ipair).trial_corr_post = cell(n_animals, 1);
+    group_results(ipair).trial_corr_early_shuff = cell(n_animals, 1);
+    group_results(ipair).trial_corr_pre_shuff = cell(n_animals, 1);
+    group_results(ipair).trial_corr_post_shuff = cell(n_animals, 1);
+    
+    group_results(ipair).trial_precession_early_idx = cell(n_animals, 1);
+    group_results(ipair).trial_precession_pre_idx = cell(n_animals, 1);
+    group_results(ipair).trial_precession_post_idx = cell(n_animals, 1);
+    group_results(ipair).trial_precession_early_idx_shuff = cell(n_animals, 1);
+    group_results(ipair).trial_precession_pre_idx_shuff = cell(n_animals, 1);
+    group_results(ipair).trial_precession_post_idx_shuff = cell(n_animals, 1);
+    
+    group_results(ipair).trial_precession_early_curve = cell(n_animals, 1);
+    group_results(ipair).trial_precession_pre_curve = cell(n_animals, 1);
+    group_results(ipair).trial_precession_post_curve = cell(n_animals, 1);
+    group_results(ipair).trial_precession_early_curve_shuff = cell(n_animals, 1);
+    group_results(ipair).trial_precession_pre_curve_shuff = cell(n_animals, 1);
+    group_results(ipair).trial_precession_post_curve_shuff = cell(n_animals, 1);
 end
-%% 4. MAIN ANALYSIS LOOP & FILE LOADING
 
+%% 4. MAIN ANALYSIS LOOP & FILE LOADING
 % Bundle current parameters for tracking and comparison
 current_config = struct(...
     'pca_selection_method', pca_selection_method, ...
@@ -119,9 +122,7 @@ current_config = struct(...
     'min_units_per_region', min_units_per_region, ...
     'n_bins', n_bins, ...
     'n_shuffles', n_shuffles);
-
 existing_files = dir(fullfile(data_dir, 'Spatial_CCA_Results_*.mat'));
-
 % --> MODIFIED: Bypass loading if force_reprocess is true
 if ~isempty(existing_files) && ~force_reprocess
     
@@ -189,17 +190,22 @@ else
             D = load(fullpath);
             if ~isfield(D, 'units') || ~isfield(D, 'analysis_spatial'), continue; end
             units = D.units;
-            
+
+            % --- FS unit exclusion (per-unit logical) ---
             keep_mask = true(length(units.unit_id), 1);
             if isfield(units, 'idx_fs')
                 target_fs_areas = {'V1', 'RSC', 'CA1', 'CA3'};
-                is_fs = logical(units.idx_fs);
+                is_fs = logical(units.idx_fs(:));
                 for r = 1:length(target_fs_areas)
-                    fs_in_area = strcmp(units.region, target_fs_areas{r}) & is_fs;
-                    keep_mask(fs_in_area) = false;
+                    % Get the row for this FS area
+                    row_mask = strcmp(units.regions_label, target_fs_areas{r});
+                    if any(row_mask)
+                        % Find units belonging to this area AND flagged as FS
+                        fs_in_area = logical(units.idx(row_mask, :))' & is_fs;
+                        keep_mask(fs_in_area) = false;
+                    end
                 end
             end
-            units.idx(~keep_mask, :) = 0;
             
             if isfield(D.analysis_spatial, 'firing') && isfield(D.analysis_spatial.firing, 'cued')
                 raw_spatial = D.analysis_spatial.firing.cued.freq_z;
@@ -213,32 +219,52 @@ else
                 if curr_n_bins ~= n_bins
                     warning('Bin mismatch for %s. Skipping.', filename); continue;
                 end
-            else, continue; end
-            
+            else
+                continue; 
+            end
+            % Free loaded raw data
+            clear D raw_spatial;
+
             animal_areas = unique(units.regions_label);
             AreaActivity = struct();
-            
             for ia = 1:length(animal_areas)
-                area_name = animal_areas{ia};
-                u_idx = units.idx(strcmp(units.regions_label, area_name), :);
-                if sum(u_idx) < min_units_per_region, continue; end
+                area_name = char(animal_areas{ia});
+                if isempty(area_name), continue; end
                 
-                area_dat = animal_data(u_idx, :, :);
-                reshaped_dat = reshape(area_dat, sum(u_idx), [])'; 
+                % Find which row corresponds to this area
+                row_idx = strcmp(units.regions_label, area_name);
+                if ~any(row_idx), continue; end
                 
-                if size(reshaped_dat, 2) >= 2 
+                % Extract the logical mask for units in this area
+                % units.idx is [num_areas x num_units]
+                u_idx = units.idx(row_idx, :); 
+                
+                % Combine with FS keep_mask
+                u_logical = logical(u_idx(:)) & keep_mask(:);
+                if sum(u_logical) < min_units_per_region, continue; end
+                
+                area_dat = animal_data(u_logical, :, :);
+                reshaped_dat = reshape(area_dat, sum(u_logical), [])';
+                if size(reshaped_dat, 2) >= 2
                     [~, scores, ~, ~, explained] = pca(reshaped_dat);
                     if strcmp(pca_selection_method, 'variance')
                         cum_var = cumsum(explained);
                         n_comps = find(cum_var >= pca_variance_threshold, 1);
                         if isempty(n_comps), n_comps = size(scores, 2); end
-                    else, n_comps = n_components_reduced; end
-                    
-                    n_comps = max(n_comps, num_ccs_analyze); 
-                    n_comps = min(n_comps, size(scores, 2));
-                    
+                    else
+                        n_comps = n_components_reduced;
+                    end
+                    % Floor at num_ccs_analyze, cap at max_k_per_region,
+                    % and never exceed the available PCs.
+                    k_at_thresh = find(cumsum(explained) >= pca_variance_threshold, 1);
+                    if isempty(k_at_thresh), k_at_thresh = size(scores, 2); end
+                    n_comps = max(n_comps, num_ccs_analyze);
+                    n_comps = min([n_comps, max_k_per_region, size(scores, 2)]);
                     AreaActivity.(area_name).data = reshape(scores(:, 1:n_comps)', n_comps, n_bins, num_trials);
                     AreaActivity.(area_name).n_comps = n_comps;
+                    fprintf('    [PCA] %s: %d units -> n_comps=%d (k_pca@%d%%=%d, capped at %d)\n', ...
+                        area_name, sum(u_logical), n_comps, pca_variance_threshold, ...
+                        k_at_thresh, max_k_per_region);
                 end
             end
             
@@ -267,36 +293,45 @@ else
                 
                 % =========================================================
                 % ANALYSIS 1: TRIAL-WISE
+                % parfor over trials; serial inner shuffle (parfor cannot
+                % nest, and the inner work is too small to justify per-
+                % shuffle scheduling overhead anyway).
                 % =========================================================
-                for t = 1:num_trials
+                parfor t = 1:num_trials
                     win = t + n_trials_window; win = win(win>=1 & win<=num_trials);
                     if isempty(win), continue; end
-                    
                     D1_local = d1(:, :, win); D2_local = d2(:, :, win);
                     x = reshape(D1_local, nc1, []); y = reshape(D2_local, nc2, []);
-                    
+                    cca_tr_col       = nan(num_ccs_analyze, 1);
+                    cca_tr_sh_col    = nan(num_ccs_analyze, 1);
+                    prec_tr_idx_col  = nan(num_ccs_analyze, 1);
+                    prec_tr_idx_sh_col = nan(num_ccs_analyze, 1);
+                    prec_tr_curve_col    = nan(num_ccs_analyze, n_shifts);
+                    prec_tr_curve_sh_col = nan(num_ccs_analyze, n_shifts);
                     if check_dims(x, y, max(nc1, nc2) + 5)
                         [~,~,r] = canoncorr(x', y');
-                        cca_tr(1:min(length(r), num_ccs_analyze), t) = r(1:min(length(r), num_ccs_analyze));
+                        nccs = min(length(r), num_ccs_analyze);
+                        cca_tr_col(1:nccs) = r(1:nccs);
                         [c_curve, c_idx] = calc_precession(D1_local, D2_local, max_shift_bins, num_ccs_analyze, nc1, nc2);
-                        prec_tr_curve(:, :, t) = c_curve;
-                        prec_tr_idx(:, t) = c_idx;
-                        r_sh_iter = nan(num_ccs_analyze, n_shuffles);
-                        p_sh_idx_iter = nan(num_ccs_analyze, n_shuffles);
-                        p_sh_curve_iter = nan(num_ccs_analyze, n_shifts, n_shuffles);
+                        prec_tr_curve_col = c_curve;
+                        prec_tr_idx_col   = c_idx;
                         n_bins_local = size(D1_local, 2);
-                        parfor ish = 1:n_shuffles
+                        r_sh_iter        = nan(num_ccs_analyze, n_shuffles);
+                        p_sh_idx_iter    = nan(num_ccs_analyze, n_shuffles);
+                        p_sh_curve_iter  = nan(num_ccs_analyze, n_shifts, n_shuffles);
+                        for ish = 1:n_shuffles
                             perm_idx = randperm(n_bins_local);
                             D1_s = D1_local(:, perm_idx, :); x_s = reshape(D1_s, nc1, []);
                             [~,~,rs] = canoncorr(x_s', y');
-                            r_sh_iter(:, ish) = rs(1:min(length(rs), num_ccs_analyze));
+                            nccs_s = min(length(rs), num_ccs_analyze);
+                            r_sh_iter(1:nccs_s, ish) = rs(1:nccs_s);
                             [c_curve_sh, c_idx_sh] = calc_precession(D1_s, D2_local, max_shift_bins, num_ccs_analyze, nc1, nc2);
                             p_sh_curve_iter(:, :, ish) = c_curve_sh;
                             p_sh_idx_iter(:, ish) = c_idx_sh;
                         end
-                        cca_tr_shuff(:, t) = mean(r_sh_iter, 2, 'omitnan');
-                        prec_tr_curve_shuff(:, :, t) = mean(p_sh_curve_iter, 3, 'omitnan');
-                        prec_tr_idx_shuff(:, t) = mean(p_sh_idx_iter, 2, 'omitnan');
+                        cca_tr_sh_col       = mean(r_sh_iter, 2, 'omitnan');
+                        prec_tr_curve_sh_col = mean(p_sh_curve_iter, 3, 'omitnan');
+                        prec_tr_idx_sh_col   = mean(p_sh_idx_iter, 2, 'omitnan');
                     else
                         if any(isnan(x(:))) || any(isnan(y(:)))
                             fprintf('  [NaN Tracker] Trial %d skipped (Pair %d): NaNs present in PCA scores.\n', t, ipair);
@@ -304,43 +339,59 @@ else
                             fprintf('  [NaN Tracker] Trial %d skipped (Pair %d): Insufficient samples (Size: %d).\n', t, ipair, size(x, 2));
                         end
                     end
+                    cca_tr(:, t)              = cca_tr_col;
+                    cca_tr_shuff(:, t)        = cca_tr_sh_col;
+                    prec_tr_idx(:, t)         = prec_tr_idx_col;
+                    prec_tr_idx_shuff(:, t)   = prec_tr_idx_sh_col;
+                    prec_tr_curve(:, :, t)    = prec_tr_curve_col;
+                    prec_tr_curve_shuff(:, :, t) = prec_tr_curve_sh_col;
                 end
-                
                 % =========================================================
                 % ANALYSIS 2: BIN-WISE
+                % parfor over bins; serial inner shuffle.
                 % =========================================================
-                for b = 1:n_bins
+                parfor b = 1:n_bins
                     win = b + n_bins_window; win = win(win>=1 & win<=n_bins);
                     if isempty(win), continue; end
-                    
                     D1_local = d1(:, win, :); D2_local = d2(:, win, :);
                     x = reshape(D1_local, nc1, []); y = reshape(D2_local, nc2, []);
-                    
+                    cca_bin_col       = nan(num_ccs_analyze, 1);
+                    cca_bin_sh_col    = nan(num_ccs_analyze, 1);
+                    prec_bin_idx_col  = nan(num_ccs_analyze, 1);
+                    prec_bin_idx_sh_col = nan(num_ccs_analyze, 1);
+                    prec_bin_curve_col    = nan(num_ccs_analyze, n_shifts);
+                    prec_bin_curve_sh_col = nan(num_ccs_analyze, n_shifts);
                     if check_dims(x, y, max(nc1, nc2) + 5)
                         [~,~,r] = canoncorr(x', y');
-                        cca_bin(1:min(length(r), num_ccs_analyze), b) = r(1:min(length(r), num_ccs_analyze));
+                        nccs = min(length(r), num_ccs_analyze);
+                        cca_bin_col(1:nccs) = r(1:nccs);
                         [c_curve, c_idx] = calc_precession(D1_local, D2_local, max_shift_bins, num_ccs_analyze, nc1, nc2);
-                        prec_bin_curve(:, :, b) = c_curve;
-                        prec_bin_idx(:, b) = c_idx;
-                        
-                        r_sh_iter = nan(num_ccs_analyze, n_shuffles);
-                        p_sh_idx_iter = nan(num_ccs_analyze, n_shuffles);
-                        p_sh_curve_iter = nan(num_ccs_analyze, n_shifts, n_shuffles);
+                        prec_bin_curve_col = c_curve;
+                        prec_bin_idx_col   = c_idx;
                         n_tr_local = size(D1_local, 3);
-                        
-                        parfor ish = 1:n_shuffles
+                        r_sh_iter       = nan(num_ccs_analyze, n_shuffles);
+                        p_sh_idx_iter   = nan(num_ccs_analyze, n_shuffles);
+                        p_sh_curve_iter = nan(num_ccs_analyze, n_shifts, n_shuffles);
+                        for ish = 1:n_shuffles
                              perm_idx = randperm(n_tr_local);
                              D1_s = D1_local(:, :, perm_idx); x_s = reshape(D1_s, nc1, []);
                              [~,~,rs] = canoncorr(x_s', y');
-                             r_sh_iter(:, ish) = rs(1:min(length(rs), num_ccs_analyze));
+                             nccs_s = min(length(rs), num_ccs_analyze);
+                             r_sh_iter(1:nccs_s, ish) = rs(1:nccs_s);
                              [c_curve_sh, c_idx_sh] = calc_precession(D1_s, D2_local, max_shift_bins, num_ccs_analyze, nc1, nc2);
                              p_sh_curve_iter(:, :, ish) = c_curve_sh;
                              p_sh_idx_iter(:, ish) = c_idx_sh;
                         end
-                        cca_bin_shuff(:, b) = mean(r_sh_iter, 2, 'omitnan');
-                        prec_bin_curve_shuff(:, :, b) = mean(p_sh_curve_iter, 3, 'omitnan');
-                        prec_bin_idx_shuff(:, b) = mean(p_sh_idx_iter, 2, 'omitnan');
+                        cca_bin_sh_col       = mean(r_sh_iter, 2, 'omitnan');
+                        prec_bin_curve_sh_col = mean(p_sh_curve_iter, 3, 'omitnan');
+                        prec_bin_idx_sh_col   = mean(p_sh_idx_iter, 2, 'omitnan');
                     end
+                    cca_bin(:, b)             = cca_bin_col;
+                    cca_bin_shuff(:, b)       = cca_bin_sh_col;
+                    prec_bin_idx(:, b)        = prec_bin_idx_col;
+                    prec_bin_idx_shuff(:, b)  = prec_bin_idx_sh_col;
+                    prec_bin_curve(:, :, b)   = prec_bin_curve_col;
+                    prec_bin_curve_shuff(:, :, b) = prec_bin_curve_sh_col;
                 end
                 
                 % --- F. Store Results ---
@@ -380,7 +431,12 @@ else
                     group_results(ipair).trial_precession_pre_curve_shuff{ianimal}   = get_cols_3d(prec_tr_curve_shuff, idx_pre);
                     group_results(ipair).trial_precession_post_curve_shuff{ianimal}  = get_cols_3d(prec_tr_curve_shuff, idx_post);
                 end
-            end 
+            end
+            % --- Save partial results after every animal so that a crash
+            %     or interrupt doesn't lose all prior work. ---
+            saved_config = current_config;
+            save(save_path, 'group_results', 'is_learner', 'analysis_lp', 'saved_config', '-v7.3');
+            fprintf('  saved partial results -> %s\n', save_path);
         catch ME
             fprintf('Error processing %s: %s\n', filename, ME.message);
         end
@@ -389,71 +445,9 @@ else
     save(save_path, 'group_results', 'is_learner', 'analysis_lp', 'saved_config', '-v7.3');
     fprintf('Finished analysis and saving! \n')
 end
-
 %% 5. PLOTTING (Summary Figures)
 fprintf('\nGenerating Plots...\n');
 lags = -max_shift_bins:max_shift_bins;
-
-% --- NEW FIX: Pad cell arrays to prevent out-of-bounds indexing ---
-n_total_animals = length(is_learner); 
-for ipair = 1:n_pairs
-    fields = fieldnames(group_results);
-    for f = 1:length(fields)
-        if iscell(group_results(ipair).(fields{f}))
-            if length(group_results(ipair).(fields{f})) < n_total_animals
-                % Assigning an empty array to the last index forces MATLAB 
-                % to pad the missing intermediate indices with []
-                group_results(ipair).(fields{f}){n_total_animals} = [];
-            end
-        end
-    end
-end
-
-% % --- A1. Spatial Correlation (Bin-wise) ---
-% figure('Name', 'Group Spatial Correlation', 'Color', 'w', 'Position', [100 100 1200 800]);
-% tiledlayout('flow');
-% for ipair = 1:n_pairs
-%     nexttile
-%     [mu, se] = aggregate_cells(group_results(ipair).all_bins_corr, n_bins, 1); 
-%     [mu_s, ~] = aggregate_cells(group_results(ipair).all_bins_corr_shuff, n_bins, 1);
-%     if isempty(mu), continue; end
-%     plot(1:n_bins, mu_s, 'Color', [0.5 0.5 0.5], 'LineWidth', 1); hold on;
-%     shadedErrorBar(1:n_bins, mu, se, 'lineProps', {'Color', 'b'});
-%     xline((landmarks_cm(:) / track_length_cm) * n_bins); 
-%     title(group_results(ipair).pair_name); xlabel('Spatial Bin'); ylabel('Correlation (CC1)'); xlim([1 n_bins]);
-% end
-% save_to_svg(fullfile(data_dir, 'Spatial_Corr_Group'));
-% 
-% % --- A2. Spatial Precession (Average Index) ---
-% figure('Name', 'Group Spatial Precession Index', 'Color', 'w', 'Position', [100 100 1200 800]);
-% tiledlayout('flow');
-% for ipair = 1:n_pairs
-%     nexttile
-%     [mu, se] = aggregate_cells(group_results(ipair).all_bins_precession_idx, n_bins, 1);
-%     [mu_s, ~] = aggregate_cells(group_results(ipair).all_bins_precession_idx_shuff, n_bins, 1); 
-%     if isempty(mu), continue; end
-%     plot(1:n_bins, mu_s, 'Color', [0.6 0.6 0.6], 'LineWidth', 1, 'LineStyle', '--'); hold on;
-%     shadedErrorBar(1:n_bins, mu, se, 'lineProps', {'Color', 'r'});
-%     xline((landmarks_cm(:) / track_length_cm) * n_bins); yline(0, '--k');
-%     title(group_results(ipair).pair_name); xlim([1 n_bins]); ylim([-0.2 0.2]); ylabel('Precession Idx (CC1)');
-% end
-% save_to_svg(fullfile(data_dir, 'Spatial_Precession_Idx_Group'));
-
-% % --- A3. Spatial Precession (Lag vs Space Heatmap) ---
-% figure('Name', 'Group Spatial Lag-Tuning', 'Color', 'w', 'Position', [100 100 1200 800]);
-% tiledlayout('flow');
-% for ipair = 1:n_pairs
-%     nexttile
-%     mu_real = aggregate_shift_heatmaps(group_results(ipair).all_bins_precession_curve, n_bins, 1);
-%     mu_shuff = aggregate_shift_heatmaps(group_results(ipair).all_bins_precession_curve_shuff, n_bins, 1);
-%     if isempty(mu_real), continue; end
-%     imagesc(1:n_bins, lags, mu_real - mu_shuff); axis xy; colormap(gca, 'parula');
-%     c = colorbar; c.Label.String = '\Delta Corr (Real-Shuff)';
-%     xline((landmarks_cm(:) / track_length_cm) * n_bins, 'w--'); yline(0, 'w:');
-%     title(group_results(ipair).pair_name); xlabel('Spatial Bin');
-%     ylabel(sprintf('%s Leads <-Lag-> %s Leads', area_pairs_to_analyze{ipair,1}, area_pairs_to_analyze{ipair,2}));
-% end
-% save_to_svg(fullfile(data_dir, 'Spatial_Precession_Heatmaps'));
 
 % --- B1. Epoch Correlation (Bar Graph with Mixed rmANOVA) ---
 fprintf('\n--- Epoch Correlation Mixed rmANOVA Results ---\n');
@@ -471,7 +465,6 @@ for ipair = 1:n_pairs
     plot_grouped_bars_with_rmanova(e_vals, p_vals, x_vals, is_learner, group_results(ipair).pair_name, 'Correlation (CC1)', false);
 end
 save_to_svg(fullfile(data_dir, 'Epoch_Corr_Bars_Split'));
-
 % --- B2. Epoch Precession Index (Bar Graph with Mixed rmANOVA) ---
 fprintf('\n--- Epoch Precession Index Mixed rmANOVA Results ---\n');
 figure('Name', 'Epoch Precession (Learners vs Non)', 'Color', 'w', 'Position', [100 100 1400 800]);
@@ -488,7 +481,6 @@ for ipair = 1:n_pairs
     plot_grouped_bars_with_rmanova(e_vals, p_vals, x_vals, is_learner, group_results(ipair).pair_name, 'Precession Index', true);
 end
 save_to_svg(fullfile(data_dir, 'Epoch_Precession_Bars_Split'));
-
 % --- C1. Continuous Trial-by-Trial Precession (3 Epochs Linked) ---
 fprintf('\n--- Continuous Trial Precession Stats (Mixed rmANOVA, Uncorrected Local Tests) ---\n');
 figure('Name', 'Continuous Epoch Precession', 'Color', 'w', 'Position', [150 150 1500 800]);
@@ -612,7 +604,6 @@ for ipair = 1:n_pairs
     end
 end
 save_to_svg(fullfile(data_dir, 'Continuous_Trial_Precession_Split'));
-
 % --- C2. Continuous Trial-by-Trial CC1 (Correlation) ---
 fprintf('\n--- Continuous Trial Correlation Stats (Mixed rmANOVA, Uncorrected Local Tests) ---\n');
 figure('Name', 'Continuous Epoch Correlation', 'Color', 'w', 'Position', [150 150 1500 800]);
@@ -713,95 +704,6 @@ for ipair = 1:n_pairs
     end
 end
 save_to_svg(fullfile(data_dir, 'Continuous_Trial_Corr_Split'));
-%
-
-% % --- D. Dual-Encoded Network Visualization (Learners vs Non-Learners) ---
-% fprintf('\nGenerating Network Graphs (Real vs Shuffled Filtered)...\n');
-% layout_def.names = {'CA1', 'V1', 'DG', 'CA3', 'RSC', 'SUB'};
-% layout_def.x     = [7.0,  8.0,  3.0,  5.0,  2.0,  2.0];
-% layout_def.y     = [5.0,  9.0,  4.0,  2.0,  9.0,  6.5];
-% 
-% % Preallocate tracking structures
-% net = struct();
-% metrics = {'L_early_cc', 'L_post_cc', 'L_early_ifi', 'L_post_ifi', ...
-%            'NL_early_cc', 'NL_post_cc', 'NL_early_ifi', 'NL_post_ifi', ...
-%            'L_early_pval', 'L_post_pval', 'NL_early_pval', 'NL_post_pval'};
-% for m = metrics, net.(m{1}) = nan(n_pairs, 1); end
-% 
-% % Extract mean state values and run paired t-tests (Real vs Shuffled)
-% for ipair = 1:n_pairs
-%     e_cc = extract_animal_means(group_results(ipair).trial_corr_early, 1);
-%     x_cc = extract_animal_means(group_results(ipair).trial_corr_post, 1);
-% 
-%     e_ifi   = extract_animal_means(group_results(ipair).trial_precession_early_idx, 1);
-%     e_ifi_s = extract_animal_means(group_results(ipair).trial_precession_early_idx_shuff, 1);
-%     x_ifi   = extract_animal_means(group_results(ipair).trial_precession_post_idx, 1);
-%     x_ifi_s = extract_animal_means(group_results(ipair).trial_precession_post_idx_shuff, 1);
-% 
-%     % Means
-%     net.L_early_cc(ipair)  = mean(e_cc(is_learner), 'omitnan');
-%     net.L_post_cc(ipair)   = mean(x_cc(is_learner), 'omitnan');
-%     net.L_early_ifi(ipair) = mean(e_ifi(is_learner), 'omitnan');
-%     net.L_post_ifi(ipair)  = mean(x_ifi(is_learner), 'omitnan');
-% 
-%     % Significance testing: Paired Real vs Shuffled
-%     valid_L_e = ~isnan(e_ifi(is_learner)) & ~isnan(e_ifi_s(is_learner));
-%     if sum(valid_L_e) > 2
-%         [~, net.L_early_pval(ipair)] = ttest(e_ifi(is_learner(valid_L_e)), e_ifi_s(is_learner(valid_L_e))); 
-%     end
-% 
-%     valid_L_x = ~isnan(x_ifi(is_learner)) & ~isnan(x_ifi_s(is_learner));
-%     if sum(valid_L_x) > 2
-%         [~, net.L_post_pval(ipair)] = ttest(x_ifi(is_learner(valid_L_x)), x_ifi_s(is_learner(valid_L_x))); 
-%     end
-% 
-%     if any(~is_learner)
-%         net.NL_early_cc(ipair)  = mean(e_cc(~is_learner), 'omitnan');
-%         net.NL_post_cc(ipair)   = mean(x_cc(~is_learner), 'omitnan');
-%         net.NL_early_ifi(ipair) = mean(e_ifi(~is_learner), 'omitnan');
-%         net.NL_post_ifi(ipair)  = mean(x_ifi(~is_learner), 'omitnan');
-% 
-%         valid_NL_e = ~isnan(e_ifi(~is_learner)) & ~isnan(e_ifi_s(~is_learner));
-%         if sum(valid_NL_e) > 2
-%             [~, net.NL_early_pval(ipair)] = ttest(e_ifi(~is_learner(valid_NL_e)), e_ifi_s(~is_learner(valid_NL_e))); 
-%         end
-% 
-%         valid_NL_x = ~isnan(x_ifi(~is_learner)) & ~isnan(x_ifi_s(~is_learner));
-%         if sum(valid_NL_x) > 2
-%             [~, net.NL_post_pval(ipair)] = ttest(x_ifi(~is_learner(valid_NL_x)), x_ifi_s(~is_learner(valid_NL_x))); 
-%         end
-%     end
-% end
-% 
-% % Global Maxima for Scaling
-% global_max_cc = max(max([net.L_early_cc, net.L_post_cc, net.NL_early_cc, net.NL_post_cc]));
-% global_max_ifi = max(max(abs([net.L_early_ifi, net.L_post_ifi, net.NL_early_ifi, net.NL_post_ifi])));
-% if global_max_cc == 0 || isnan(global_max_cc), global_max_cc = 1; end
-% if global_max_ifi == 0 || isnan(global_max_ifi), global_max_ifi = 1; end
-% 
-% figure('Name', 'Network Evolution', 'Color', 'w', 'Position', [100 100 1000 800]);
-% if any(~is_learner)
-%     t = tiledlayout(2, 2, 'Padding', 'compact', 'TileSpacing', 'compact');
-% else
-%     t = tiledlayout(1, 2, 'Padding', 'compact', 'TileSpacing', 'compact');
-% end
-% 
-% % Plot Learners
-% nexttile(t); 
-% plot_dual_network(area_pairs_to_analyze, net.L_early_cc, net.L_early_ifi, net.L_early_pval, 'Learners: Naive (Early)', layout_def, global_max_cc, global_max_ifi);
-% nexttile(t); 
-% plot_dual_network(area_pairs_to_analyze, net.L_post_cc, net.L_post_ifi, net.L_post_pval, 'Learners: Expert (Post)', layout_def, global_max_cc, global_max_ifi);
-% 
-% % Plot Non-Learners
-% if any(~is_learner)
-%     nexttile(t); 
-%     plot_dual_network(area_pairs_to_analyze, net.NL_early_cc, net.NL_early_ifi, net.NL_early_pval, 'Non-Learners: Naive (Early)', layout_def, global_max_cc, global_max_ifi);
-%     nexttile(t); 
-%     plot_dual_network(area_pairs_to_analyze, net.NL_post_cc, net.NL_post_ifi, net.NL_post_pval, 'Non-Learners: Expert (Post)', layout_def, global_max_cc, global_max_ifi);
-% end
-% save_to_svg(fullfile(data_dir, 'Network_Evolution_Dual'));
-% fprintf('Done.\n');
-
 
 %% 5B. EXTENDED PLOTTING: MULTIPLE CCs (REAL VS SHUFFLED)
 fprintf('\n--- Extended Quantifications: Real vs Shuffled (%d CCs) ---\n', num_ccs_analyze);
@@ -878,15 +780,12 @@ for g_idx = 1:2
     save_to_svg(fullfile(data_dir, sprintf('Extended_CC_TrialCurves_%s', group_label)));
     save_to_svg(fullfile(data_dir, sprintf('Extended_Prec_TrialCurves_%s', group_label)));
 end
-
 %% 5C. COMBINED CONTINUOUS CURVES, ERROR BARS & NETWORKS (REAL VS SHUFFLED)
 fprintf('\n--- Generating Combined Curves, Error Bars & Networks (%d CCs) ---\n', num_ccs_analyze);
-
 % Define layout for the network plots
 layout_def.names = {'CA1', 'V1', 'DG', 'CA3', 'RSC', 'SUB'};
 layout_def.x     = [7.0,  8.0,  3.0,  5.0,  2.0,  2.0];
 layout_def.y     = [5.0,  9.0,  4.0,  2.0,  9.0,  6.5];
-
 for g_idx = 1:2
     if g_idx == 1
         mask = is_learner; group_label = 'Learners';
@@ -1023,19 +922,17 @@ for g_idx = 1:2
         save_to_svg(fullfile(data_dir, sprintf('Network_Filtered_CC%d_%s', cc, group_label)));
     end
 end
-
 %% 6. LOCAL HELPERS
-
 function mat = extract_epoch_trials(cell_data, n_animals)
     mat = nan(n_animals, 10);
-    for i = 1:n_animals
+    if ~iscell(cell_data) || isempty(cell_data), return; end
+    for i = 1:min(n_animals, length(cell_data))
         d = cell_data{i};
         if ~isempty(d) && size(d, 2) == 10
             mat(i, :) = d(1, :); 
         end
     end
 end
-
 function plot_epoch_line(x_range, data_mat, color, linestyle)
     valid_mask = sum(~isnan(data_mat), 2) > 0;
     valid_data = data_mat(valid_mask, :);
@@ -1052,7 +949,6 @@ function plot_epoch_line(x_range, data_mat, color, linestyle)
         shadedErrorBar(x_range, mu, se, 'lineProps', {'Color', color, 'LineStyle', linestyle, 'LineWidth', 2});
     end
 end
-
 function [r_shifts, p_idx] = calc_precession(D1, D2, max_shift, num_ccs, nc1, nc2)
     shifts = -max_shift : max_shift;
     r_shifts = zeros(num_ccs, length(shifts));
@@ -1073,24 +969,33 @@ function [r_shifts, p_idx] = calc_precession(D1, D2, max_shift, num_ccs, nc1, nc
     end
     idx_neg = 1:max_shift; idx_pos = max_shift+2 : length(shifts);
     p_idx = nan(num_ccs, 1);
+    eps_tol = 1e-3;     % numerical floor on |neg + pos|
     for cc = 1:num_ccs
         neg_val = mean(r_shifts(cc, idx_neg), 'omitnan');
         pos_val = mean(r_shifts(cc, idx_pos), 'omitnan');
-        if (neg_val + pos_val) > 0.001
+        % Guard symmetrically: |neg + pos| must be above the noise floor.
+        if isnan(neg_val) || isnan(pos_val)
+            p_idx(cc) = nan;
+        elseif abs(neg_val + pos_val) > eps_tol
             p_idx(cc) = (neg_val - pos_val) / (neg_val + pos_val);
         else
             p_idx(cc) = nan;
-            % Inject tracking here
-            fprintf('  [NaN Tracker] Precession NaN assigned: Correlation sum too low (%.5f)\n', neg_val + pos_val);
         end
     end
 end
-
 function raw_means = extract_animal_means(cell_data, cc_idx)
-    n_animals = length(cell_data); raw_means = nan(n_animals, 1);
-    for i = 1:n_animals, if ~isempty(cell_data{i}), raw_means(i) = mean(cell_data{i}(cc_idx, :), 2, 'omitnan'); end; end
+    if ~iscell(cell_data) || isempty(cell_data)
+        raw_means = nan(1, 1);
+        return;
+    end
+    n_animals = length(cell_data); 
+    raw_means = nan(n_animals, 1);
+    for i = 1:n_animals
+        if ~isempty(cell_data{i})
+            raw_means(i) = mean(cell_data{i}(cc_idx, :), 2, 'omitnan'); 
+        end
+    end
 end
-
 function save_to_svg(fig_name)
     fig = gcf; 
     fprintf('Saving %s.svg...\n', fig_name);
@@ -1103,13 +1008,11 @@ function save_to_svg(fig_name)
         print(fig, '-dpng', [fig_name '.png']); 
     end
 end
-
 function ok = check_dims(X, Y, min_samples)
     if isempty(X) || isempty(Y), ok = false; return; end
     n_samples = size(X, 2); if any(isnan(X(:))) || any(isnan(Y(:))), ok = false; return; end
     ok = n_samples > min_samples; 
 end
-
 function plot_dual_network(pairs, cc_vals, ifi_vals, pval_cc, pval_ifi, titleStr, layout, max_cc, max_ifi)
     regions = unique(pairs(:)); 
     sources = []; targets = []; 
@@ -1236,7 +1139,6 @@ function plot_dual_network(pairs, cc_vals, ifi_vals, pval_cc, pval_ifi, titleStr
     xlim([0 10]); ylim([0 10]);
     title(titleStr, 'FontSize', 14, 'FontWeight', 'bold');
 end
-
 function plot_grouped_bars_with_rmanova(e_vals, p_vals, x_vals, is_learner, pair_name, y_label, test_zero)
     L_e = e_vals(is_learner); L_p = p_vals(is_learner); L_x = x_vals(is_learner);
     NL_e = e_vals(~is_learner); NL_p = p_vals(~is_learner); NL_x = x_vals(~is_learner);
@@ -1373,7 +1275,6 @@ function plot_grouped_bars_with_rmanova(e_vals, p_vals, x_vals, is_learner, pair
         fprintf('Not enough complete cases (n=%d) for strict rmANOVA.\n', n_complete);
     end
 end
-
 function plot_real_shuff_bars_with_stats(e_r, e_s, x_r, x_s, title_str, y_label, c_re, c_rx, c_se, c_sx)
     % Averages and SEMs
     means = [mean(e_r, 'omitnan'), mean(e_s, 'omitnan'); mean(x_r, 'omitnan'), mean(x_s, 'omitnan')];
@@ -1442,7 +1343,6 @@ function plot_real_shuff_bars_with_stats(e_r, e_s, x_r, x_s, title_str, y_label,
     % Force the axes to update their margin properties immediately
     drawnow;
 end
-
 function plot_continuous_trials_with_shuff(e_r, e_s, x_r, x_s, title_str, y_label, c_re, c_rx, c_se, c_sx)
     hold on;
     % Plot Shuffled Data (Grays, Dashed)
@@ -1460,22 +1360,20 @@ function plot_continuous_trials_with_shuff(e_r, e_s, x_r, x_s, title_str, y_labe
     xticklabels({'Naive', 'Expert'});
     xlim([1 20]);
     title(title_str); ylabel(y_label);
-
     % Standardize tick format to ensure identical text bounding boxes across figures
     ytickformat('%.2f');
     
     % Force the axes to update their margin properties immediately
     drawnow;
 end
-
 function mat = extract_epoch_trials_cc(cell_data, n_animals, cc_idx)
     % Extracts trial-by-trial data dynamically based on the requested CC
     mat = nan(n_animals, 10);
-    for i = 1:n_animals
+    if ~iscell(cell_data), return; end
+    for i = 1:min(n_animals, length(cell_data))
         d = cell_data{i};
         if ~isempty(d) && size(d, 1) >= cc_idx && size(d, 2) == 10
             mat(i, :) = d(cc_idx, :); 
         end
     end
 end
-
