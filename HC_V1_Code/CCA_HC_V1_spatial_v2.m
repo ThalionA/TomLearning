@@ -17,9 +17,9 @@ learning_file = 'animal_behaviour.mat';
 current_date = datestr(now, 'yyyy_mm_dd');
 save_path = fullfile(data_dir, sprintf('Spatial_CCA_Results_%s.mat', current_date));
 % --- PCA Parameters ---
-pca_selection_method = 'variance';
+pca_selection_method = 'fixed'; % variance, fixed
 pca_variance_threshold = 90;
-n_components_reduced = 4;
+n_components_reduced = 5;
 % Hard cap on PCA dimensionality per region. Without a cap, the 90%
 % variance threshold can keep tens of PCs and the small-window canoncorr
 % becomes heavily upward-biased. Cap to 10 so the within-window fits have
@@ -27,12 +27,12 @@ n_components_reduced = 4;
 % on the trial path, 7 bins x 7 trials on the bin path -> 49+ samples).
 max_k_per_region = 10;
 % --- Analysis Parameters ---
-num_ccs_analyze = 3;         
+num_ccs_analyze = 1;         
 n_trials_window = -3:3;      
 n_bins_window = -3:3;        
-n_shuffles = 50;             
+n_shuffles = 20;             
 max_shift_bins = 2;          
-min_units_per_region = 5;
+min_units_per_region = 7;
 % Spatial Parameters
 n_bins = 200;                
 bin_size_cm = 2.5;           
@@ -705,81 +705,7 @@ for ipair = 1:n_pairs
 end
 save_to_svg(fullfile(data_dir, 'Continuous_Trial_Corr_Split'));
 
-%% 5B. EXTENDED PLOTTING: MULTIPLE CCs (REAL VS SHUFFLED)
-fprintf('\n--- Extended Quantifications: Real vs Shuffled (%d CCs) ---\n', num_ccs_analyze);
-for g_idx = 1:2
-    if g_idx == 1
-        mask = is_learner; group_label = 'Learners';
-    else
-        mask = ~is_learner; group_label = 'Non-Learners';
-    end
-    
-    if sum(mask) == 0, continue; end
-    
-    % Initialize Figures
-    fig_cc = figure('Name', sprintf('CC Errorbars - %s', group_label), 'Color', 'w', 'Position', [100 100 1600 900]);
-    t_cc = tiledlayout('flow', 'TileSpacing', 'compact');
-    
-    fig_idx = figure('Name', sprintf('Precession Idx Errorbars - %s', group_label), 'Color', 'w', 'Position', [150 150 1600 900]);
-    t_idx = tiledlayout('flow', 'TileSpacing', 'compact');
-    
-    fig_cc_crv = figure('Name', sprintf('CC Trial Curves - %s', group_label), 'Color', 'w', 'Position', [200 200 1600 900]);
-    t_cc_crv = tiledlayout('flow', 'TileSpacing', 'compact');
-    
-    fig_pi_crv = figure('Name', sprintf('Precession Trial Curves - %s', group_label), 'Color', 'w', 'Position', [250 250 1600 900]);
-    t_pi_crv = tiledlayout('flow', 'TileSpacing', 'compact');
-    
-    for cc = 1:num_ccs_analyze
-        for ipair = 1:n_pairs
-            pair_name = group_results(ipair).pair_name;
-            title_str = sprintf('%s (CC%d)', pair_name, cc);
-            
-            % --- Extract CC Mean Data ---
-            e_cc_r = extract_animal_means(group_results(ipair).trial_corr_early, cc);
-            e_cc_s = extract_animal_means(group_results(ipair).trial_corr_early_shuff, cc);
-            x_cc_r = extract_animal_means(group_results(ipair).trial_corr_post, cc);
-            x_cc_s = extract_animal_means(group_results(ipair).trial_corr_post_shuff, cc);
-            
-            % --- Extract Precession Idx Mean Data ---
-            e_pi_r = extract_animal_means(group_results(ipair).trial_precession_early_idx, cc);
-            e_pi_s = extract_animal_means(group_results(ipair).trial_precession_early_idx_shuff, cc);
-            x_pi_r = extract_animal_means(group_results(ipair).trial_precession_post_idx, cc);
-            x_pi_s = extract_animal_means(group_results(ipair).trial_precession_post_idx_shuff, cc);
-            
-            % --- Extract Trial-by-Trial Data (Using new CC-aware helper) ---
-            e_cc_tr_r = extract_epoch_trials_cc(group_results(ipair).trial_corr_early, n_animals, cc);
-            e_cc_tr_s = extract_epoch_trials_cc(group_results(ipair).trial_corr_early_shuff, n_animals, cc);
-            x_cc_tr_r = extract_epoch_trials_cc(group_results(ipair).trial_corr_post, n_animals, cc);
-            x_cc_tr_s = extract_epoch_trials_cc(group_results(ipair).trial_corr_post_shuff, n_animals, cc);
-            
-            e_pi_tr_r = extract_epoch_trials_cc(group_results(ipair).trial_precession_early_idx, n_animals, cc);
-            e_pi_tr_s = extract_epoch_trials_cc(group_results(ipair).trial_precession_early_idx_shuff, n_animals, cc);
-            x_pi_tr_r = extract_epoch_trials_cc(group_results(ipair).trial_precession_post_idx, n_animals, cc);
-            x_pi_tr_s = extract_epoch_trials_cc(group_results(ipair).trial_precession_post_idx_shuff, n_animals, cc);
-            
-            % --- Plot CC Bars ---
-            figure(fig_cc); nexttile(t_cc);
-            plot_real_shuff_bars_with_stats(e_cc_r(mask), e_cc_s(mask), x_cc_r(mask), x_cc_s(mask), title_str, 'Correlation (CC)');
-                
-            % --- Plot Precession Bars ---
-            figure(fig_idx); nexttile(t_idx);
-            plot_real_shuff_bars_with_stats(e_pi_r(mask), e_pi_s(mask), x_pi_r(mask), x_pi_s(mask), title_str, 'Precession Index');
-                
-            % --- Plot CC Trial Curves ---
-            figure(fig_cc_crv); nexttile(t_cc_crv);
-            plot_continuous_trials_with_shuff(e_cc_tr_r(mask,:), e_cc_tr_s(mask,:), x_cc_tr_r(mask,:), x_cc_tr_s(mask,:), title_str, 'Correlation (CC)');
-            
-            % --- Plot Precession Trial Curves ---
-            figure(fig_pi_crv); nexttile(t_pi_crv);
-            plot_continuous_trials_with_shuff(e_pi_tr_r(mask,:), e_pi_tr_s(mask,:), x_pi_tr_r(mask,:), x_pi_tr_s(mask,:), title_str, 'Precession Index');
-        end
-    end
-    
-    save_to_svg(fullfile(data_dir, sprintf('Extended_CC_Bars_%s', group_label)));
-    save_to_svg(fullfile(data_dir, sprintf('Extended_Prec_Bars_%s', group_label)));
-    save_to_svg(fullfile(data_dir, sprintf('Extended_CC_TrialCurves_%s', group_label)));
-    save_to_svg(fullfile(data_dir, sprintf('Extended_Prec_TrialCurves_%s', group_label)));
-end
+
 %% 5C. COMBINED CONTINUOUS CURVES, ERROR BARS & NETWORKS (REAL VS SHUFFLED)
 fprintf('\n--- Generating Combined Curves, Error Bars & Networks (%d CCs) ---\n', num_ccs_analyze);
 % Define layout for the network plots
