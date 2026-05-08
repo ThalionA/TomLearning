@@ -6,3 +6,4 @@
 *.mat
 *.pptx
 *.asv
+.DS_Store
