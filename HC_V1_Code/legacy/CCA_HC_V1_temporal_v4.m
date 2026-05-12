@@ -72,11 +72,21 @@ n_rz_bins              = round(rz_window_ms / target_bin_ms);   % 20 at 25 ms
 
 % --- RZ-per-bin small-sample tension ---
 % At each aligned bin we run canoncorr with n = trials_in_epoch (<=10).
-% k1 + k2 can be up to 2*max_k_per_region = 8, which fails the n > k1+k2+4
-% safety margin in v4_per_trial_cca. To make this analysis runnable, we
-% allow a smaller margin specifically for the RZ-per-bin path, and rely on
-% the shuffle correction (real - shuffle CC) to remove the small-sample
-% bias. Set rz_min_extra_samples = 2 to require n > k1+k2+2 instead.
+% Two knobs control whether the fit is even attempted:
+%
+%   max_k_rz_per_region : cap each region's PC dimensionality SPECIFICALLY
+%       for the cross-trial RZ-per-bin path. The per-trial CC and per-trial
+%       IFI still use the full max_k_per_region. With cap=3 and n_tr=10,
+%       the outer guard n > k1+k2+min_extra becomes 10 > 6+2 = 8 -> passes.
+%
+%   rz_min_extra_samples : how many extra samples beyond k1+k2 to require.
+%       Smaller = more permissive. We rely on real-minus-shuffle to absorb
+%       the small-sample bias.
+%
+% NOTE: the previous default (cap = max_k_per_region = 15, min_extra = 2)
+% caused the outer guard to fail for nearly every (pair, epoch); see
+% HC_V1_Code/PLAN_v4_fixes.md.
+max_k_rz_per_region    = 3;
 rz_min_extra_samples   = 2;
 
 % --- Epochs ---
@@ -137,6 +147,14 @@ for ipair = 1:n_pairs
         group_results(ipair).(['trial_ifi_'    ep])    = nan(n_animals, 1);
         group_results(ipair).(['trial_ifi_sh_' ep])    = nan(n_animals, 1);
 
+        % Per-trial vectors (cell array indexed by animal). For pairing
+        % against spatial v2's trial-level outputs.
+        group_results(ipair).(['trial_cc1_pertrial_'    ep]) = cell(n_animals, 1);
+        group_results(ipair).(['trial_cc1_sh_pertrial_' ep]) = cell(n_animals, 1);
+        group_results(ipair).(['trial_ifi_pertrial_'    ep]) = cell(n_animals, 1);
+        group_results(ipair).(['trial_ifi_sh_pertrial_' ep]) = cell(n_animals, 1);
+        group_results(ipair).(['trial_id_pertrial_'     ep]) = cell(n_animals, 1);
+
         % RZ-pre per-bin CC trace (one per animal x aligned bin).
         group_results(ipair).(['rz_cc1_'    ep])       = nan(n_animals, n_rz_bins);
         group_results(ipair).(['rz_cc1_sh_' ep])       = nan(n_animals, n_rz_bins);
@@ -144,6 +162,8 @@ for ipair = 1:n_pairs
         % RZ-pre per-trial IFI scalar (epoch-mean of per-trial values).
         group_results(ipair).(['rz_ifi_'    ep])       = nan(n_animals, 1);
         group_results(ipair).(['rz_ifi_sh_' ep])       = nan(n_animals, 1);
+        group_results(ipair).(['rz_ifi_pertrial_'    ep]) = cell(n_animals, 1);
+        group_results(ipair).(['rz_ifi_sh_pertrial_' ep]) = cell(n_animals, 1);
     end
 end
 
@@ -160,19 +180,25 @@ for ianimal = 1:n_animals
     end
     units = D.units;
 
-    % --- Per-unit region array ---
-    if isfield(units, 'region')
-        unit_regions = units.region(:);
-    elseif isfield(units, 'regions_label') && length(units.regions_label) == length(units.unit_id)
-        unit_regions = units.regions_label(:);
-    else
-        fprintf('  -> Could not find a valid per-unit region array. Skipping.\n'); continue;
+    % --- Per-unit region array (use units.idx + units.regions_label) ---
+    % Mirrors spatial_v2's tagging. units.region is unreliable: in 11 of
+    % 12 RSC-containing animals it tags zero RSC units even though
+    % units.idx marks tens-to-hundreds. See HC_V1_Code/PLAN_v4_fixes.md
+    % and the probe_units_and_v4.m output. v4_unit_regions returns the
+    % per-unit region label and the canonical region name list.
+    try
+        [unit_regions, animal_areas, ru_info] = v4_unit_regions(units);
+    catch ME
+        fprintf('  -> v4_unit_regions failed: %s. Skipping.\n', ME.message);
+        continue;
     end
-
-    if isfield(units, 'regions_label') && length(units.regions_label) < length(units.unit_id)
-        animal_areas = units.regions_label(:);
-    else
-        animal_areas = unique(unit_regions);
+    if ru_info.n_multi > 0
+        fprintf('  -> %d/%d units in >1 idx row; using last-match assignment.\n', ...
+            ru_info.n_multi, ru_info.n_units);
+    end
+    if ru_info.n_unassigned > 0
+        fprintf('  -> %d/%d units have no idx-row membership (will be skipped).\n', ...
+            ru_info.n_unassigned, ru_info.n_units);
     end
 
     % --- FS unit exclusion (v3-identical) ---
@@ -407,8 +433,13 @@ for ianimal = 1:n_animals
             pair_cache(ipair).rz_ifi(end+1, 1)    = rz_ifi_real;
             pair_cache(ipair).rz_ifi_sh(end+1, 1) = rz_ifi_sh;
             if ~isempty(rz_X_seg)
-                pair_cache(ipair).rz_X{end+1}        = rz_X_seg;
-                pair_cache(ipair).rz_Y{end+1}        = rz_Y_seg;
+                % Cap PCs for the cross-trial RZ-per-bin fit only. The
+                % per-trial pre-RZ IFI computation above used the full
+                % rz_X_seg / rz_Y_seg already.
+                k_cap_x = min(size(rz_X_seg, 2), max_k_rz_per_region);
+                k_cap_y = min(size(rz_Y_seg, 2), max_k_rz_per_region);
+                pair_cache(ipair).rz_X{end+1}        = rz_X_seg(:, 1:k_cap_x);
+                pair_cache(ipair).rz_Y{end+1}        = rz_Y_seg(:, 1:k_cap_y);
                 pair_cache(ipair).rz_trial_id(end+1, 1) = tr_id;
             end
         end
@@ -436,6 +467,15 @@ for ianimal = 1:n_animals
             group_results(ipair).(['rz_ifi_'    ep])(ianimal)    = mean(pair_cache(ipair).rz_ifi(sel),    'omitnan');
             group_results(ipair).(['rz_ifi_sh_' ep])(ianimal)    = mean(pair_cache(ipair).rz_ifi_sh(sel), 'omitnan');
 
+            % Per-trial vectors for paired comparisons against spatial v2.
+            group_results(ipair).(['trial_cc1_pertrial_'    ep]){ianimal} = pair_cache(ipair).cc1(sel);
+            group_results(ipair).(['trial_cc1_sh_pertrial_' ep]){ianimal} = pair_cache(ipair).cc1_sh(sel);
+            group_results(ipair).(['trial_ifi_pertrial_'    ep]){ianimal} = pair_cache(ipair).ifi(sel);
+            group_results(ipair).(['trial_ifi_sh_pertrial_' ep]){ianimal} = pair_cache(ipair).ifi_sh(sel);
+            group_results(ipair).(['trial_id_pertrial_'     ep]){ianimal} = pair_cache(ipair).trial_id(sel);
+            group_results(ipair).(['rz_ifi_pertrial_'    ep]){ianimal}    = pair_cache(ipair).rz_ifi(sel);
+            group_results(ipair).(['rz_ifi_sh_pertrial_' ep]){ianimal}    = pair_cache(ipair).rz_ifi_sh(sel);
+
             % --- RZ per-bin CC across this epoch's trials ---
             sel_rz = ismember(pair_cache(ipair).rz_trial_id, epoch_trials.(ep));
             if any(sel_rz)
@@ -453,6 +493,9 @@ for ianimal = 1:n_animals
                     fprintf('    [rz-skip] %s ep=%s: n_tr=%d, k1+k2=%d (need n>k1+k2+%d)\n', ...
                         group_results(ipair).pair_name, ep, n_tr_rz, k1+k2, rz_min_extra_samples);
                 end
+            else
+                fprintf('    [rz-empty] %s ep=%s: 0 RZ-stash trials in this epoch\n', ...
+                    group_results(ipair).pair_name, ep);
             end
         end
     end
@@ -532,9 +575,10 @@ function [cc_trace, cc_trace_sh] = local_rz_per_bin_cc(X_stack, Y_stack, n_shuff
 % At each aligned bin b in 1..n_rz_bins, fit canoncorr across the trial
 % axis (n = n_tr_rz). Return CC trace and shuffle CC trace.
 %
-% Uses local_rz_per_bin_canoncorr to allow a smaller n>k1+k2 margin than
-% the default v4_per_trial_cca check, since we deliberately operate in a
-% small-sample regime here and rely on shuffle correction.
+% Uses v4_relaxed_canoncorr (via local_relaxed_canoncorr) to allow a
+% smaller n>k1+k2 margin than the default v4_per_trial_cca check, since
+% we deliberately operate in a small-sample regime here and rely on
+% shuffle correction.
     n_rz = size(X_stack, 1);
     n_tr = size(X_stack, 3);
     cc_trace    = nan(1, n_rz);
@@ -558,18 +602,7 @@ function [cc_trace, cc_trace_sh] = local_rz_per_bin_cc(X_stack, Y_stack, n_shuff
 end
 
 function [r, ok] = local_relaxed_canoncorr(X, Y, min_extra)
-% canoncorr with relaxed sample-size check (n > k1+k2+min_extra) and the
-% same rank check as v4_per_trial_cca. Used by the RZ-per-bin path.
-    r = NaN; ok = false;
-    n = size(X, 1); k1 = size(X, 2); k2 = size(Y, 2);
-    if n <= (k1 + k2 + min_extra), return; end
-    Xc = X - repmat(mean(X, 1), n, 1);
-    Yc = Y - repmat(mean(Y, 1), n, 1);
-    if rank(Xc) < k1 || rank(Yc) < k2, return; end
-    try
-        [~, ~, rall] = canoncorr(X, Y);
-    catch
-        return;
-    end
-    r = rall(1); ok = true;
+% Thin wrapper around v4_relaxed_canoncorr (standalone helper) so the
+% RZ-per-bin path can be unit-tested directly.
+    [r, ok, ~] = v4_relaxed_canoncorr(X, Y, min_extra);
 end

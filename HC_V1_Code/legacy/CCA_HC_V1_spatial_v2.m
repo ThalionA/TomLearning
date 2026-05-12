@@ -19,7 +19,7 @@ save_path = fullfile(data_dir, sprintf('Spatial_CCA_Results_%s.mat', current_dat
 % --- PCA Parameters ---
 pca_selection_method = 'fixed'; % variance, fixed
 pca_variance_threshold = 90;
-n_components_reduced = 5;
+n_components_reduced = 3;
 % Hard cap on PCA dimensionality per region. Without a cap, the 90%
 % variance threshold can keep tens of PCs and the small-window canoncorr
 % becomes heavily upward-biased. Cap to 10 so the within-window fits have
@@ -30,9 +30,9 @@ max_k_per_region = 10;
 num_ccs_analyze = 1;         
 n_trials_window = -3:3;      
 n_bins_window = -3:3;        
-n_shuffles = 20;             
+n_shuffles = 25;             
 max_shift_bins = 2;          
-min_units_per_region = 7;
+min_units_per_region = 5;
 % Spatial Parameters
 n_bins = 200;                
 bin_size_cm = 2.5;           
@@ -706,7 +706,7 @@ end
 save_to_svg(fullfile(data_dir, 'Continuous_Trial_Corr_Split'));
 
 
-%% 5C. COMBINED CONTINUOUS CURVES, ERROR BARS & NETWORKS (REAL VS SHUFFLED)
+%% 6. COMBINED CONTINUOUS CURVES, ERROR BARS & NETWORKS (REAL VS SHUFFLED)
 fprintf('\n--- Generating Combined Curves, Error Bars & Networks (%d CCs) ---\n', num_ccs_analyze);
 % Define layout for the network plots
 layout_def.names = {'CA1', 'V1', 'DG', 'CA3', 'RSC', 'SUB'};
@@ -848,7 +848,7 @@ for g_idx = 1:2
         save_to_svg(fullfile(data_dir, sprintf('Network_Filtered_CC%d_%s', cc, group_label)));
     end
 end
-%% 6. LOCAL HELPERS
+%% 7. LOCAL HELPERS
 function mat = extract_epoch_trials(cell_data, n_animals)
     mat = nan(n_animals, 10);
     if ~iscell(cell_data) || isempty(cell_data), return; end
@@ -895,14 +895,18 @@ function [r_shifts, p_idx] = calc_precession(D1, D2, max_shift, num_ccs, nc1, nc
     end
     idx_neg = 1:max_shift; idx_pos = max_shift+2 : length(shifts);
     p_idx = nan(num_ccs, 1);
-    eps_tol = 1e-3;     % numerical floor on |neg + pos|
+    eps_tol = 1e-3;     % numerical floor on |neg| + |pos|
     for cc = 1:num_ccs
-        neg_val = mean(r_shifts(cc, idx_neg), 'omitnan');
-        pos_val = mean(r_shifts(cc, idx_pos), 'omitnan');
-        % Guard symmetrically: |neg + pos| must be above the noise floor.
+        % Canonical lag-asymmetry index: take absolute values on both
+        % sides so p_idx is bounded to [-1, 1] regardless of the signs of
+        % neg_val and pos_val. Without abs, opposite-sign cases (e.g.
+        % neg=0.5, pos=-0.3) produce |p_idx| > 1. Matches the convention
+        % in cca_animal_sanity_check.m and v4_ifi_from_lags.m.
+        neg_val = abs(mean(r_shifts(cc, idx_neg), 'omitnan'));
+        pos_val = abs(mean(r_shifts(cc, idx_pos), 'omitnan'));
         if isnan(neg_val) || isnan(pos_val)
             p_idx(cc) = nan;
-        elseif abs(neg_val + pos_val) > eps_tol
+        elseif (neg_val + pos_val) > eps_tol
             p_idx(cc) = (neg_val - pos_val) / (neg_val + pos_val);
         else
             p_idx(cc) = nan;

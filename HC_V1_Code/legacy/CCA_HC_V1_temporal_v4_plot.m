@@ -312,9 +312,7 @@ save_fig(gcf, fullfile(data_dir, 'TemporalCCAv4_Diagnostic.svg'));
 fprintf('\nAll v4 figures saved to %s\n', data_dir);
 
 
-%% ===================================================================
 %% LOCAL HELPERS
-%% ===================================================================
 
 function plot_bars_with_rmanova(re, rp, rx, se, sp, sx, is_learner, ...
                                  pair_name, y_label, col_L, col_NL, sig_mode)

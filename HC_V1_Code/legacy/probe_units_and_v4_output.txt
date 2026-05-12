@@ -1,0 +1,261 @@
+=== probe_units_and_v4.m  08-May-2026 16:03:29 ===
+
+--- Probe 1: units.region vs units.idx vs units.regions_label ---
+
+Animal: TF028_export.mat
+  n_units = 206   has region=1  idx=1  regions_label=1
+  regions_label (5): { CA1, CA3, DG, LG, V1 }
+  size(units.region) = [206 1]
+  size(units.idx)    = [5 206]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    30  |    30 | OK
+        V1 |    69  |    69 | OK
+        DG |    13  |    13 | OK
+       CA3 |    15  |    15 | OK
+       RSC |     0  |    -1 | no-row
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 206
+
+Animal: TF034_export.mat
+  n_units = 191   has region=1  idx=1  regions_label=1
+  regions_label (6): { CA1, CA3, DG, HVA, LG, V1 }
+  size(units.region) = [191 1]
+  size(units.idx)    = [6 191]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    27  |    27 | OK
+        V1 |   118  |   118 | OK
+        DG |     3  |     3 | OK
+       CA3 |    13  |    13 | OK
+       RSC |     0  |    -1 | no-row
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 191
+
+Animal: TF036_export.mat
+  n_units = 130   has region=1  idx=1  regions_label=1
+  regions_label (5): { CA1, CA3, DG, HVA, V1 }
+  size(units.region) = [130 1]
+  size(units.idx)    = [5 130]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    39  |    39 | OK
+        V1 |    29  |    29 | OK
+        DG |     2  |     2 | OK
+       CA3 |    12  |    12 | OK
+       RSC |     0  |    -1 | no-row
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 130
+
+Animal: TF041_export.mat
+  n_units = 226   has region=1  idx=1  regions_label=1
+  regions_label (4): { CA1, CA3, DG, V1 }
+  size(units.region) = [226 1]
+  size(units.idx)    = [4 226]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    22  |    22 | OK
+        V1 |   176  |   176 | OK
+        DG |     4  |     4 | OK
+       CA3 |    24  |    24 | OK
+       RSC |     0  |    -1 | no-row
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 226
+
+Animal: TF052_export.mat
+  n_units = 405   has region=1  idx=1  regions_label=1
+  regions_label (7): { CA1, CA3, DG, SCm, SCop, V1, RSC }
+  size(units.region) = [405 1]
+  size(units.idx)    = [7 405]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    57  |    57 | OK
+        V1 |   109  |   109 | OK
+        DG |    33  |    33 | OK
+       CA3 |    61  |    61 | OK
+       RSC |     0  |    10 | DIFFER
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 405
+
+Animal: TF061_export.mat
+  n_units = 454   has region=1  idx=1  regions_label=1
+  regions_label (7): { CA1, CA3, DG, SCm, SCop, V1, RSC }
+  size(units.region) = [454 1]
+  size(units.idx)    = [7 454]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    64  |    64 | OK
+        V1 |    93  |    93 | OK
+        DG |    25  |    25 | OK
+       CA3 |    33  |    33 | OK
+       RSC |     0  |   115 | DIFFER
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 454
+
+Animal: TF063_export.mat
+  n_units = 76   has region=1  idx=1  regions_label=1
+  regions_label (6): { CA1, CA3, DG, HVA, V1, RSC }
+  size(units.region) = [76 1]
+  size(units.idx)    = [6 76]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    13  |    13 | OK
+        V1 |     1  |     1 | OK
+        DG |     1  |     1 | OK
+       CA3 |     3  |     3 | OK
+       RSC |     0  |    55 | DIFFER
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 76
+
+Animal: TF066_export.mat
+  n_units = 170   has region=1  idx=1  regions_label=1
+  regions_label (7): { CA1, CA3, DG, HVA, SUB, V1, RSC }
+  size(units.region) = [170 1]
+  size(units.idx)    = [7 170]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    29  |    29 | OK
+        V1 |    22  |    22 | OK
+        DG |    33  |    33 | OK
+       CA3 |     3  |     3 | OK
+       RSC |     0  |    18 | DIFFER
+       SUB |    13  |    13 | OK
+  units in >1 idx row : 0 / 170
+
+Animal: TF068_export.mat
+  n_units = 120   has region=1  idx=1  regions_label=1
+  regions_label (8): { CA1, CA3, DG, HVA, SCm, SCop, V1, RSC }
+  size(units.region) = [120 1]
+  size(units.idx)    = [8 120]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    18  |    18 | OK
+        V1 |     2  |     2 | OK
+        DG |    24  |    24 | OK
+       CA3 |    12  |    12 | OK
+       RSC |     0  |    22 | DIFFER
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 120
+
+Animal: TF070_export.mat
+  n_units = 417   has region=1  idx=1  regions_label=1
+  regions_label (5): { CA1, DG, RSC, SUB, V1 }
+  size(units.region) = [417 1]
+  size(units.idx)    = [5 417]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    81  |    81 | OK
+        V1 |   127  |   127 | OK
+        DG |    47  |    47 | OK
+       CA3 |     0  |    -1 | no-row
+       RSC |   122  |   122 | OK
+       SUB |    40  |    40 | OK
+  units in >1 idx row : 0 / 417
+
+Animal: TF071_export.mat
+  n_units = 455   has region=1  idx=1  regions_label=1
+  regions_label (7): { CA1, CA3, DG, HVA, SUB, V1, RSC }
+  size(units.region) = [455 1]
+  size(units.idx)    = [7 455]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    23  |    23 | OK
+        V1 |    62  |    62 | OK
+        DG |   121  |   121 | OK
+       CA3 |    66  |    66 | OK
+       RSC |     0  |   129 | DIFFER
+       SUB |    41  |    41 | OK
+  units in >1 idx row : 0 / 455
+
+Animal: TF073_export.mat
+  n_units = 168   has region=1  idx=1  regions_label=1
+  regions_label (5): { CA1, DG, SUB, V1, RSC }
+  size(units.region) = [168 1]
+  size(units.idx)    = [5 168]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    26  |    26 | OK
+        V1 |    19  |    19 | OK
+        DG |    29  |    29 | OK
+       CA3 |     0  |    -1 | no-row
+       RSC |     0  |    64 | DIFFER
+       SUB |    27  |    27 | OK
+  units in >1 idx row : 0 / 168
+
+Animal: TF075_export.mat
+  n_units = 411   has region=1  idx=1  regions_label=1
+  regions_label (5): { CA1, DG, SUB, V1, RSC }
+  size(units.region) = [411 1]
+  size(units.idx)    = [5 411]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    25  |    25 | OK
+        V1 |    63  |    63 | OK
+        DG |    62  |    62 | OK
+       CA3 |     0  |    -1 | no-row
+       RSC |     0  |   196 | DIFFER
+       SUB |    38  |    38 | OK
+  units in >1 idx row : 0 / 411
+
+Animal: TF077_export.mat
+  n_units = 367   has region=1  idx=1  regions_label=1
+  regions_label (5): { CA1, DG, SUB, V1, RSC }
+  size(units.region) = [367 1]
+  size(units.idx)    = [5 367]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |     9  |     9 | OK
+        V1 |    12  |    12 | OK
+        DG |     5  |     5 | OK
+       CA3 |     0  |    -1 | no-row
+       RSC |     0  |   225 | DIFFER
+       SUB |     6  |     6 | OK
+  units in >1 idx row : 0 / 367
+
+Animal: TF098_export.mat
+  n_units = 258   has region=1  idx=1  regions_label=1
+  regions_label (6): { CA1, CA3, DG, HVA, LG, RSC }
+  size(units.region) = [258 1]
+  size(units.idx)    = [6 258]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    21  |    21 | OK
+        V1 |     0  |    -1 | no-row
+        DG |     1  |     1 | OK
+       CA3 |     5  |     5 | OK
+       RSC |     0  |    36 | DIFFER
+       SUB |     0  |    -1 | no-row
+  units in >1 idx row : 0 / 258
+
+Animal: TF100_export.mat
+  n_units = 510   has region=1  idx=1  regions_label=1
+  regions_label (5): { CA1, DG, SUB, V1, RSC }
+  size(units.region) = [510 1]
+  size(units.idx)    = [5 510]
+  per-area counts:
+           | region | idx  | match?
+       CA1 |    72  |    72 | OK
+        V1 |   162  |   162 | OK
+        DG |    98  |    98 | OK
+       CA3 |     0  |    -1 | no-row
+       RSC |     0  |    79 | DIFFER
+       SUB |    55  |    55 | OK
+  units in >1 idx row : 0 / 510
+
+--- Probe 2: Temporal_CCA_v4_2026_05_05.mat NaN audit ---
+
+  n_pairs   = 8
+  n_animals = 16
+  epochs    = early, pre, post
+
+  pair                    | trial_cc1 NaN per epoch (early/pre/post) | rz_cc1 NaN per epoch | contains_RSC
+  CA1-V1                  |  4/16  4/16  4/16 | 16/16 16/16 16/16 | false
+  CA1-DG                  |  6/16  6/16  6/16 | 16/16 16/16 16/16 | false
+  CA1-CA3                 | 11/16 11/16 11/16 | 16/16 16/16 16/16 | false
+  CA1-RSC                 | 16/16 16/16 16/16 | 16/16 16/16 16/16 | true
+  CA1-SUB                 | 10/16 10/16 10/16 | 16/16 16/16 16/16 | false
+  V1-RSC                  | 16/16 16/16 16/16 | 16/16 16/16 16/16 | true
+  RSC-SUB                 | 16/16 16/16 16/16 | 16/16 16/16 16/16 | true
+  CA3-DG                  | 12/16 12/16 12/16 | 16/16 16/16 16/16 | false
+
+=== done ===
