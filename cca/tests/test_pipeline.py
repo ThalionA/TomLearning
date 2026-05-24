@@ -1,0 +1,203 @@
+"""End-to-end tests for the per-(animal, pair) pipeline, on synthetic animals."""
+
+from __future__ import annotations
+
+import dataclasses
+
+import numpy as np
+
+from tom_cca import config, core, dataio, pipeline
+
+CFG = config.DEFAULT
+
+
+def synthetic_animal(
+    units_per_area: dict[str, int],
+    *,
+    shared_strength: float,
+    noise: float,
+    n_trials: int = 120,
+    n_bins: int = config.N_BINS,
+    n_shared: int = 3,
+    seed: int = 0,
+    fs_units: tuple[int, ...] = (),
+) -> dataio.Animal:
+    """An animal whose area residuals share ``n_shared`` latent dimensions.
+
+    Each unit = a fixed spatial tuning profile (removed by residualisation)
+    plus ``shared_strength`` x (shared latents) plus independent noise. With
+    ``shared_strength > 0`` the areas have genuine trial-to-trial communication;
+    with ``shared_strength == 0`` they do not.
+    """
+    rng = np.random.default_rng(seed)
+    n_units = sum(units_per_area.values())
+
+    profile = rng.standard_normal((1, n_bins, n_units)) * 2.0
+    activity = np.repeat(profile, n_trials, axis=0)
+
+    shared_latents = rng.standard_normal((n_trials, n_bins, n_shared))
+
+    masks = {a: np.zeros(n_units, dtype=bool) for a in config.AREAS}
+    start = 0
+    for area in config.AREAS:
+        count = units_per_area.get(area, 0)
+        if count and shared_strength > 0:
+            loadings = rng.standard_normal((n_shared, count))
+            activity[:, :, start : start + count] += shared_strength * (
+                shared_latents @ loadings
+            )
+        masks[area][start : start + count] = True
+        start += count
+    activity += noise * rng.standard_normal((n_trials, n_bins, n_units))
+
+    fs_mask = np.zeros(n_units, dtype=bool)
+    for u in fs_units:
+        fs_mask[u] = True
+
+    return dataio.Animal(
+        animal_id=1,
+        spatial_fr=activity,
+        area_masks=masks,
+        fs_mask=fs_mask,
+        n_trials=n_trials,
+    )
+
+
+LEARNER = dataio.CohortEntry(animal_id=1, role="learner", lp=42, raw_lp=42)
+
+
+def test_fit_pair_recovers_shared_communication():
+    animal = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0, noise=0.3)
+    fit = pipeline.fit_pair(animal, "CA1", "V1", LEARNER, CFG)
+    assert isinstance(fit, pipeline.PairFit)
+    assert set(fit.epochs) == set(config.EPOCH_NAMES)
+    for epoch in config.EPOCH_NAMES:
+        assert fit.epochs[epoch].held_out_r[0] > 0.6
+
+
+def test_fit_pair_no_communication_stays_near_zero():
+    animal = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=0.0, noise=1.0)
+    fit = pipeline.fit_pair(animal, "CA1", "V1", LEARNER, CFG)
+    assert isinstance(fit, pipeline.PairFit)
+    for epoch in config.EPOCH_NAMES:
+        assert abs(fit.epochs[epoch].held_out_r[0]) < 0.3
+        assert fit.epochs[epoch].in_sample_r[0] > fit.epochs[epoch].held_out_r[0]
+
+
+def test_fit_pair_skips_area_with_too_few_units():
+    animal = synthetic_animal(
+        {"CA1": 25, "V1": 25, "DG": 3}, shared_strength=1.0, noise=0.3
+    )
+    result = pipeline.fit_pair(animal, "CA1", "DG", LEARNER, CFG)
+    assert isinstance(result, pipeline.SkippedPair)
+    assert "too few units" in result.reason
+
+
+def test_fit_pair_skips_when_epochs_invalid():
+    animal = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0, noise=0.3)
+    too_early = dataio.CohortEntry(animal_id=1, role="learner", lp=5, raw_lp=5)
+    result = pipeline.fit_pair(animal, "CA1", "V1", too_early, CFG)
+    assert isinstance(result, pipeline.SkippedPair)
+    assert "no valid epochs" in result.reason
+
+
+def test_fit_pair_k_is_fixed_across_epochs():
+    animal = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0, noise=0.3)
+    fit = pipeline.fit_pair(animal, "CA1", "V1", LEARNER, CFG)
+    assert isinstance(fit, pipeline.PairFit)
+    ks = {cv.k for cv in fit.epochs.values()}
+    assert ks == {fit.k}
+
+
+def test_fit_pair_bin_count_agnostic_at_50_bins():
+    # The pipeline does not hard-code n_bins; a 50-bin fixture must work too.
+    animal = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0,
+                              noise=0.3, n_bins=50)
+    assert animal.n_bins == 50
+    fit = pipeline.fit_pair(animal, "CA1", "V1", LEARNER, CFG)
+    assert isinstance(fit, pipeline.PairFit)
+    for epoch in config.EPOCH_NAMES:
+        assert fit.epochs[epoch].n_samples == CFG.trials_per_epoch * 50
+
+
+def test_zscore_units_flag_runs_and_recovers_communication():
+    animal = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0, noise=0.3)
+    zcfg = dataclasses.replace(CFG, zscore_units=True)
+    fit = pipeline.fit_pair(animal, "CA1", "V1", LEARNER, zcfg)
+    assert isinstance(fit, pipeline.PairFit)
+    for epoch in config.EPOCH_NAMES:
+        assert fit.epochs[epoch].held_out_r[0] > 0.6
+
+
+def test_zscore_invariant_to_global_unit_rescaling():
+    base = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0, noise=0.3)
+    scaled = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0, noise=0.3)
+    scaled.spatial_fr[:, :, 0] *= 100.0
+    zcfg = dataclasses.replace(CFG, zscore_units=True, k_mode="fixed", k_fixed=10)
+    fit_base = pipeline.fit_pair(base, "CA1", "V1", LEARNER, zcfg)
+    fit_scaled = pipeline.fit_pair(scaled, "CA1", "V1", LEARNER, zcfg)
+    for epoch in config.EPOCH_NAMES:
+        assert np.allclose(fit_base.epochs[epoch].held_out_r,
+                           fit_scaled.epochs[epoch].held_out_r, atol=1e-8)
+
+
+def test_prepare_pair_partial_removes_third_area_mediated_coupling():
+    # All three areas share the SAME latents -- CA1-V1 coupling runs through DG.
+    # Partialling DG out should substantially reduce the CA1-V1 canonical
+    # correlation (not to zero -- DG is only a noisy proxy for the latent).
+    animal = synthetic_animal({"CA1": 25, "V1": 25, "DG": 25},
+                              shared_strength=1.0, noise=0.3)
+    plain = pipeline.prepare_pair(animal, "CA1", "V1", LEARNER, CFG)
+    part = pipeline.prepare_pair_partial(animal, "CA1", "V1", LEARNER, CFG)
+    assert isinstance(plain, pipeline.PreparedPair)
+    assert isinstance(part, pipeline.PreparedPair)
+    for epoch in config.EPOCH_NAMES:
+        plain_cc = core.cca_cv(plain.scores_x[epoch],
+                               plain.scores_y[epoch], CFG).held_out_r[0]
+        part_cc = core.cca_cv(part.scores_x[epoch],
+                              part.scores_y[epoch], CFG).held_out_r[0]
+        assert plain_cc > 0.6
+        assert plain_cc - part_cc > 0.2
+
+
+def test_prepare_pair_partial_skips_when_no_other_area():
+    animal = synthetic_animal({"CA1": 25, "V1": 25},
+                              shared_strength=1.0, noise=0.3)
+    result = pipeline.prepare_pair_partial(animal, "CA1", "V1", LEARNER, CFG)
+    assert isinstance(result, pipeline.SkippedPair)
+    assert "other area" in result.reason
+
+
+def test_prepare_pair_partial_returns_a_valid_prepared_pair():
+    animal = synthetic_animal({"CA1": 25, "V1": 25, "DG": 25},
+                              shared_strength=1.0, noise=0.3)
+    part = pipeline.prepare_pair_partial(animal, "CA1", "V1", LEARNER, CFG)
+    assert isinstance(part, pipeline.PreparedPair)
+    assert set(part.scores_x) == set(config.EPOCH_NAMES)
+    for epoch in config.EPOCH_NAMES:
+        assert part.scores_x[epoch].shape[2] == part.k
+        assert part.scores_y[epoch].shape[2] == part.k
+
+
+def test_zscore_normalisation_spans_whole_engaged_period():
+    base = synthetic_animal({"CA1": 25, "V1": 25}, shared_strength=1.0, noise=0.3)
+    expert_only = synthetic_animal({"CA1": 25, "V1": 25},
+                                   shared_strength=1.0, noise=0.3)
+    expert = np.arange(LEARNER.lp, LEARNER.lp + CFG.trials_per_epoch)
+    expert_only.spatial_fr[expert, :, 0] *= 50.0
+    zcfg = dataclasses.replace(CFG, zscore_units=True, k_mode="fixed", k_fixed=10)
+    fit_base = pipeline.fit_pair(base, "CA1", "V1", LEARNER, zcfg)
+    fit_expert = pipeline.fit_pair(expert_only, "CA1", "V1", LEARNER, zcfg)
+    assert not np.allclose(fit_base.epochs["naive"].held_out_r,
+                           fit_expert.epochs["naive"].held_out_r, atol=1e-6)
+
+
+def test_fs_exclusion_only_applies_in_fs_areas():
+    # FS-flagged units inside V1 (an FS area) are dropped; the same flag on a
+    # DG unit (not in FS_AREAS) is ignored -- the Tom convention.
+    a = synthetic_animal({"V1": 10, "DG": 10}, shared_strength=0.5, noise=0.3,
+                         fs_units=(2, 12))   # unit 2 in V1, unit 12 in DG
+    v1_kept = dataio.select_units(a, "V1", CFG)
+    dg_kept = dataio.select_units(a, "DG", CFG)
+    assert 2 not in v1_kept.tolist() and v1_kept.size == 9
+    assert 12 in dg_kept.tolist() and dg_kept.size == 10
