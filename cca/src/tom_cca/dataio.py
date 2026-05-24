@@ -44,7 +44,6 @@ class Animal:
     area_masks: dict[str, np.ndarray]    # area -> (n_units,) bool
     fs_mask: np.ndarray                  # (n_units,) bool -- raw FS flag
     n_trials: int
-    zscored_lick_errors: np.ndarray      # (n_trials_beh,) -- used to detect LP
     filename: str = ""
 
     @property
@@ -146,26 +145,7 @@ def _infer_animal_id(filename: str, fallback: int) -> int:
     return fallback
 
 
-def _zscored_lick_errors(behaviour_lookup: dict, animal_id: int,
-                         n_trials: int) -> np.ndarray:
-    """The cohort behaviour file's per-trial lick-error z-score, if available.
-
-    The Tom cohort file (``animal_behaviour.mat``) stores per-animal behaviour
-    summaries indexed by ``animal_id``. The pipeline only needs the per-trial
-    z-scored lick error for the in-Python LP-detection path; when the file
-    only carries a pre-computed ``period_experienced`` (the LP itself), the
-    detector is bypassed (see :func:`classify_cohort`). Returns an empty array
-    when no per-trial behaviour is available.
-    """
-    z = behaviour_lookup.get(("zscored_lick_errors", animal_id))
-    if z is None:
-        return np.zeros(0)
-    z = np.asarray(z, dtype=float).ravel()
-    return z[:n_trials] if n_trials else z
-
-
 def load_animal(path: str | Path, animal_id: int | None = None,
-                behaviour_lookup: dict | None = None,
                 spatial_field: str = "freq") -> Animal:
     """Load one ``TF*_export.mat`` file."""
     path = Path(path)
@@ -191,16 +171,12 @@ def load_animal(path: str | Path, animal_id: int | None = None,
     for row, label in enumerate(region_labels):
         if label in masks:
             masks[label] |= area_idx[row]
-    n_trials = spatial_fr.shape[0]
-    z = (_zscored_lick_errors(behaviour_lookup or {}, aid, n_trials)
-         if behaviour_lookup is not None else np.zeros(0))
     return Animal(
         animal_id=aid,
         spatial_fr=spatial_fr,
         area_masks=masks,
         fs_mask=fs_flag,
-        n_trials=n_trials,
-        zscored_lick_errors=z,
+        n_trials=spatial_fr.shape[0],
         filename=path.name,
     )
 
@@ -209,11 +185,9 @@ def load_animal(path: str | Path, animal_id: int | None = None,
 # Cohort loader (all TF*_export.mat in a directory)
 # ---------------------------------------------------------------------------
 def _read_behaviour_file(path: Path) -> dict:
-    """Read ``animal_behaviour.mat`` -- LP per animal + optional per-trial z.
+    """Read ``animal_behaviour.mat`` -- LP per animal.
 
-    Returns a flat lookup dict:
-      ('period_experienced', animal_id) -> int LP
-      ('zscored_lick_errors', animal_id) -> 1-D ndarray (only if present)
+    Returns a flat lookup dict ``('period_experienced', animal_id) -> int LP``.
     """
     lookup: dict = {}
     if not path.is_file():
@@ -272,12 +246,10 @@ def load_animals(data_dir: str | Path | None = None,
         raise FileNotFoundError(
             f"no {config.DATA_FILE_PATTERN} files in {data_dir}"
         )
-    behaviour_lookup = _read_behaviour_file(data_dir / config.LEARNING_FILE)
     animals: list[Animal] = []
     for i, path in enumerate(files, start=1):
         aid = _infer_animal_id(path.name, i)
         animals.append(load_animal(path, animal_id=aid,
-                                   behaviour_lookup=behaviour_lookup,
                                    spatial_field=spatial_field))
     return animals
 
@@ -285,24 +257,11 @@ def load_animals(data_dir: str | Path | None = None,
 # ---------------------------------------------------------------------------
 # Learning point + cohort classification
 # ---------------------------------------------------------------------------
-def find_learning_point(zscored_lick_errors: np.ndarray, cfg) -> int | None:
-    """Detect the learning point: the trial sustained learning begins from.
-
-    The learning point is the first trial ``t`` that is **itself** below
-    threshold (z-scored lick error <= ``lp_z_threshold``) *and* from which
-    performance is sustained -- the window ``[t, t + lp_window)`` contains at
-    least ``lp_min_consecutive`` below-threshold trials. Mirrors the
-    striatum pipeline's corrected rule.
-
-    Returns 1-indexed trial number, or None if no LP.
-    """
-    z = np.asarray(zscored_lick_errors, dtype=float).ravel()
-    below = z <= cfg.lp_z_threshold          # NaN -> False
-    w = cfg.lp_window
-    for t in range(len(z) - w + 1):
-        if below[t] and np.sum(below[t : t + w]) >= cfg.lp_min_consecutive:
-            return t + 1
-    return None
+# Learning points come entirely from Tom's cohort behaviour file
+# (``animal_behaviour.mat``; ``period_experienced(:, 1)`` indexed by
+# ``animal_id``). The user committed to "whatever LP Tom is giving" -- there is
+# no Python-side LP detection and no LP-criterion sweep. Animals without a
+# recorded LP are dropped from the cohort (committed: learners only).
 
 
 @dataclass
@@ -312,49 +271,32 @@ class CohortEntry:
     animal_id: int
     role: str             # "learner" | "nonlearner"
     lp: int               # learning point used for epochs (real or yoked)
-    raw_lp: int | None    # detected/recorded LP, or None
+    raw_lp: int | None    # recorded LP from Tom's file, or None
 
 
-def _per_animal_lp(animal: Animal, behaviour_lookup: dict, cfg) -> int | None:
-    """Per-animal LP: prefer the cohort file value, fall back to detection."""
-    if behaviour_lookup is not None:
-        recorded = behaviour_lookup.get(("period_experienced", animal.animal_id))
-        if recorded is not None:
-            return recorded
-    if animal.zscored_lick_errors.size:
-        return find_learning_point(animal.zscored_lick_errors, cfg)
-    return None
+def _per_animal_lp(animal: Animal, behaviour_lookup: dict | None) -> int | None:
+    """The LP Tom's cohort file records for this animal, or None."""
+    if behaviour_lookup is None:
+        return None
+    return behaviour_lookup.get(("period_experienced", animal.animal_id))
 
 
 def classify_cohort(animals: list[Animal], cfg,
                     behaviour_lookup: dict | None = None
-                    ) -> tuple[dict[int, CohortEntry], int]:
-    """Split the cohort into learners and yoked non-learners.
+                    ) -> dict[int, CohortEntry]:
+    """Return the LEARNER subset, keyed by ``animal_id``.
 
-    A learner has a known learning point (from the cohort behaviour file or
-    detected on the per-trial lick-error trace) and is not in
-    ``cfg.manual_nonlearners``. Non-learners receive the cohort-mean ("yoked")
-    learning point so their early/mid/late trial windows remain analysable.
-
-    Returns ``(entries, yoked_lp)`` keyed by ``animal_id``.
+    A learner has a recorded LP in Tom's cohort behaviour file and is not in
+    ``cfg.manual_nonlearners``. Animals without a recorded LP are dropped
+    (committed: "only work with the learners" -- no yoked non-learner branch).
     """
-    raw = {a.animal_id: _per_animal_lp(a, behaviour_lookup, cfg) for a in animals}
-    learner_ids = [
-        aid for aid, lp in raw.items()
-        if lp is not None and aid not in cfg.manual_nonlearners
-    ]
-    learner_lps = [raw[aid] for aid in learner_ids]
-    yoked_lp = int(round(float(np.mean(learner_lps)))) if learner_lps else 0
-
     entries: dict[int, CohortEntry] = {}
     for a in animals:
-        aid = a.animal_id
-        lp = raw[aid]
-        if aid in learner_ids:
-            entries[aid] = CohortEntry(aid, "learner", lp, lp)
-        else:
-            entries[aid] = CohortEntry(aid, "nonlearner", yoked_lp, lp)
-    return entries, yoked_lp
+        lp = _per_animal_lp(a, behaviour_lookup)
+        if lp is None or a.animal_id in cfg.manual_nonlearners:
+            continue
+        entries[a.animal_id] = CohortEntry(a.animal_id, "learner", lp, lp)
+    return entries
 
 
 # ---------------------------------------------------------------------------

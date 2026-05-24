@@ -1,8 +1,7 @@
 """Tests for the Tom dataio module.
 
 Two layers:
-1. Unit tests for the LP-detection / cohort / epoch logic that don't touch
-   .mat files.
+1. Unit tests for the cohort / epoch logic that don't touch .mat files.
 2. Round-trip tests that write a synthetic ``TF*_export.mat`` (and a matching
    ``animal_behaviour.mat``) to a tmp directory, load it with
    :func:`tom_cca.dataio.load_animal`, and check the in-memory layout.
@@ -24,7 +23,7 @@ CFG = config.DEFAULT
 # ---------------------------------------------------------------------------
 # Synthetic animal (in-memory)
 # ---------------------------------------------------------------------------
-def make_animal(animal_id, n_trials, units_per_area, z, fs_units=()):
+def make_animal(animal_id, n_trials, units_per_area, fs_units=()):
     """Build an Animal directly (no .mat round-trip)."""
     n_units = sum(units_per_area.values())
     rng = np.random.default_rng(animal_id)
@@ -44,82 +43,57 @@ def make_animal(animal_id, n_trials, units_per_area, z, fs_units=()):
         area_masks=masks,
         fs_mask=fs_mask,
         n_trials=n_trials,
-        zscored_lick_errors=np.asarray(z, dtype=float),
     )
 
 
 # ---------------------------------------------------------------------------
-# Learning point detection
+# Cohort classification -- learners only, LP from Tom's behaviour file
 # ---------------------------------------------------------------------------
-def test_find_learning_point_is_first_sustained_below_trial():
-    z = np.concatenate([np.zeros(30), np.full(40, -3.0)])
-    assert dataio.find_learning_point(z, CFG) == 31
-
-
-def test_find_learning_point_skips_above_threshold_window_start():
-    z = np.concatenate([np.zeros(30), [1.0], np.full(40, -3.0)])
-    lp = dataio.find_learning_point(z, CFG)
-    assert lp == 32
-    assert z[lp - 1] <= CFG.lp_z_threshold
-
-
-def test_find_learning_point_returns_none_when_never_learned():
-    z = np.full(80, 1.0)
-    assert dataio.find_learning_point(z, CFG) is None
-
-
-def test_find_learning_point_needs_enough_within_window():
-    z = np.tile([-3, -3, -3, -3, -3, -3, 1, 1, 1, 1], 8).astype(float)
-    assert dataio.find_learning_point(z, CFG) is None
-
-
-# ---------------------------------------------------------------------------
-# Cohort classification
-# ---------------------------------------------------------------------------
-def test_classify_cohort_splits_learners_and_yokes_nonlearners():
-    learner_a = make_animal(1, 130, {"CA1": 10}, np.zeros(120))
-    learner_b = make_animal(2, 130, {"CA1": 10}, np.zeros(120))
-    non_learner = make_animal(3, 130, {"CA1": 10}, np.zeros(120))
+def test_classify_cohort_returns_only_learners_with_recorded_lp():
+    a1 = make_animal(1, 130, {"CA1": 10})
+    a2 = make_animal(2, 130, {"CA1": 10})
+    a3 = make_animal(3, 130, {"CA1": 10})
+    # Animal 3 has no recorded LP -- dropped (no yoking).
     behaviour = {
         ("period_experienced", 1): 40,
         ("period_experienced", 2): 60,
         ("period_experienced", 3): None,
     }
-    entries, yoked = dataio.classify_cohort(
-        [learner_a, learner_b, non_learner], CFG, behaviour
-    )
+    entries = dataio.classify_cohort([a1, a2, a3], CFG, behaviour)
+    assert set(entries) == {1, 2}
     assert entries[1].role == "learner" and entries[1].lp == 40
     assert entries[2].role == "learner" and entries[2].lp == 60
-    assert entries[3].role == "nonlearner"
-    assert yoked == 50
-    assert entries[3].lp == 50
 
 
-def test_classify_cohort_falls_back_to_per_trial_detection():
-    z = np.concatenate([np.zeros(39), np.full(80, -3.0)])
-    a = make_animal(1, 130, {"CA1": 10}, z)
-    entries, _ = dataio.classify_cohort([a], CFG, behaviour_lookup={})
-    assert entries[1].role == "learner"
-    assert entries[1].lp == 40
+def test_classify_cohort_drops_animals_without_any_recorded_lp():
+    a = make_animal(1, 100, {"CA1": 10})
+    # No behaviour entry at all -> not a learner.
+    entries = dataio.classify_cohort([a], CFG, behaviour_lookup={})
+    assert entries == {}
+
+
+def test_classify_cohort_drops_when_behaviour_file_missing():
+    a = make_animal(1, 100, {"CA1": 10})
+    entries = dataio.classify_cohort([a], CFG, behaviour_lookup=None)
+    assert entries == {}
 
 
 def test_classify_cohort_honours_manual_nonlearners():
-    a = make_animal(7, 130, {"CA1": 10}, np.zeros(120))
-    other = make_animal(1, 130, {"CA1": 10}, np.zeros(120))
+    a = make_animal(7, 130, {"CA1": 10})
+    other = make_animal(1, 130, {"CA1": 10})
     cfg = dataclasses.replace(CFG, manual_nonlearners=frozenset({7}))
     behaviour = {("period_experienced", 7): 30, ("period_experienced", 1): 50}
-    entries, yoked = dataio.classify_cohort([a, other], cfg, behaviour)
-    assert entries[7].role == "nonlearner"
-    assert entries[7].raw_lp == 30
-    assert yoked == 50
-    assert entries[7].lp == 50
+    entries = dataio.classify_cohort([a, other], cfg, behaviour)
+    # Animal 7 is forced out even though it has a recorded LP.
+    assert set(entries) == {1}
+    assert entries[1].lp == 50
 
 
 # ---------------------------------------------------------------------------
 # Usable trials / epoch windows
 # ---------------------------------------------------------------------------
 def test_n_usable_trials_uses_full_trial_count():
-    a = make_animal(1, 90, {"CA1": 5}, np.zeros(90))
+    a = make_animal(1, 90, {"CA1": 5})
     assert dataio.n_usable_trials(a) == 90
 
 
@@ -152,22 +126,32 @@ def test_epoch_windows_reject_when_expert_exceeds_trials():
 # ---------------------------------------------------------------------------
 def test_select_units_excludes_fast_spiking_in_fs_areas_only():
     # FS flag on unit 2 (V1 -> FS area, dropped) and unit 12 (DG -> kept).
-    a = make_animal(1, 60, {"V1": 10, "DG": 10}, np.zeros(60), fs_units=(2, 12))
+    a = make_animal(1, 60, {"V1": 10, "DG": 10}, fs_units=(2, 12))
     assert 2 not in dataio.select_units(a, "V1", CFG).tolist()
     assert 12 in dataio.select_units(a, "DG", CFG).tolist()
 
 
 def test_select_units_keeps_fast_spiking_when_disabled():
-    a = make_animal(1, 60, {"V1": 10}, np.zeros(60), fs_units=(3,))
+    a = make_animal(1, 60, {"V1": 10}, fs_units=(3,))
     cfg = dataclasses.replace(CFG, exclude_fast_spiking=False)
     assert dataio.select_units(a, "V1", cfg).size == 10
 
 
 def test_area_tensor_shape_and_truncation():
-    a = make_animal(1, 80, {"V1": 12, "DG": 8}, np.zeros(80), fs_units=(0,))
+    a = make_animal(1, 80, {"V1": 12, "DG": 8}, fs_units=(0,))
     tensor, idx = dataio.area_tensor(a, "V1", CFG)
     assert tensor.shape == (80, config.N_BINS, 11)
     assert idx.size == 11
+
+
+# ---------------------------------------------------------------------------
+# Committed defaults the user pinned
+# ---------------------------------------------------------------------------
+def test_committed_defaults():
+    assert CFG.zscore_units is True
+    assert CFG.min_units == 5
+    assert CFG.exclude_fast_spiking is True
+    assert not hasattr(CFG, "lp_min_consecutive")     # LP detection removed
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +221,7 @@ def test_load_animal_round_trip(tmp_path):
     _write_tom_mat(path, n_units=n_units, n_trials=n_trials, n_bins=n_bins,
                    region_for_unit=regions, fs_units=(2, 11))
 
-    a = dataio.load_animal(path, behaviour_lookup={})
+    a = dataio.load_animal(path)
     assert a.animal_id == 3
     assert a.n_trials == n_trials
     assert a.n_units == n_units
@@ -250,7 +234,7 @@ def test_load_animal_round_trip(tmp_path):
     assert dataio.select_units(a, "V1", CFG).size == 9       # unit 11 dropped
 
 
-def test_load_animals_uses_behaviour_lookup_for_lp(tmp_path):
+def test_load_animals_with_behaviour_uses_recorded_lp(tmp_path):
     for i in (1, 2, 3):
         _write_tom_mat(tmp_path / f"TF{i:02d}_export.mat", n_units=10,
                        n_trials=80, n_bins=config.N_BINS,
@@ -260,11 +244,11 @@ def test_load_animals_uses_behaviour_lookup_for_lp(tmp_path):
 
     animals = dataio.load_animals(tmp_path)
     behaviour = dataio._read_behaviour_file(tmp_path / config.LEARNING_FILE)
-    entries, yoked = dataio.classify_cohort(animals, CFG, behaviour)
+    entries = dataio.classify_cohort(animals, CFG, behaviour)
+    assert set(entries) == {1, 2, 3}
     assert entries[1].lp == 35
     assert entries[2].lp == 45
     assert entries[3].lp == 55
-    assert yoked == 45
 
 
 def test_load_animal_missing_file_raises(tmp_path):

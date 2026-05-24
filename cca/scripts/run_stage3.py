@@ -56,10 +56,12 @@ def main() -> None:
 
 
 def run_variant(animals, behaviour, cfg, tag: str) -> None:
-    entries, _ = dataio.classify_cohort(animals, cfg, behaviour)
+    entries = dataio.classify_cohort(animals, cfg, behaviour)
     results: list[stage3.PairSubspace] = []
     t0 = time.time()
     for animal in animals:
+        if animal.animal_id not in entries:        # learners only
+            continue
         entry = entries[animal.animal_id]
         for area_x, area_y in config.PAIRS:
             prepared = pipeline.prepare_pair(animal, area_x, area_y, entry, cfg)

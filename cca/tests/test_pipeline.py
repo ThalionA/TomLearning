@@ -60,7 +60,6 @@ def synthetic_animal(
         area_masks=masks,
         fs_mask=fs_mask,
         n_trials=n_trials,
-        zscored_lick_errors=np.zeros(n_trials),
     )
 
 

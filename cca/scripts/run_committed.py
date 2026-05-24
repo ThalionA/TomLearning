@@ -112,9 +112,11 @@ def main():
         (Path(args.data_dir) if args.data_dir else config.DATA_DIR)
         / config.LEARNING_FILE
     )
-    entries, _ = dataio.classify_cohort(animals, cfg, behaviour)
+    entries = dataio.classify_cohort(animals, cfg, behaviour)
     prepared, skipped = [], []
     for a in animals:
+        if a.animal_id not in entries:        # learners only
+            continue
         entry = entries[a.animal_id]
         for ax, ay in config.PAIRS:
             r = prep_fn(a, ax, ay, entry, cfg)

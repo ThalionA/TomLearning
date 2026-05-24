@@ -1,10 +1,10 @@
-"""Partial CCA -- committed config, all 10 pairs, conditioned on the rest.
+"""Partial CCA -- committed config, all 8 pairs, conditioned on the rest.
 
-For every animal, prepares all five areas; for each pair X-Y it compares the
-plain held-out CC1 with the partial held-out CC1 after regressing *every other
-area the animal recorded* (concatenated) out of both X and Y. A large
-plain->partial drop means the pair's apparent coupling is largely carried by
-the other areas; little drop means the coupling is direct.
+For every learner animal, prepares every recorded area; for each pair X-Y it
+compares the plain held-out CC1 with the partial held-out CC1 after regressing
+*every other area the animal recorded* (concatenated) out of both X and Y. A
+large plain->partial drop means the pair's apparent coupling is largely
+carried by the other areas; little drop means the coupling is direct.
 
 The conditioning set is whatever other areas that animal has -- its size
 varies by animal and is recorded per cell (`n_control`). Cells need at least
@@ -85,23 +85,25 @@ def main():
     cfg = config.DEFAULT
 
     animals = dataio.load_animals()
-    entries, _ = dataio.classify_cohort(animals, cfg)
+    behaviour = dataio._read_behaviour_file(config.DATA_DIR / config.LEARNING_FILE)
+    entries = dataio.classify_cohort(animals, cfg, behaviour)
+    learner_animals = [a for a in animals if a.animal_id in entries]
 
     rows, done = [], set()
     if OUT.exists() and not args.fresh:
         with open(OUT, "rb") as fh:
             blob = pickle.load(fh)
         rows, done = blob["rows"], set(blob.get("done", []))
-    todo = [a for a in animals if a.animal_id not in done]
-    print(f"partial CCA (committed config); {len(done)}/{len(animals)} "
-          f"animals done, {len(todo)} to do.")
+    todo = [a for a in learner_animals if a.animal_id not in done]
+    print(f"partial CCA (committed config); {len(done)}/{len(learner_animals)} "
+          f"learner animals done, {len(todo)} to do.")
 
     for animal in todo:
         rows.extend(animal_rows(animal, entries[animal.animal_id], cfg))
         done.add(animal.animal_id)
         _save(rows, done)
         print(f"  animal {animal.animal_id} done "
-              f"({len(done)}/{len(animals)}); {len(rows)} cells total")
+              f"({len(done)}/{len(learner_animals)}); {len(rows)} cells total")
         if deadline is not None and time.time() > deadline:
             print("  stopped at deadline -- re-run to resume")
             return

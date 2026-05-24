@@ -1,6 +1,7 @@
 # Tom-learning CCA -- Shared Understanding
 
-Status: **scaffolded, awaiting first cohort run**
+Status: **scaffolded; commit pass 1 done (z, min_units, LP, learners-only,
+IFI window); awaiting first cohort run**
 Last updated: 2026-05-24
 
 ---
@@ -59,11 +60,12 @@ Per-epoch sample budget: 10 trials x 200 bins = **2000 samples**.
 These map onto the striatum decisions (D1-D12 in
 `Striatum project/cca/UNDERSTANDING.md`); divergences are flagged.
 
-**D1 -- Pair scope.** All eight Tom pairs. The cohort splits into learners (a
-learning point exists -- either recorded in ``animal_behaviour.mat`` or detected
-from a per-trial lick-error trace) and yoked non-learners (the cohort-mean LP).
-No tiering -- group inference is per-pair across whatever learner animals carry
-enough units. (Cohort sizes per pair will be reported after the first run.)
+**D1 -- Pair scope: learners only.** All eight Tom pairs, learner animals
+only. A learner is an animal with a learning point recorded in
+``animal_behaviour.mat`` (``period_experienced(:, 1)`` indexed by
+``animal_id``). Animals without a recorded LP are dropped from the cohort
+entirely -- no yoked non-learner branch. (User commit pass 1: "Only work
+with the learners.")
 
 **D2 -- "Communication" definition: residuals primary.** Subtract each unit's
 per-bin trial-mean (within epoch) -> CCA on the trial-to-trial residual
@@ -114,45 +116,53 @@ striatum work, and Tom's per-epoch budget is similar).
 **D12 -- Delivery.** Same staging as striatum: design doc -> full pipeline
 (TDD, 109 synthetic-ground-truth tests pass) -> staged check-ins -> writeup.
 
+### User-pinned defaults (NOT on the sweep grid)
+
+User commit pass 1 (2026-05-24) -- the following are fixed by instruction:
+
+* **FS exclusion: FIXED ON.** ``units.idx_fs`` applied only to
+  ``V1/RSC/CA1/CA3`` (Tom's MATLAB convention).
+* **Bin width: FIXED at 200 bins** (Tom's native 2.5 cm).
+* **z-scoring: FIXED ON.** Each unit divided by its std over the entire
+  engaged period, before epoch slicing.
+* **min_units: FIXED at 5** units per area.
+* **Learning point: from Tom's ``animal_behaviour.mat`` only.** No
+  Python-side LP detection, no ``lp_min_consecutive`` sweep.
+* **Cohort: learners only.** No yoked non-learners.
+
 ### Self-made decisions
 
-* **FS exclusion: FIXED.** The user said "Exclude fs". FS exclusion uses
-  ``units.idx_fs`` and is applied only to ``V1/RSC/CA1/CA3`` (Tom's MATLAB
-  convention). This axis is **not on the sweep grid**.
-* **Bin width: FIXED at 200 bins.** Per the user's instruction. Not on the
-  sweep grid.
-* **min_units = 6** (committed default; sweep covers 4/6/10).
 * **Epochs:** naive = trials 1..10; intermediate = (lp-9)..lp;
   expert = (lp+1)..(lp+10).
-* **Learning point rule:** prefer the cohort file's recorded
-  ``period_experienced(:, 1)``; fall back to per-trial detection
-  (z <= -2, window 10, >= ``lp_min_consecutive`` within window;
-  ``lp_min_consecutive`` default 7, sweep 7/8).
 * **manual_nonlearners:** empty for Tom -- no animal-8 analogue is known.
   Set ``cfg.manual_nonlearners`` if a known LP-detection artefact appears.
-* **Spatial firing source:** ``analysis_spatial.firing.cued.freq`` (raw Hz),
-  so the pipeline's own ``zscore_units`` axis is meaningful. The pre-z-scored
-  ``freq_z`` can be selected via ``cfg.spatial_field = "freq_z"`` for parity
-  with Tom's MATLAB scripts.
+* **Spatial firing source:** ``analysis_spatial.firing.cued.freq`` (raw Hz).
+  ``freq_z`` (pre-z-scored) can be selected via
+  ``cfg.spatial_field = "freq_z"`` for parity with Tom's MATLAB scripts.
 
 ---
 
 ## 4. Sweep grid
 
-``tom_cca.sweep.build_sweep("spatial")`` (see `src/tom_cca/sweep.py`):
+After commit pass 1, ``tom_cca.sweep.build_sweep("spatial")``
+(see `src/tom_cca/sweep.py`):
 
 | axis           | values |
 |----------------|--------|
 | CCA type       | residual / signal |
-| z-scoring      | on / off |
-| min units      | 4 / 6 / 10 |
-| LP criterion   | 7 / 8 consecutive |
 | PC-count rule  | samples 15/25/40, fixed 3/5/10/20/30, variance 75/85/95 % |
+| IFI lag window | 5 / 10 / 20 bins  (+/-12.5 / 25 / 50 cm) |
 
-Total: 2 x 2 x 3 x 2 x 11 = **264 configs**.
+Total: 2 x 11 x 3 = **66 configs**. The tag format is
+``{cca}_{krule}_lag{NN}`` (e.g. ``res_samp15_lag10`` is the committed default).
 
-Bin width (fixed 200) and FS (fixed-excluded) are *not* on the grid, per the
-user's instruction.
+The IFI is reported at every *sub*-window of its scan, so every config
+implicitly carries IFI at all of ``1..max_lag_bins`` -- the sweep axis
+controls the maximum scan range and the lag-curve resolution.
+
+Bin width (fixed 200), FS (fixed-excluded), z-scoring (fixed on), min-units
+(fixed 5) and LP criterion (use Tom's recorded LP) are not on the grid, per
+the user's commits.
 
 ---
 
@@ -175,10 +185,11 @@ user's instruction.
    data lives in ``HC_V1_data/`` per Tom's MATLAB scripts; ``run_stage2.py``
    accepts ``--data-dir`` to override the default location.
 2. **Per-pair learner counts** are unknown until the first cohort run.
-3. **Committed config for Tom** is set to the striatum committed config minus
-   the bin / FS axes -- residual CCA, z-scoring on, min_units 6, LP-7,
-   samples_per_pc=15, n_shuffles=200 (``config.DEFAULT``). May need revising
-   in light of the cohort-level results.
+3. **Committed config for Tom** (``config.DEFAULT``) after commit pass 1:
+   residual CCA, z-scoring on, ``min_units = 5``, ``samples_per_pc = 15``,
+   ``max_lag_bins = 10``, ``n_shuffles = 200``, learners only, LP from
+   ``animal_behaviour.mat``. May need revising in light of the cohort-level
+   results.
 
 ---
 

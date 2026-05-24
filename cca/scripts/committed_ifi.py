@@ -31,10 +31,11 @@ from scipy import stats  # noqa: E402
 from tom_cca import config  # noqa: E402
 
 ALPHA = 0.05
-# config.DEFAULT, FS-excluded -- the committed config's Stage-2 result. The
-# Tom sweep tags omit the bin-width and FS axes (both fixed for Tom -- see
-# tom_cca/sweep.py), so the committed tag is shorter than the striatum one.
-COMMITTED_TAG = "res_z1_mu06_lp7_samp15"
+# config.DEFAULT, FS-excluded, learners-only -- the committed config's Stage-2
+# result. After the user's commits (z fixed-on, min_units fixed at 5, LP from
+# Tom's file, FS fixed-excluded, 200 bins) the Tom sweep tags carry only the
+# CCA-type, PC-rule and IFI lag-window axes (see tom_cca/sweep.py).
+COMMITTED_TAG = f"res_samp15_lag{config.DEFAULT.max_lag_bins:02d}"
 PAIR_NAMES = [f"{ax}-{ay}" for ax, ay in config.PAIRS]
 # One example pair to dump per-window numbers for in the terminal log.
 EXAMPLE_PAIR = "CA1-V1"

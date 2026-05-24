@@ -59,12 +59,12 @@ def _key(obj):
     return (obj.animal_id, obj.area_x, obj.area_y)
 
 
-def _save(path, done, skipped, cfg, yoked):
+def _save(path, done, skipped, cfg):
     """Atomic pickle write -- a kill mid-write cannot corrupt the resume file."""
     tmp = path.with_suffix(".tmp")
     with open(tmp, "wb") as fh:
         pickle.dump({"results": list(done.values()), "skipped": skipped,
-                     "cfg": cfg, "yoked_lp": yoked}, fh)
+                     "cfg": cfg}, fh)
     os.replace(tmp, path)
 
 
@@ -89,8 +89,8 @@ def main() -> None:
             n_done += 1
             continue
         cfg = dataclasses.replace(cfg, n_shuffles=args.shuffles)
-        entries, yoked = dataio.classify_cohort(animals, cfg, behaviour)
-        if run_config(animals, entries, yoked, cfg, tag, args, deadline):
+        entries = dataio.classify_cohort(animals, cfg, behaviour)
+        if run_config(animals, entries, cfg, tag, args, deadline):
             n_done += 1
         if deadline is not None and time.time() > deadline:
             break
@@ -100,11 +100,13 @@ def main() -> None:
           + ("SWEEP COMPLETE." if done else "re-run to resume."))
 
 
-def run_config(animals, entries, yoked, cfg, tag: str, args, deadline) -> bool:
+def run_config(animals, entries, cfg, tag: str, args, deadline) -> bool:
     """Prepare, analyse and save one configuration. Returns True if complete."""
     print(f"=== config '{tag}' ({pipeline.config_label(cfg)}) ===")
     prepared, skipped = [], []
     for animal in animals:
+        if animal.animal_id not in entries:        # learners only
+            continue
         entry = entries[animal.animal_id]
         for area_x, area_y in config.PAIRS:
             result = pipeline.prepare_pair(animal, area_x, area_y, entry, cfg)
@@ -129,13 +131,13 @@ def run_config(animals, entries, yoked, cfg, tag: str, args, deadline) -> bool:
             for i, res in enumerate(pool.imap_unordered(worker, todo), start=1):
                 done[_key(res)] = res
                 if i % 6 == 0:
-                    _save(out_path, done, skipped, cfg, yoked)
+                    _save(out_path, done, skipped, cfg)
                     print(f"    {len(done)}/{len(prepared)} "
                           f"({time.time() - t0:.0f}s)")
                 if deadline is not None and time.time() > deadline:
                     paused = True
                     break
-        _save(out_path, done, skipped, cfg, yoked)
+        _save(out_path, done, skipped, cfg)
         print(f"  {'paused' if paused else 'saved'} {out_path.name} "
               f"({time.time() - t0:.0f}s)")
 

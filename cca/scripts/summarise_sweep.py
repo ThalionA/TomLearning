@@ -79,15 +79,13 @@ def _krule_label(cfg) -> str:
 
 
 def cfg_params(cfg) -> dict:
-    # Bin width and FS are fixed for Tom (no sweep axis) -- omitted from the
-    # parameter table to keep the long-format CSV from being padded with a
-    # constant column.
+    # Bin width, FS, z-scoring, min-units and LP-criterion are all fixed for
+    # Tom (no sweep axis). The remaining swept knobs are CCA type, PC-count
+    # rule and the IFI lag-scan window.
     return {
         "cca": "residual" if cfg.subtract_trial_mean else "signal",
-        "z": "on" if cfg.zscore_units else "off",
         "k_rule": _krule_label(cfg),
-        "min_units": cfg.min_units,
-        "lp_consec": cfg.lp_min_consecutive,
+        "max_lag": cfg.max_lag_bins,
     }
 
 
@@ -148,7 +146,7 @@ METRIC_COLS = (["n_learn", "n_dims_naive", "n_dims_expert", "cc_naive",
                 "cc_expert", "d_cc", "p_naive_vs_expert", "angle_ne",
                 "sh_floor", "angle_minus_floor", "gini_naive", "gini_expert"]
                + IFI_KEYS + P_IFI_KEYS)
-PARAM_COLS = ["tag", "cca", "z", "k_rule", "min_units", "lp_consec", "pair"]
+PARAM_COLS = ["tag", "cca", "k_rule", "max_lag", "pair"]
 LONG_COLS = PARAM_COLS + METRIC_COLS
 P_COLS = ["p_naive_vs_expert"] + P_IFI_KEYS
 

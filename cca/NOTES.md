@@ -85,6 +85,56 @@ TomLearning repo; the data files are not in the container, so this round is
   way `Striatum project/cca/RESULTS.md` was. The current writeup is
   ``UNDERSTANDING.md`` -- the design + decisions; this file is the work log.
 
+---
+
+## 2026-05-24 -- commit pass 1: z, min_units, LP, learners-only, IFI window
+
+Theo's three commits (single message): "commit to z-scoring. commit to 5 min
+units. commit to whatever learning point tom is giving" -- followed by "Only
+work with the learners. Another parameter is the window for IFI."
+
+### What changed
+
+* ``config.Config`` -- ``min_units`` 6 -> 5; ``zscore_units`` stays True; the
+  LP-detection params (``lp_z_threshold``, ``lp_window``,
+  ``lp_min_consecutive``) are deleted.
+* ``dataio`` -- ``find_learning_point`` deleted; ``classify_cohort`` simplified
+  to return a single dict of LEARNER ``CohortEntry`` (no yoked non-learners;
+  no fallback detection). LP comes only from ``animal_behaviour.mat``.
+  ``Animal.zscored_lick_errors`` removed (no longer needed).
+  ``_read_behaviour_file`` no longer extracts the optional per-trial z trace.
+* ``sweep`` -- axes pared back to **CCA type x PC-count rule x IFI lag
+  window**:
+    - AXIS_Z, AXIS_MIN_UNITS, AXIS_LP all removed
+    - AXIS_LAG = (5, 10, 20) bins added -- +/-12.5 / 25 / 50 cm scan
+  Grid is now **66 configs** (was 264). Tag is ``{cca}_{krule}_lag{NN}``.
+* Runner scripts -- ``run_committed``, ``run_stage2``, ``run_stage3``,
+  ``run_partial`` all updated for the new ``classify_cohort`` return type and
+  filter ``animal.animal_id not in entries`` to skip non-learners.
+* ``summarise_sweep`` -- ``PARAM_COLS`` reduced to ``["tag", "cca", "k_rule",
+  "max_lag", "pair"]``; ``cfg_params`` drops the constant z / min_units /
+  lp_consec columns and gains ``max_lag``.
+* ``committed_ifi`` -- ``COMMITTED_TAG`` updated to
+  ``res_samp15_lag{max_lag_bins:02d}`` (derived from ``config.DEFAULT``).
+* ``test_dataio`` -- LP-detection tests deleted; cohort-classification tests
+  rewritten for the learners-only contract; new
+  ``test_committed_defaults`` pins z=True, min_units=5, FS-excluded, and
+  asserts the LP-detection knobs are gone.
+* ``test_pipeline`` -- ``synthetic_animal`` builder drops the
+  ``zscored_lick_errors`` field.
+* All 107 tests pass (down from 109 after removing the four obsolete
+  LP-detection tests + adding the new committed-defaults check). ruff clean.
+
+### IFI window note
+
+The IFI is computed for every sub-window of the lag scan in one fit (via
+``lagged.ifi_by_window``), so a config with ``max_lag_bins=10`` already
+carries IFI at all of ``w = 1..10``. Sweeping ``max_lag_bins`` therefore
+varies the *maximum* scan range (and the lag-curve resolution / peak-lag
+detection range), not the IFI at any fixed sub-window. The per-pair x
+per-config IFI summary in ``summarise_sweep`` reports the IFI at every
+sub-window of each config's scan, so the user sees both axes.
+
 ### Pending / blockers
 
 * The data directory ``TomLearning/HC_V1_data/`` is empty (only a

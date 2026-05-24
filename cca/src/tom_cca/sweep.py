@@ -1,29 +1,27 @@
 """Parameter sweep for the Tom-learning CCA pipeline.
 
-The user's brief:
+The user's commitments (NOT on the sweep grid):
 
 * spatial analysis only -- no temporal axis;
 * Tom's eight hard-coded pairs;
-* FS-excluded is fixed (not on the sweep grid);
-* bin width is fixed at 200 bins (Tom's native preprocessing -- no rebin);
-* sweep every other knob -- residual/signal CCA, z-scoring on/off, min-units,
-  LP criterion, PC-count rule.
+* FS-excluded fixed;
+* bin width fixed at 200 bins (Tom's native preprocessing);
+* z-scoring fixed ON;
+* min_units fixed at 5;
+* learning point taken from Tom's ``animal_behaviour.mat`` (no LP-criterion
+  sweep, no Python-side LP detection);
+* learners only.
 
-That leaves the following axes (compared to the striatum sweep we have
-dropped ``AXIS_BINS`` and ``AXIS_FS``):
+Swept axes:
 
-    CCA type        x  AXIS_CCA       (residual / signal)
-    z-scoring       x  AXIS_Z         (on / off)
-    min units       x  AXIS_MIN_UNITS (4 / 6 / 10)
-    LP criterion    x  AXIS_LP        (7 / 8 consecutive)
-    PC-count rule   x  AXIS_KRULE     (samples 15/25/40, fixed 3/5/10/20/30,
-                                       variance 75/85/95 %)
+    CCA type        x  AXIS_CCA   (residual / signal)
+    PC-count rule   x  AXIS_KRULE (samples 15/25/40, fixed 3/5/10/20/30,
+                                   variance 75/85/95 %)
+    IFI lag window  x  AXIS_LAG   (5 / 10 / 20 bins  ==  +/-12.5 / 25 / 50 cm)
 
-Total = 2 * 2 * 3 * 2 * 11 = 264 configs.
+Total = 2 * 11 * 3 = 66 configs.
 
-``build_sweep(name)`` returns a list of ``(tag, cfg)`` pairs. Defined in one
-place so run_stage2.py, run_stage3.py and summarise_sweep.py all see the same
-grid.
+``build_sweep(name)`` returns a list of ``(tag, cfg)`` pairs.
 """
 
 from __future__ import annotations
@@ -32,12 +30,8 @@ import dataclasses
 
 from . import config
 
-
 # --- sweep axes (edit to trim the grid) -------------------------------------
 AXIS_CCA = ((True, "res"), (False, "sig"))
-AXIS_Z = ((True, "z1"), (False, "z0"))
-AXIS_MIN_UNITS = (4, 6, 10)
-AXIS_LP = (7, 8)
 AXIS_KRULE = (
     ("samp15", {"k_mode": "samples", "samples_per_pc": 15}),
     ("samp25", {"k_mode": "samples", "samples_per_pc": 25}),
@@ -51,33 +45,33 @@ AXIS_KRULE = (
     ("var85", {"k_mode": "variance", "k_variance": 0.85}),
     ("var95", {"k_mode": "variance", "k_variance": 0.95}),
 )
+# IFI lag-scan window in bins. 2.5 cm/bin: +/-5 = +/-12.5 cm, +/-10 = +/-25 cm,
+# +/-20 = +/-50 cm. The IFI is reported at every sub-window of the scan via
+# ``analysis.EpochAnalysis.ifi_windows`` (shape (n_dims, max_lag_bins)), so
+# every sweep config implicitly carries all sub-windows of its scan.
+AXIS_LAG = (5, 10, 20)
 
 
 def _spatial() -> list[tuple[str, config.Config]]:
-    """The Cartesian product of every sweep axis. FS is fixed-excluded."""
+    """The Cartesian product of every sweep axis."""
     base = config.DEFAULT
     out: list[tuple[str, config.Config]] = []
     for resid, ctag in AXIS_CCA:
-        for z, ztag in AXIS_Z:
-            for mu in AXIS_MIN_UNITS:
-                for lpc in AXIS_LP:
-                    for krtag, kover in AXIS_KRULE:
-                        cfg = dataclasses.replace(
-                            base, subtract_trial_mean=resid,
-                            exclude_fast_spiking=True,    # fixed
-                            zscore_units=z, min_units=mu,
-                            lp_min_consecutive=lpc, **kover)
-                        tag = (f"{ctag}_{ztag}_mu{mu:02d}"
-                               f"_lp{lpc}_{krtag}")
-                        out.append((tag, cfg))
+        for krtag, kover in AXIS_KRULE:
+            for lag in AXIS_LAG:
+                cfg = dataclasses.replace(
+                    base,
+                    subtract_trial_mean=resid,
+                    max_lag_bins=lag,
+                    **kover,
+                )
+                tag = f"{ctag}_{krtag}_lag{lag:02d}"
+                out.append((tag, cfg))
     return out
 
 
 def build_sweep(name: str) -> list[tuple[str, config.Config]]:
-    """``(tag, cfg)`` pairs for sweep ``name``.
-
-    ``name`` must be ``"spatial"`` -- there is no temporal arm for Tom.
-    """
+    """``(tag, cfg)`` pairs for sweep ``name``. ``name`` must be ``"spatial"``."""
     if name == "spatial":
         return _spatial()
     raise ValueError(f"unknown sweep: {name!r}")

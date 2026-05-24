@@ -89,32 +89,37 @@ EPOCH_COLOURS: dict[str, tuple[float, float, float]] = {
 
 @dataclass(frozen=True)
 class Config:
-    """Tunable analysis parameters. Frozen so a run's settings are immutable."""
+    """Tunable analysis parameters. Frozen so a run's settings are immutable.
 
-    # Learning point detection (project rule).
-    lp_z_threshold: float = -2.0
-    lp_window: int = 10
-    lp_min_consecutive: int = 7
-    # Animals forced to non-learner regardless of a detected LP. Empty for Tom
-    # by default -- there is no analogue of the striatum animal-8 artefact.
+    Committed-by-user-instruction (NOT on the sweep grid):
+      * ``zscore_units = True`` -- whole-engaged-period per-unit z-scoring
+      * ``min_units = 5``       -- minimum units per area per pair
+      * ``exclude_fast_spiking = True`` -- FS-excluded (Tom convention)
+      * spatial bin width: 200 bins x 2.5 cm (no rebin)
+      * learning point: whatever ``animal_behaviour.mat`` provides
+        (no Python-side LP detection; no LP-criterion sweep)
+    """
+
+    # Animals forced to non-learner regardless of the recorded LP. Empty for
+    # Tom -- if a known LP artefact surfaces, add the animal_id here.
     manual_nonlearners: frozenset[int] = frozenset()
 
     # Epochs.
     trials_per_epoch: int = 10
 
-    # Unit inclusion. FS-excluded is FIXED here (the user's request) -- it is
-    # not on the sweep grid. The flag stays so the FS-included variant can be
-    # run by overriding the config explicitly (matching striatum's
-    # `--include-fs` switch).
-    min_units: int = 6
+    # Unit inclusion. FS-excluded is FIXED (user instruction). Override the
+    # `exclude_fast_spiking` flag explicitly to run the FS-included variant
+    # (matching striatum's `--include-fs` switch).
+    min_units: int = 5
     exclude_fast_spiking: bool = True
 
-    # Residualisation (D2 in the striatum spec): subtract the per-(bin, unit)
-    # trial mean. Default True; signal-CCA variant flips this off.
+    # Residualisation: subtract the per-(bin, unit) trial mean. Default True;
+    # signal-CCA variant flips this off (the one remaining sweep axis on the
+    # "what is communication" question).
     subtract_trial_mean: bool = True
     # Z-score each unit by its std over the entire engaged period, applied to
-    # the raw activity *before* residualisation and epoch slicing (striatum
-    # round 7 convention).
+    # the raw activity *before* residualisation and epoch slicing. FIXED ON
+    # (user instruction); not on the sweep grid.
     zscore_units: bool = True
 
     # Source field in analysis_spatial.firing.cued. "freq" = raw firing rate
