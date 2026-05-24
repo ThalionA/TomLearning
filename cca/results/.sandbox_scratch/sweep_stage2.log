@@ -1,0 +1,4 @@
+Sweep 'spatial': 66 configs; 200 surrogates; jobs=4.
+
+=== config 'res_samp15_lag05' (spatial, residual, FS-excl, z-on, k=samples) ===
+  50 pairs prepared, 0 done, 50 to do.

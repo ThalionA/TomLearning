@@ -156,3 +156,85 @@ sub-window of each config's scan, so the user sees both axes.
 * Consider revisiting the committed config after the per-pair x
   per-config sweep grids are available -- the striatum project iterated
   twice on this (round 8 -> round 10).
+
+---
+
+## 2026-05-24 -- first real-data run attempt: MATLAB `string` blocker + fix
+
+The 16 ``TF*_export.mat`` files + ``animal_behaviour.mat`` are now in the
+container. Tried to run the full 66-config sweep; hit a data-contract blocker
+on the very first animal load.
+
+### What was found
+
+* The ported test suite is healthy -- **112 tests pass** (107 prior + 5 new).
+  Note: pytest's default temp cleanup hits the Cowork sandbox's no-delete
+  restriction on mounted folders and dies with a ``RecursionError``. Run the
+  suite with ``--basetemp`` pointed outside the mount, e.g.
+  ``PYTHONPATH=src python -m pytest tests/ -q --basetemp=/tmp/tcca``.
+* **Blocker:** ``units.regions_label`` (and ``units.region``,
+  ``units.region_details``, and ``animal_behaviour.mat``'s ``animal_id``) are
+  stored as MATLAB **``string``** arrays in every real file. h5py cannot
+  decode the ``string`` type (nor can the ``mat73`` library -- it errors
+  ``MATLAB type not supported: string``). The scaffold's ``dataio.py`` assumed
+  ``regions_label`` was a cellstr because the synthetic test fixtures write it
+  that way -- the scaffold was built with no real data in the container.
+  Without region labels there is no idx-column -> area-name map, so no pair
+  can be built and nothing runs.
+* ``analysis_spatial.firing.cued.freq`` (200 bins x 78 trials x 130 units),
+  ``units.idx`` (logical, 130 x 5) and ``units.idx_fs`` all load fine -- the
+  break is purely the ``string``-typed label fields.
+* ``animal_behaviour.mat``: ``period_experienced`` is 16 animals x **10
+  columns** (the loader's old comment guessed 2). The LP is column 1 per
+  Tom's MATLAB pipeline -- but this is worth confirming against the data.
+
+### Fix (chosen with Theo: source-side re-export)
+
+* New ``scripts/export_cca_labels.m`` -- a one-off MATLAB script Theo runs.
+  It reads each file's ``string`` fields in MATLAB (where ``string`` is
+  native), and writes ``HC_V1_data/cca_labels.json`` (schema
+  ``tom_cca_labels_v1``): per-animal region labels in idx-column order, plus
+  per-animal learning point (+ all 10 ``period_experienced`` columns for the
+  record). ``lp_column`` is a script argument, default 1.
+* ``dataio.py`` -- new ``_read_companion`` reads ``cca_labels.json``.
+  ``load_animal`` gains a ``region_labels`` override; ``load_animals`` and
+  ``_read_behaviour_file`` use the companion when it is present and fall back
+  to reading the .mat fields directly when it is absent (keeps the cellstr
+  test fixtures working). ``config.COMPANION_FILE = "cca_labels.json"``.
+* 5 new ``test_dataio.py`` tests cover the companion path (label override,
+  behaviour preference, missing-animal error, end-to-end classify). ruff clean.
+
+### Pending
+
+* **Theo must run ``scripts/export_cca_labels.m`` in MATLAB** (the container
+  has no MATLAB) to produce ``HC_V1_data/cca_labels.json``. The sweep is
+  blocked until that file exists.
+* Then resume: smoke-test one animal -> ``run_stage2.py`` (66-config sweep,
+  resumable) -> ``run_stage3.py`` -> ``summarise_sweep.py``.
+* Confirm ``period_experienced`` column 1 is the learning point.
+
+---
+
+## 2026-05-24 -- companion file generated; pipeline verified; sweep handed off
+
+* Theo ran ``export_cca_labels.m``; ``HC_V1_data/cca_labels.json`` now exists
+  (schema ``tom_cca_labels_v1``, 16 animals).
+* **``period_experienced`` resolved.** Its 10 columns are consecutive trial
+  indices (LP, LP+1, ..., LP+9), so column 1 *is* the learning point --
+  ``lp_column=1`` confirmed correct. 12 of 16 animals have a recorded LP;
+  TF070/071/098/100 are NaN -> dropped as non-learners (learners-only spec).
+  Cohort for all runs = **12 learner animals**.
+* **End-to-end smoke test passed on real data.** TF036 loaded via the
+  companion path (78 trials x 200 bins x 130 units; CA1 39, V1 29, CA3 12,
+  DG 2 units), classified learner lp=28, ``fit_pair`` on CA1-V1 succeeded
+  (k=26; CA1 32 / V1 26 units post-FS). Held-out CC1 ~0.01-0.09 vs in-sample
+  ~0.27-0.36 -- CV behaving correctly, no red flags.
+* **Sweep throughput measured:** ~0.25 (animal x pair x config) fits/sec on
+  4 cores; full 66-config Stage 2 ~= 3300 fits ~= 4-6 h of compute.
+* **Sweep handed to Theo for native execution.** The Cowork sandbox caps each
+  shell command at 45 s and kills background processes between calls, so a
+  multi-hour batch job is impractical here. The pipeline is fixed and proven;
+  Theo runs ``run_stage2.py`` / ``run_stage3.py`` / ``summarise_sweep.py``
+  natively (resumable, one command each). ``results/`` was left clean; the
+  partial pkl from the throughput test is parked in
+  ``results/.sandbox_scratch/`` (a native run starts fresh).

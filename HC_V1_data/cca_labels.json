@@ -1,0 +1,454 @@
+{
+  "schema": "tom_cca_labels_v1",
+  "generated": "2026-05-24 21:10:08",
+  "lp_column": 1,
+  "animals": [
+    {
+      "id": 28,
+      "file": "TF028_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "LG",
+        "V1"
+      ]
+    },
+    {
+      "id": 34,
+      "file": "TF034_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "HVA",
+        "LG",
+        "V1"
+      ]
+    },
+    {
+      "id": 36,
+      "file": "TF036_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "HVA",
+        "V1"
+      ]
+    },
+    {
+      "id": 41,
+      "file": "TF041_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "V1"
+      ]
+    },
+    {
+      "id": 52,
+      "file": "TF052_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "SCm",
+        "SCop",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 61,
+      "file": "TF061_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "SCm",
+        "SCop",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 63,
+      "file": "TF063_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "HVA",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 66,
+      "file": "TF066_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "HVA",
+        "SUB",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 68,
+      "file": "TF068_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "HVA",
+        "SCm",
+        "SCop",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 70,
+      "file": "TF070_export.mat",
+      "regions": [
+        "CA1",
+        "DG",
+        "RSC",
+        "SUB",
+        "V1"
+      ]
+    },
+    {
+      "id": 71,
+      "file": "TF071_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "HVA",
+        "SUB",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 73,
+      "file": "TF073_export.mat",
+      "regions": [
+        "CA1",
+        "DG",
+        "SUB",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 75,
+      "file": "TF075_export.mat",
+      "regions": [
+        "CA1",
+        "DG",
+        "SUB",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 77,
+      "file": "TF077_export.mat",
+      "regions": [
+        "CA1",
+        "DG",
+        "SUB",
+        "V1",
+        "RSC"
+      ]
+    },
+    {
+      "id": 98,
+      "file": "TF098_export.mat",
+      "regions": [
+        "CA1",
+        "CA3",
+        "DG",
+        "HVA",
+        "LG",
+        "RSC"
+      ]
+    },
+    {
+      "id": 100,
+      "file": "TF100_export.mat",
+      "regions": [
+        "CA1",
+        "DG",
+        "SUB",
+        "V1",
+        "RSC"
+      ]
+    }
+  ],
+  "behaviour": [
+    {
+      "id": 52,
+      "lp": 36,
+      "period_experienced": [
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ]
+    },
+    {
+      "id": 61,
+      "lp": 88,
+      "period_experienced": [
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97
+      ]
+    },
+    {
+      "id": 63,
+      "lp": 107,
+      "period_experienced": [
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116
+      ]
+    },
+    {
+      "id": 68,
+      "lp": 42,
+      "period_experienced": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51
+      ]
+    },
+    {
+      "id": 66,
+      "lp": 28,
+      "period_experienced": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37
+      ]
+    },
+    {
+      "id": 70,
+      "lp": null,
+      "period_experienced": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 71,
+      "lp": null,
+      "period_experienced": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 73,
+      "lp": 59,
+      "period_experienced": [
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68
+      ]
+    },
+    {
+      "id": 75,
+      "lp": 31,
+      "period_experienced": [
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
+      ]
+    },
+    {
+      "id": 77,
+      "lp": 49,
+      "period_experienced": [
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58
+      ]
+    },
+    {
+      "id": 98,
+      "lp": null,
+      "period_experienced": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 100,
+      "lp": null,
+      "period_experienced": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 28,
+      "lp": 69,
+      "period_experienced": [
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78
+      ]
+    },
+    {
+      "id": 36,
+      "lp": 28,
+      "period_experienced": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37
+      ]
+    },
+    {
+      "id": 34,
+      "lp": 48,
+      "period_experienced": [
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57
+      ]
+    },
+    {
+      "id": 41,
+      "lp": 29,
+      "period_experienced": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38
+      ]
+    }
+  ]
+}

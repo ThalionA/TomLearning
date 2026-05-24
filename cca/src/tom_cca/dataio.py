@@ -22,6 +22,7 @@ when available, otherwise from the file ordering (after a stable sort).
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -84,8 +85,21 @@ def _read_region_labels(file_handle, units_group) -> list[str]:
     return labels
 
 
-def _read_units(file_handle, units_group) -> tuple[np.ndarray, list[str], np.ndarray]:
+def _read_units(file_handle, units_group,
+                region_labels: list[str] | None = None
+                ) -> tuple[np.ndarray, list[str], np.ndarray]:
     """Read ``(area_idx, region_labels, fs_flag)`` from ``units``.
+
+    Parameters
+    ----------
+    region_labels : list of str, optional
+        Area names, one per row of ``units.idx``. When supplied (from the
+        JSON companion file -- see :data:`config.COMPANION_FILE`), the labels
+        are used verbatim and ``units.regions_label`` is not read from the
+        .mat file. This is the path taken for Tom's real exports, where
+        ``regions_label`` is a MATLAB ``string`` array h5py cannot decode.
+        When ``None`` the labels are read from the file (cellstr layout --
+        used by the synthetic test fixtures and any cellstr-typed export).
 
     Returns
     -------
@@ -97,7 +111,10 @@ def _read_units(file_handle, units_group) -> tuple[np.ndarray, list[str], np.nda
     # h5py reads MATLAB matrices transposed; idx is (n_areas, n_units) on disk
     # but stored as (n_units, n_areas) by h5py. Detect and align by matching
     # the regions_label length on the area axis.
-    labels = _read_region_labels(file_handle, units_group)
+    if region_labels is not None:
+        labels = list(region_labels)
+    else:
+        labels = _read_region_labels(file_handle, units_group)
     if idx.shape[0] != len(labels):
         idx = idx.T
     if idx.shape[0] != len(labels):
@@ -146,8 +163,16 @@ def _infer_animal_id(filename: str, fallback: int) -> int:
 
 
 def load_animal(path: str | Path, animal_id: int | None = None,
-                spatial_field: str = "freq") -> Animal:
-    """Load one ``TF*_export.mat`` file."""
+                spatial_field: str = "freq",
+                region_labels: list[str] | None = None) -> Animal:
+    """Load one ``TF*_export.mat`` file.
+
+    ``region_labels`` (one per ``units.idx`` row), when supplied, overrides the
+    in-file ``units.regions_label`` -- the path used for Tom's real exports,
+    whose ``regions_label`` is a MATLAB ``string`` array (see
+    :func:`_read_units`). :func:`load_animals` supplies it from the JSON
+    companion file automatically.
+    """
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(f"animal file not found: {path}")
@@ -157,7 +182,8 @@ def load_animal(path: str | Path, animal_id: int | None = None,
             raise ValueError(
                 f"{path.name} missing required fields (units, analysis_spatial)"
             )
-        area_idx, region_labels, fs_flag = _read_units(f, f["units"])
+        area_idx, region_labels, fs_flag = _read_units(
+            f, f["units"], region_labels=region_labels)
         spatial_fr = _read_spatial_fr(f, f["analysis_spatial"], spatial_field)
 
     n_units = spatial_fr.shape[2]
@@ -184,11 +210,51 @@ def load_animal(path: str | Path, animal_id: int | None = None,
 # ---------------------------------------------------------------------------
 # Cohort loader (all TF*_export.mat in a directory)
 # ---------------------------------------------------------------------------
+def _read_companion(data_dir: str | Path) -> dict | None:
+    """Parse the JSON companion file in ``data_dir``, or None if it is absent.
+
+    The companion file (:data:`config.COMPANION_FILE`, written by
+    ``scripts/export_cca_labels.m``) carries the region labels and learning
+    points that Tom's exports store as MATLAB ``string`` arrays -- a type
+    h5py cannot decode. When present it is the authoritative source for both.
+
+    Returns
+    -------
+    dict or None
+        ``{"regions": {animal_id: [area, ...]},
+           "lp":      {animal_id: int | None}}``  or ``None`` when no
+        companion file exists in ``data_dir``.
+    """
+    path = Path(data_dir) / config.COMPANION_FILE
+    if not path.is_file():
+        return None
+    data = json.loads(path.read_text())
+    regions: dict[int, list[str]] = {}
+    for entry in data.get("animals", []):
+        regions[int(entry["id"])] = [str(r) for r in entry["regions"]]
+    lp: dict[int, int | None] = {}
+    for entry in data.get("behaviour", []):
+        val = entry.get("lp")
+        lp[int(entry["id"])] = (
+            int(round(val)) if val is not None and np.isfinite(val) else None
+        )
+    return {"regions": regions, "lp": lp}
+
+
 def _read_behaviour_file(path: Path) -> dict:
-    """Read ``animal_behaviour.mat`` -- LP per animal.
+    """Read learning points -- one per animal.
 
     Returns a flat lookup dict ``('period_experienced', animal_id) -> int LP``.
+    When a JSON companion file sits beside ``path`` it is used (Tom's real
+    cohort); otherwise the learning points are read from ``animal_behaviour.mat``
+    directly (the numeric layout the synthetic test fixtures write).
     """
+    path = Path(path)
+    companion = _read_companion(path.parent)
+    if companion is not None:
+        return {("period_experienced", aid): lp
+                for aid, lp in companion["lp"].items()}
+
     lookup: dict = {}
     if not path.is_file():
         return lookup
@@ -246,11 +312,25 @@ def load_animals(data_dir: str | Path | None = None,
         raise FileNotFoundError(
             f"no {config.DATA_FILE_PATTERN} files in {data_dir}"
         )
+    # When the JSON companion is present it supplies region labels (Tom's
+    # exports store regions_label as an undecodable MATLAB `string`); when
+    # absent each file's labels are read directly (cellstr test fixtures).
+    companion = _read_companion(data_dir)
     animals: list[Animal] = []
     for i, path in enumerate(files, start=1):
         aid = _infer_animal_id(path.name, i)
+        region_labels = None
+        if companion is not None:
+            region_labels = companion["regions"].get(aid)
+            if region_labels is None:
+                raise ValueError(
+                    f"{path.name}: animal {aid} is missing from "
+                    f"{config.COMPANION_FILE} -- re-run "
+                    f"scripts/export_cca_labels.m to refresh it"
+                )
         animals.append(load_animal(path, animal_id=aid,
-                                   spatial_field=spatial_field))
+                                   spatial_field=spatial_field,
+                                   region_labels=region_labels))
     return animals
 
 

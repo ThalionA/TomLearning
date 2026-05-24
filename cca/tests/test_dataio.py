@@ -10,6 +10,7 @@ Two layers:
 from __future__ import annotations
 
 import dataclasses
+import json
 
 import h5py
 import numpy as np
@@ -259,3 +260,90 @@ def test_load_animal_missing_file_raises(tmp_path):
 def test_load_animals_with_no_matches_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         dataio.load_animals(tmp_path)
+
+
+# ---------------------------------------------------------------------------
+# JSON companion file (cca_labels.json)
+#
+# Tom's real exports store units.regions_label / animal_id as MATLAB `string`
+# arrays h5py cannot decode. scripts/export_cca_labels.m decodes them in MATLAB
+# and writes a JSON companion; the loader prefers it when present. These tests
+# write a synthetic companion and check it overrides the in-file labels.
+# ---------------------------------------------------------------------------
+def _write_companion_json(path, *, animals, behaviour):
+    """Write a cca_labels.json.
+
+    ``animals``   -- list of ``(animal_id, [area, ...])``.
+    ``behaviour`` -- list of ``(animal_id, lp_or_None)``.
+    """
+    data = {
+        "schema": "tom_cca_labels_v1",
+        "lp_column": 1,
+        "animals": [
+            {"id": aid, "file": f"TF{aid:02d}_export.mat", "regions": regs}
+            for aid, regs in animals
+        ],
+        "behaviour": [{"id": aid, "lp": lp} for aid, lp in behaviour],
+    }
+    path.write_text(json.dumps(data))
+
+
+def test_read_companion_returns_none_when_absent(tmp_path):
+    assert dataio._read_companion(tmp_path) is None
+
+
+def test_load_animals_uses_companion_region_labels(tmp_path):
+    # The .mat embeds deliberately wrong labels; the companion must win.
+    _write_tom_mat(tmp_path / "TF01_export.mat", n_units=10, n_trials=80,
+                   n_bins=config.N_BINS,
+                   region_for_unit=(["AAA"] * 6) + (["BBB"] * 4))
+    _write_companion_json(tmp_path / config.COMPANION_FILE,
+                          animals=[(1, ["CA1", "V1"])], behaviour=[(1, 40)])
+
+    a = dataio.load_animals(tmp_path)[0]
+    assert int(a.area_masks["CA1"].sum()) == 6
+    assert int(a.area_masks["V1"].sum()) == 4
+    # The bogus in-file labels are not among the recognised areas.
+    assert sum(int(m.sum()) for m in a.area_masks.values()) == 10
+
+
+def test_read_behaviour_file_prefers_companion(tmp_path):
+    # A numeric .mat behaviour file AND a companion -- the companion wins.
+    _write_behaviour_mat(tmp_path / config.LEARNING_FILE,
+                         animal_ids=[1, 2], learning_points=[99, 99])
+    _write_companion_json(tmp_path / config.COMPANION_FILE,
+                          animals=[(1, ["CA1"]), (2, ["CA1"])],
+                          behaviour=[(1, 35), (2, None)])
+
+    lookup = dataio._read_behaviour_file(tmp_path / config.LEARNING_FILE)
+    assert lookup[("period_experienced", 1)] == 35
+    assert lookup[("period_experienced", 2)] is None      # JSON null -> None
+
+
+def test_load_animals_raises_when_companion_missing_an_animal(tmp_path):
+    for i in (1, 2):
+        _write_tom_mat(tmp_path / f"TF{i:02d}_export.mat", n_units=10,
+                       n_trials=80, n_bins=config.N_BINS,
+                       region_for_unit=(["AAA"] * 6) + (["BBB"] * 4))
+    # Companion covers animal 1 only -- animal 2 must trigger a clear error.
+    _write_companion_json(tmp_path / config.COMPANION_FILE,
+                          animals=[(1, ["CA1", "V1"])], behaviour=[(1, 40)])
+    with pytest.raises(ValueError, match="missing from"):
+        dataio.load_animals(tmp_path)
+
+
+def test_companion_end_to_end_classify_cohort(tmp_path):
+    for i in (1, 2):
+        _write_tom_mat(tmp_path / f"TF{i:02d}_export.mat", n_units=10,
+                       n_trials=80, n_bins=config.N_BINS,
+                       region_for_unit=(["ZZ"] * 6) + (["YY"] * 4))
+    _write_companion_json(tmp_path / config.COMPANION_FILE,
+                          animals=[(1, ["CA1", "V1"]), (2, ["CA1", "V1"])],
+                          behaviour=[(1, 35), (2, None)])
+
+    animals = dataio.load_animals(tmp_path)
+    behaviour = dataio._read_behaviour_file(tmp_path / config.LEARNING_FILE)
+    entries = dataio.classify_cohort(animals, CFG, behaviour)
+    # Animal 2's LP is null -> dropped; only animal 1 is a learner.
+    assert set(entries) == {1}
+    assert entries[1].lp == 35

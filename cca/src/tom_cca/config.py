@@ -31,6 +31,13 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]          # ".../TomLearning"
 DATA_DIR = _REPO_ROOT / "HC_V1_data"
 DATA_FILE_PATTERN = "TF*_export.mat"
 LEARNING_FILE = "animal_behaviour.mat"
+# Plain-JSON companion file holding the region labels and learning points that
+# Tom's exports store as MATLAB `string` arrays (a type h5py cannot decode).
+# Generated once by scripts/export_cca_labels.m; consumed by dataio. When this
+# file is present alongside the .mat exports it is the authoritative source for
+# region labels and LPs; when absent the loader falls back to reading those
+# fields directly from the .mat files (works for cellstr-typed test fixtures).
+COMPANION_FILE = "cca_labels.json"
 CCA_DIR = _REPO_ROOT / "cca"
 RESULTS_DIR = CCA_DIR / "results"
 FIGURES_DIR = CCA_DIR / "figures"
