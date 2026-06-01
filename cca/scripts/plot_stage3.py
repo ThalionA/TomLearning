@@ -45,16 +45,27 @@ EPOCH_LABEL = ["naive", "inter", "expert"]
 TRANSITIONS = ("naive->intermediate", "intermediate->expert", "naive->expert")
 TRANSITION_LABEL = ["n->i", "i->e", "n->e"]
 
-# Set by main() from --variant ("plain" or "partial").
+# Set by main() from --variant / --tag.
 RESULTS_PKL = config.RESULTS_DIR / "stage3_committed.pkl"
 SUFFIX = "committed"
 VARIANT_NOTE = ""
+OUTDIR = config.FIGURES_DIR
 
 
-def _configure(variant):
-    """Point the script at the plain or the partial-CCA Stage-3 results."""
-    global RESULTS_PKL, SUFFIX, VARIANT_NOTE
-    if variant == "partial":
+def _configure(args):
+    """Point the script at the committed run, the partial run, or a sweep config.
+
+    ``--tag`` takes precedence: it plots ``results/stage3_<tag>.pkl`` (any sweep
+    config) and writes the figures into ``figures/<tag>/``. Without ``--tag``
+    the behaviour is unchanged -- the committed (or partial) run.
+    """
+    global RESULTS_PKL, SUFFIX, VARIANT_NOTE, OUTDIR
+    if args.tag:
+        RESULTS_PKL = config.RESULTS_DIR / f"stage3_{args.tag}.pkl"
+        SUFFIX = args.tag
+        VARIANT_NOTE = f"  [sweep config '{args.tag}']"
+        OUTDIR = config.FIGURES_DIR / args.tag
+    elif args.variant == "partial":
         RESULTS_PKL = config.RESULTS_DIR / "stage3_committed_partial.pkl"
         SUFFIX = "committed_partial"
         VARIANT_NOTE = "  [PARTIAL -- all other recorded areas removed]"
@@ -79,9 +90,9 @@ def _grid():
 
 
 def _save(fig, name):
-    config.FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    OUTDIR.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
-    path = config.FIGURES_DIR / f"{name}_{SUFFIX}.png"
+    path = OUTDIR / f"{name}_{SUFFIX}.png"
     fig.savefig(path, dpi=150)
     plt.close(fig)
     print(f"saved {path}")
@@ -219,7 +230,10 @@ def plot_membership_overlap(results):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--variant", choices=("plain", "partial"), default="plain")
-    _configure(p.parse_args().variant)
+    p.add_argument("--tag", default=None,
+                   help="plot a sweep config (results/stage3_<tag>.pkl) "
+                        "instead of the committed run; figures -> figures/<tag>/")
+    _configure(p.parse_args())
     results = load()
     plot_principal_angles(results)
     plot_gini(results)

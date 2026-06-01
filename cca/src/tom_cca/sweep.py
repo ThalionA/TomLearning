@@ -70,8 +70,63 @@ def _spatial() -> list[tuple[str, config.Config]]:
     return out
 
 
+# --- temporal sweep axes ----------------------------------------------------
+# Bin width is a sweep axis for the temporal arms because directionality
+# resolution scales with it (peak-lag quantization = bin_ms). 50 ms matches
+# Tom's MATLAB-v6 baseline; 25 ms doubles the lag-curve resolution at the
+# cost of ~2x more lag refits per fit cell and sparser counts per bin.
+AXIS_TEMPORAL_BIN = (25, 50)
+# Landmark arm allows residual + signal (aligned windows make per-(bin, unit)
+# PSTH well-defined). Arm A is signal-only (ragged segments, no PSTH).
+AXIS_TEMPORAL_CCA = ((True, "res"), (False, "sig"))
+
+
+def _temporal_landmark() -> list[tuple[str, config.Config]]:
+    """Arm B grid: bin_ms x cca_type x k_rule = 2 * 2 * 11 = 44 configs."""
+    base = config.DEFAULT
+    out: list[tuple[str, config.Config]] = []
+    for bin_ms in AXIS_TEMPORAL_BIN:
+        for resid, ctag in AXIS_TEMPORAL_CCA:
+            for krtag, kover in AXIS_KRULE:
+                cfg = dataclasses.replace(
+                    base,
+                    bin_mode="landmark",
+                    temporal_bin_ms=bin_ms,
+                    subtract_trial_mean=resid,
+                    **kover,
+                )
+                tag = f"landmark{bin_ms:02d}_{ctag}_{krtag}"
+                out.append((tag, cfg))
+    return out
+
+
+def _temporal_runstate() -> list[tuple[str, config.Config]]:
+    """Arm A grid: bin_ms x k_rule = 2 * 11 = 22 configs (signal forced)."""
+    base = config.DEFAULT
+    out: list[tuple[str, config.Config]] = []
+    for bin_ms in AXIS_TEMPORAL_BIN:
+        for krtag, kover in AXIS_KRULE:
+            cfg = dataclasses.replace(
+                base,
+                bin_mode="temporal_runstate",
+                temporal_bin_ms=bin_ms,
+                subtract_trial_mean=False,
+                **kover,
+            )
+            tag = f"temp{bin_ms:02d}_sig_{krtag}"
+            out.append((tag, cfg))
+    return out
+
+
 def build_sweep(name: str) -> list[tuple[str, config.Config]]:
-    """``(tag, cfg)`` pairs for sweep ``name``. ``name`` must be ``"spatial"``."""
+    """``(tag, cfg)`` pairs for sweep ``name``.
+
+    Names: ``"spatial"``, ``"temporal_landmark"``, ``"temporal_runstate"``.
+    """
     if name == "spatial":
         return _spatial()
+    if name == "temporal_landmark":
+        return _temporal_landmark()
+    if name == "temporal_runstate":
+        return _temporal_runstate()
     raise ValueError(f"unknown sweep: {name!r}")

@@ -48,16 +48,27 @@ EPOCH_LABEL = ["naive", "inter", "expert"]
 EPOCH_COLOUR = config.EPOCH_COLOURS               # consistent with MATLAB
 ALPHA = 0.05
 
-# Set by main() from --variant ("plain" or "partial").
+# Set by main() from --variant / --tag.
 TAG = "committed"
 RESULTS_PKL = config.RESULTS_DIR / "stage2_committed_circshift.pkl"
 SUBTITLE = "committed config, circshift null"
+OUTDIR = config.FIGURES_DIR
 
 
-def _configure(variant):
-    """Point the script at the plain or the partial-CCA Stage-2 results."""
-    global TAG, RESULTS_PKL, SUBTITLE
-    if variant == "partial":
+def _configure(args):
+    """Point the script at the committed run, the partial run, or a sweep config.
+
+    ``--tag`` takes precedence: it plots ``results/stage2_<tag>.pkl`` (any sweep
+    config) and writes the figures into ``figures/<tag>/``. Without ``--tag``
+    the behaviour is unchanged -- the committed (or partial) run.
+    """
+    global TAG, RESULTS_PKL, SUBTITLE, OUTDIR
+    if args.tag:
+        TAG = args.tag
+        RESULTS_PKL = config.RESULTS_DIR / f"stage2_{args.tag}.pkl"
+        SUBTITLE = f"sweep config '{args.tag}', circshift null"
+        OUTDIR = config.FIGURES_DIR / args.tag
+    elif args.variant == "partial":
         TAG = "committed_partial"
         RESULTS_PKL = (config.RESULTS_DIR
                        / "stage2_committed_circshift_partial.pkl")
@@ -147,9 +158,9 @@ def _grid():
 
 
 def _save(fig, name):
-    config.FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    OUTDIR.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
-    path = config.FIGURES_DIR / f"{name}_{TAG}.png"
+    path = OUTDIR / f"{name}_{TAG}.png"
     fig.savefig(path, dpi=150)
     plt.close(fig)
     print(f"saved {path}")
@@ -286,7 +297,10 @@ def plot_ifi_window(results, window):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--variant", choices=("plain", "partial"), default="plain")
-    _configure(p.parse_args().variant)
+    p.add_argument("--tag", default=None,
+                   help="plot a sweep config (results/stage2_<tag>.pkl) "
+                        "instead of the committed run; figures -> figures/<tag>/")
+    _configure(p.parse_args())
     if not RESULTS_PKL.exists():
         sys.exit(f"missing {RESULTS_PKL.name} -- run "
                  f"run_committed.py --stage 2 --null-type circshift")

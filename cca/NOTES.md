@@ -238,3 +238,29 @@ on the very first animal load.
   natively (resumable, one command each). ``results/`` was left clean; the
   partial pkl from the throughput test is parked in
   ``results/.sandbox_scratch/`` (a native run starts fresh).
+
+---
+
+## 2026-05-25 -- sweep complete; per-config plotting
+
+* Theo ran the full sweep natively: 66 ``stage2_*`` + 66 ``stage3_*`` pkls,
+  all ``.done``; ``summarise_sweep.py`` outputs in ``figures/``.
+* ``plot_stage2.py`` / ``plot_stage3.py`` gained an additive ``--tag`` arg:
+  with ``--tag <sweep_tag>`` they plot ``results/stage{2,3}_<tag>.pkl`` and
+  write into ``figures/<tag>/``. Without ``--tag`` behaviour is unchanged
+  (committed / partial run). Default-path code untouched.
+* Generated the full Stage 2 + Stage 3 figure set for the four var-85 configs
+  -- ``{res,sig}_var85_lag{05,10}`` -- into ``figures/<tag>/`` (54 PNGs).
+* New ``scripts/plot_sweep_explore.py`` -- config-centric exploration of the
+  sweep (reads ``sweep_summary_spatial.csv``; writes ``figures/sweep_explore/``,
+  6 PNGs). Key structural finding: the 66 configs collapse to **16 distinct
+  headline results** -- the IFI lag-scan window (5/10/20) leaves every headline
+  metric unchanged, and ``samp15/25/40`` + ``fix30`` share one effective k.
+  CCA type is the dominant axis (signal ~2x CC, almost all significant effects);
+  signal x variance-k is the live corner; the committed config sits low
+  (~18th percentile on effect size).
+* New ``scripts/plot_ifi_explore.py`` -- IFI deep-dive from the per-epoch data
+  in the lag20 Stage 2 pkls (dim-0 IFI = the pipeline's headline ``.ifi``).
+  4 PNGs in ``figures/ifi_explore/``: IFI across learning per pair, naive->
+  expert IFI change, IFI vs lag-window (naive vs expert), peak lead/lag in cm.
+  Descriptive only (configs are not independent samples).

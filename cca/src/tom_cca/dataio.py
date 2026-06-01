@@ -30,7 +30,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 
-from . import config
+from . import config, landmark_align, segments
 
 
 # ---------------------------------------------------------------------------
@@ -46,6 +46,10 @@ class Animal:
     fs_mask: np.ndarray                  # (n_units,) bool -- raw FS flag
     n_trials: int
     filename: str = ""
+    # Path back to the .mat file, used by the temporal arms to lazy-load the
+    # 1 ms ``binned_spikes`` and ``data_behaviour`` streams on demand. Set by
+    # load_animal; None when an Animal is constructed in-memory (test fixtures).
+    streams_path: Path | None = None
 
     @property
     def n_units(self) -> int:
@@ -204,6 +208,7 @@ def load_animal(path: str | Path, animal_id: int | None = None,
         fs_mask=fs_flag,
         n_trials=spatial_fr.shape[0],
         filename=path.name,
+        streams_path=path,
     )
 
 
@@ -439,3 +444,221 @@ def area_tensor(animal: Animal, area: str, cfg) -> tuple[np.ndarray, np.ndarray]
     idx = select_units(animal, area, cfg)
     n_use = n_usable_trials(animal)
     return animal.spatial_fr[:n_use][:, :, idx], idx
+
+
+# ===========================================================================
+# Temporal arms (Arm A: running-state full-traversal; Arm B: landmark-centred)
+# ===========================================================================
+# 1 ms streams are read on demand from the TF*_export.mat and immediately
+# binned to ``cfg.temporal_bin_ms`` (default 50 ms). Only the 50 ms result is
+# cached -- the raw 1 ms ``binned_spikes`` is large (~1.6 GB per animal).
+# Cache holds one animal; cleared when a different animal is requested. See
+# ``cca/UNDERSTANDING_temporal.md`` Sec. 3 for the data contract.
+
+
+def rebin_spikes(spikes_1ms, bin_ms: int,
+                 chunk_out_bins: int = 2000,
+                 max_1ms: int | None = None) -> np.ndarray:
+    """Sum 1 ms spike counts into ``bin_ms``-wide bins.
+
+    ``(n_1ms, n_units) -> (n_bins, n_units)`` float32. An incomplete final
+    bin is dropped.
+
+    Accepts either a numpy array or an h5py Dataset for ``spikes_1ms`` -- both
+    support ``[start:stop]`` slicing and ``.shape``. Rebinning is done in
+    chunks of ``chunk_out_bins`` 50 ms bins so the intermediate float32 array
+    stays bounded (~80 MB at default values for 200 units; well under the
+    sandbox cap). The full 1 ms array is never materialised as float32.
+
+    ``max_1ms`` caps the input length (used when the 1 ms streams have been
+    trimmed for cross-stream alignment).
+    """
+    bin_ms = int(bin_ms)
+    n_1ms = int(spikes_1ms.shape[0])
+    if max_1ms is not None:
+        n_1ms = min(n_1ms, int(max_1ms))
+    n_units = int(spikes_1ms.shape[1])
+    n_bins = n_1ms // bin_ms
+    if n_bins == 0:
+        return np.zeros((0, n_units), dtype=np.float32)
+    out = np.empty((n_bins, n_units), dtype=np.float32)
+    for start in range(0, n_bins, int(chunk_out_bins)):
+        stop = min(start + int(chunk_out_bins), n_bins)
+        chunk = np.asarray(spikes_1ms[start * bin_ms : stop * bin_ms])
+        out[start:stop] = (
+            chunk.astype(np.float32)
+                 .reshape(stop - start, bin_ms, n_units)
+                 .sum(axis=1)
+        )
+    return out
+
+
+def bin_velocity(vel_1ms: np.ndarray, bin_ms: int) -> np.ndarray:
+    """Mean velocity per 50 ms bin. ``(n_1ms,) -> (n_bins,)``."""
+    vel = np.asarray(vel_1ms, dtype=float).ravel()
+    n_bins = vel.size // int(bin_ms)
+    if n_bins == 0:
+        return np.zeros(0, dtype=float)
+    return vel[: n_bins * int(bin_ms)].reshape(n_bins, int(bin_ms)).mean(axis=1)
+
+
+def bin_trial_index(trial_1ms: np.ndarray, bin_ms: int) -> np.ndarray:
+    """All-or-nothing 50 ms trial index.
+
+    A 50 ms bin is in trial t iff *every* 1 ms bin in its span is in trial t.
+    Returns NaN for bins that are outside any trial or that span a trial
+    boundary (the conservative rule that keeps segments from straddling
+    trial boundaries -- see ``segments.find_segments``).
+    """
+    trial = np.asarray(trial_1ms, dtype=float).ravel()
+    n_bins = trial.size // int(bin_ms)
+    if n_bins == 0:
+        return np.zeros(0, dtype=float)
+    blk = trial[: n_bins * int(bin_ms)].reshape(n_bins, int(bin_ms))
+    first = blk[:, 0]
+    # consistent <=> every cell in the row equals the first column AND is
+    # finite. NaN == NaN is False so a NaN-in-first-column row collapses to
+    # False here, which is exactly the desired "drop" behaviour.
+    consistent = np.all(blk == first[:, None], axis=1)
+    consistent &= np.all(np.isfinite(blk), axis=1)
+    return np.where(consistent, first, np.nan)
+
+
+@dataclass
+class _TemporalStreams:
+    """Binned 50 ms streams for one animal."""
+
+    spikes_50ms: np.ndarray         # (n_bins, n_units) float32
+    vel_50ms: np.ndarray            # (n_bins,) float
+    trial_idx_50ms: np.ndarray      # (n_bins,) float, NaN where out-of-trial
+    entries_1ms: np.ndarray         # (n_entries, 2) int -- (1ms_idx, landmark_id)
+
+
+_TEMPORAL_CACHE: dict = {}
+
+
+def _load_temporal_streams(animal: Animal, cfg) -> _TemporalStreams:
+    """Read + bin the 1 ms streams for ``animal``. Cached per animal.
+
+    Cache holds one animal at a time. Re-binning into ``cfg.temporal_bin_ms``
+    happens on every reload (cache key includes the bin size).
+    """
+    key = (animal.animal_id, int(cfg.temporal_bin_ms))
+    cached = _TEMPORAL_CACHE.get(key)
+    if cached is not None:
+        return cached
+    _TEMPORAL_CACHE.clear()                                # 1-slot cache
+    if animal.streams_path is None:
+        raise ValueError(
+            f"animal {animal.animal_id} has no streams_path -- cannot load "
+            f"1 ms streams (in-memory Animal fixtures cannot drive the "
+            f"temporal arms; use load_animal to attach the .mat path)"
+        )
+    bin_ms = int(cfg.temporal_bin_ms)
+    with h5py.File(animal.streams_path, "r") as f:
+        ds = f["binned_spikes"]                         # h5py Dataset, lazy
+        beh = f["data_behaviour"]
+        vel_1ms = np.asarray(beh["velocity_binned_gf"]).ravel()
+        trial_1ms = np.asarray(beh["trial_binned_cued"]).ravel()
+        landmark_1ms = np.asarray(
+            beh["visual_landmark_binned"]).ravel().astype(int)
+        # Align lengths -- the four streams should be 1:1 by construction;
+        # trim to the common length defensively.
+        n = min(int(ds.shape[0]), vel_1ms.size, trial_1ms.size, landmark_1ms.size)
+        vel_1ms = vel_1ms[:n]
+        trial_1ms = trial_1ms[:n]
+        landmark_1ms = landmark_1ms[:n]
+        # Chunked read directly from the h5py dataset -- the full 1.6 GB uint8
+        # binned_spikes is never materialised in memory.
+        spikes_50ms = rebin_spikes(ds, bin_ms, max_1ms=n)
+
+    streams = _TemporalStreams(
+        spikes_50ms=spikes_50ms,
+        vel_50ms=bin_velocity(vel_1ms, bin_ms),
+        trial_idx_50ms=bin_trial_index(trial_1ms, bin_ms),
+        entries_1ms=landmark_align.find_entries(landmark_1ms),
+    )
+    _TEMPORAL_CACHE[key] = streams
+    return streams
+
+
+def _zscore_engaged(spikes_area: np.ndarray, vel_50ms: np.ndarray,
+                    trial_idx_50ms: np.ndarray, vel_threshold: float,
+                    require_running: bool) -> np.ndarray:
+    """Per-unit z-score using the engaged-period reference.
+
+    Reference = bins in any cued trial (require_running=False) or in any cued
+    trial AND running >= threshold (require_running=True). The choice differs
+    by arm: Arm A residualises against running-state distribution; Arm B uses
+    the wider in-cued reference so the landmark windows include the full
+    behavioural envelope around landmarks.
+    """
+    in_trial = ~np.isnan(trial_idx_50ms)
+    if require_running:
+        ref_mask = in_trial & (vel_50ms >= vel_threshold)
+    else:
+        ref_mask = in_trial
+    if not np.any(ref_mask):
+        return spikes_area
+    ref = spikes_area[ref_mask]
+    mu = ref.mean(axis=0)
+    sd = ref.std(axis=0)
+    sd[sd == 0] = 1.0
+    return (spikes_area - mu) / sd
+
+
+def temporal_segments(animal: Animal, cfg) -> list[segments.Segment]:
+    """Velocity-passing segments for Arm A. Area-agnostic (same for X and Y)."""
+    streams = _load_temporal_streams(animal, cfg)
+    vel_mask = streams.vel_50ms >= cfg.velocity_thresh_cm_s
+    return segments.find_segments(
+        vel_mask,
+        streams.trial_idx_50ms,
+        min_gap_close_bins=config.min_gap_close_bins(cfg),
+        min_run_bins=config.min_run_bins(cfg),
+    )
+
+
+def area_activity_50ms(animal: Animal, area: str, cfg
+                       ) -> tuple[np.ndarray, np.ndarray]:
+    """Arm A: per-area 50 ms activity matrix, z-scored over running+cued bins.
+
+    Returns ``(spikes_50ms[:, kept_units], kept_unit_indices)``.
+    """
+    streams = _load_temporal_streams(animal, cfg)
+    idx = select_units(animal, area, cfg)
+    spikes_area = streams.spikes_50ms[:, idx]
+    if cfg.zscore_units:
+        spikes_area = _zscore_engaged(
+            spikes_area, streams.vel_50ms, streams.trial_idx_50ms,
+            cfg.velocity_thresh_cm_s, require_running=True,
+        )
+    return spikes_area, idx
+
+
+def area_landmark_windows(animal: Animal, area: str, cfg
+                          ) -> tuple[dict[int, landmark_align.LandmarkWindows],
+                                     np.ndarray]:
+    """Arm B: per-landmark window stacks for one area's units.
+
+    Returns ``(dict landmark_id -> LandmarkWindows, kept_unit_indices)``.
+    """
+    streams = _load_temporal_streams(animal, cfg)
+    idx = select_units(animal, area, cfg)
+    spikes_area = streams.spikes_50ms[:, idx]
+    if cfg.zscore_units:
+        spikes_area = _zscore_engaged(
+            spikes_area, streams.vel_50ms, streams.trial_idx_50ms,
+            cfg.velocity_thresh_cm_s, require_running=False,
+        )
+    windows = landmark_align.align_windows(
+        spikes_area,
+        streams.vel_50ms,
+        streams.trial_idx_50ms,
+        streams.entries_1ms,
+        bin_ms=int(cfg.temporal_bin_ms),
+        window_bins_pre=config.landmark_window_bins_pre(cfg),
+        window_bins_post=config.landmark_window_bins_post(cfg),
+        vel_threshold_cm_s=cfg.velocity_thresh_cm_s,
+    )
+    return windows, idx
