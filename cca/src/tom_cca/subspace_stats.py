@@ -50,23 +50,18 @@ class CellSubspaceStats:
     ifi_weighted: float         # sum(IFI * CC) / sum(CC); NaN if all CC=0
 
 
-def cell_subspace_stats(cell, alpha: float = 0.05,
-                        cc_clip: float = CC_CLIP) -> CellSubspaceStats | None:
-    """Aggregate per-cell stats across canonical dimensions.
+def _aggregate(strength_cc: np.ndarray, p_dim: np.ndarray, ifi: np.ndarray,
+               alpha: float, cc_clip: float) -> CellSubspaceStats:
+    """Shared subspace aggregation given per-dim strength CC, p-values, IFI.
 
-    ``cell`` is a ``LandmarkCellAnalysis`` or ``TemporalEpochAnalysis`` (anything
-    that exposes ``lag_cc_per_dim``, ``p_peak_cc_per_dim``, ``ifi_per_dim``).
-    Returns ``None`` if the cell was skipped.
+    ``strength_cc`` is the per-dim canonical correlation used for the MI
+    strength readout (peak-across-lag for landmark/temporal cells; lag-0 for
+    spatial epochs). ``p_dim`` is the matching per-dim significance.
     """
-    if getattr(cell, "skip_reason", None) is not None:
-        return None
-    if getattr(cell, "lag_cc_per_dim", None) is None:
-        return None
-    peak_cc_raw = np.nanmax(cell.lag_cc_per_dim, axis=0)
     # Clip to [0, cc_clip] -- negative held-out CCs (the direction did not
     # generalise) are floored; near-1 CCs are clipped so log(1-x^2) stays finite.
-    peak_cc = np.clip(peak_cc_raw, 0.0, cc_clip)
-    p_dim = np.asarray(cell.p_peak_cc_per_dim, dtype=float)
+    peak_cc = np.clip(np.asarray(strength_cc, dtype=float), 0.0, cc_clip)
+    p_dim = np.asarray(p_dim, dtype=float)
     sig = np.isfinite(p_dim) & (p_dim < alpha)
     n_sig = int(np.sum(sig))
 
@@ -79,7 +74,7 @@ def cell_subspace_stats(cell, alpha: float = 0.05,
     else:
         mi_sig = 0.0
 
-    ifi = np.asarray(cell.ifi_per_dim, dtype=float)
+    ifi = np.asarray(ifi, dtype=float)
     finite_ifi = np.isfinite(ifi)
     if np.any(finite_ifi):
         ifi_mean_all = float(np.mean(ifi[finite_ifi]))
@@ -111,6 +106,42 @@ def cell_subspace_stats(cell, alpha: float = 0.05,
         ifi_mean_sig=ifi_mean_sig,
         ifi_weighted=ifi_weighted,
     )
+
+
+def cell_subspace_stats(cell, alpha: float = 0.05,
+                        cc_clip: float = CC_CLIP) -> CellSubspaceStats | None:
+    """Aggregate per-cell stats across canonical dimensions.
+
+    ``cell`` is a ``LandmarkCellAnalysis`` or ``TemporalEpochAnalysis`` (anything
+    that exposes ``lag_cc_per_dim``, ``p_peak_cc_per_dim``, ``ifi_per_dim``).
+    Strength uses the peak-across-lag held-out CC. Returns ``None`` if the cell
+    was skipped.
+    """
+    if getattr(cell, "skip_reason", None) is not None:
+        return None
+    if getattr(cell, "lag_cc_per_dim", None) is None:
+        return None
+    peak_cc_raw = np.nanmax(cell.lag_cc_per_dim, axis=0)
+    return _aggregate(peak_cc_raw, cell.p_peak_cc_per_dim, cell.ifi_per_dim,
+                      alpha, cc_clip)
+
+
+def epoch_subspace_stats(epoch, alpha: float = 0.05,
+                         cc_clip: float = CC_CLIP) -> CellSubspaceStats | None:
+    """Spatial-arm analogue of :func:`cell_subspace_stats`.
+
+    The spatial ``EpochAnalysis`` defines significance on the **lag-0** held-out
+    CC (``p_per_dim``, the D7 permutation test), so strength and significance are
+    both taken at lag 0: MI is summed over ``held_out_cc`` for dims with
+    ``p_per_dim < alpha``. Directionality (``ifi_weighted``) uses ``ifi_per_dim``
+    (the lagged-curve IFI) weighted by the lag-0 CC. Same formulas as the
+    landmark cell, but on the spatial arm's native lag-0 quantities rather than
+    the peak-across-lag quantities. Returns ``None`` if the epoch has no CC.
+    """
+    if getattr(epoch, "held_out_cc", None) is None:
+        return None
+    return _aggregate(epoch.held_out_cc, epoch.p_per_dim, epoch.ifi_per_dim,
+                      alpha, cc_clip)
 
 
 def per_dim_long_form(fits, alpha: float = 0.05) -> list[dict]:

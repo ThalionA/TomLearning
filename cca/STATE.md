@@ -30,7 +30,7 @@ Eight pairs: CA1-V1, CA1-DG, CA1-CA3, CA1-RSC, CA1-SUB, V1-RSC, RSC-SUB, CA3-DG.
 | Configs | 66 (`{res,sig}` × 11 k-rules × 3 lag windows) | 44 (`{res,sig}` × 11 k-rules × {25,50} ms bins) |
 | Result pkls | `results/stage2_*_lag*.pkl`, `results/stage3_*_lag*.pkl` (132) | `results/landmark{25,50}_*.pkl` (44) |
 | Summary | `figures/sweep_summary_spatial.{csv,xlsx}` | `results/sweep_landmark_summary.csv` |
-| Learning test | per-config `d_cc` + uncorrected `p_naive_vs_expert` only | **paired per-animal Wilcoxon + FDR** (`results/learning_changes_*.csv`) |
+| Learning test | **paired Wilcoxon + FDR** (`learning_changes_spatial_*.csv`) — null; CA3-DG dir-consistent | **paired per-animal Wilcoxon + FDR** (`results/learning_changes_*.csv`) |
 | Canonical config | `res_samp15_lag10` | **`landmark50_res_samp15`** |
 | Status | Exploratory — see §4 gap | **Carried through to a rigorous verdict** |
 
@@ -59,9 +59,15 @@ strengthening with expertise**.
   landmark configs — far ahead of any other effect (next is V1-RSC intermediate-naive at
   7/40, which does *not* reproduce in the expert contrast). Source: pooled-scope rows of
   `results/learning_changes_*.csv` (CRLF-safe scan; see `GOTCHAS.md`).
-- **Spatial corroboration:** in `figures/sweep_summary_spatial.csv`, CA3-DG has the largest
-  positive `d_cc` (+0.053, cc_expert 0.248 — the highest spatial CC of any pair), consistent
-  in sign though not significant.
+- **Spatial corroboration (paired test, 2026-06-05):** the spatial arm now has its own paired
+  per-animal Wilcoxon + FDR test (`scripts/learning_changes_spatial.py`, mirroring the landmark
+  pooled scope). Across all 66 spatial configs there is **1** FDR survivor total
+  (CA1-V1/ifi_weighted in a single config) — consistent with chance, i.e. **no robust spatial
+  learning effect**. But **CA3-DG expert−naive `mi_sig` is positive in 63/66 configs** (committed
+  config: Δ=+0.18) — strongly direction-consistent with the landmark finding. It never reaches
+  significance because only **n=4** animals have CA3-DG, and the two-sided signed-rank p-floor at
+  n=4 is 0.125. So the full-corridor arm is both diluted and underpowered; the event-locked
+  landmark arm is where the effect is detectable.
 - **Weaker / not robust:** CA1-CA3 (expert-naive, 2/40), CA1-RSC, CA1-DG, and scattered
   intermediate-naive hits (V1-RSC, RSC-SUB) appear in a minority of configs and do not
   reproduce across contrasts. Treat as suggestive, not established.
@@ -96,12 +102,12 @@ other pairs are at best suggestive.**
 
 ## 5. Open decisions
 
-1. **Spatial-arm learning gap.** The spatial arm has 132 result pkls and a summary, but its
-   `p_naive_vs_expert` is uncorrected and there is no paired per-animal test analogous to
-   `scripts/learning_changes.py`. Decide: (a) build a spatial analogue of the paired+FDR test
-   to get a comparable verdict, or (b) formally declare the spatial arm exploratory/superseded
-   by the landmark arm. *(Recommendation: (b) unless a corridor-wide learning claim is needed.)*
-2. **Arm A (running-state).** Designed, not run. Run it or drop it from scope.
+1. ~~**Spatial-arm learning gap.**~~ **Resolved 2026-06-05** — built `learning_changes_spatial.py`
+   (paired per-animal Wilcoxon + FDR). Verdict: no robust spatial learning effect (1/66 configs
+   has a lone FDR hit), CA3-DG direction-consistent but underpowered (n=4). The spatial arm is
+   confirmed exploratory/corroborative; the landmark arm is canonical.
+2. **Arm A (running-state).** Committed config `temp50_sig_samp15` run on 2026-06-05 (see §3 once
+   analysed). Full 22-config sweep still optional.
 3. **Publication scope.** If CA3-DG is the headline result, decide whether the analysis was
    pre-registered to that pair or is a post-hoc discovery (affects how the 8-pair correction
    is framed).

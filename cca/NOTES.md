@@ -16,8 +16,18 @@ FDR-pass; expert>intermediate Δ+0.15 p=0.004 FDR-pass; reproducible in 18/40
 non-overfit landmark configs). Nothing survives the per-landmark (48-test)
 FDR family in any config. Excluded the 4 overfit configs
 (`landmark50_res_{fix30,var75,var85,var95}`). Found + fixed a CRLF gotcha in
-the learning-changes CSVs (see `GOTCHAS.md`). Spatial arm has no paired
-learning test -- flagged as an open decision in `STATE.md` §5.
+the learning-changes CSVs (see `GOTCHAS.md`).
+
+Then closed the spatial-arm gap: built `scripts/learning_changes_spatial.py`
+(TDD) with the testable core in `src/tom_cca/` -- `subspace_stats.epoch_subspace_stats`
+(spatial lag-0 analogue of `cell_subspace_stats`; shared `_aggregate` core) and
+`paired_stats` (Wilcoxon + BH-FDR). Ran on all 66 spatial configs: 1 lone FDR
+survivor across the whole sweep (chance), CA3-DG expert-naive `mi_sig` positive
+in 63/66 configs but underpowered (n=4, signed-rank p-floor 0.125). Spatial arm
+confirmed corroborative-only. 196 tests pass.
+
+Kicked off Arm A (running-state) committed config `temp50_sig_samp15` via
+`run_temporal.py --arm runstate`.
 
 ---
 
