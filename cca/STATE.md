@@ -47,8 +47,22 @@ The Arm A (running-state) temporal analysis in `UNDERSTANDING_temporal.md` is de
 
 ## 3. Findings
 
-**Headline:** the one robust, reproducible learning effect is **CA3-DG communication
-strengthening with expertise**.
+> **⚠ Pseudoreplication caveat (2026-06-05) — read before trusting the p-values below.**
+> The `per_pair_pooled` test in `learning_changes.py:174` pools deltas across all 6 landmarks
+> (`n` = animals × landmarks) and treats them as independent — but the 6 landmarks within an
+> animal are repeated measures, not independent samples. This inflates significance: several
+> "hits" have a **median delta of ≈0.000** yet `p<0.01` purely from the inflated `n` (e.g.
+> CA1-RSC in `samp25`). When landmarks are **collapsed to one value per animal** (the honest
+> unit, `n` = #animals = 4–10), **no pair survives within-pair correction in the committed
+> config — including CA3-DG** (n=4, Wilcoxon p-floor 0.125). So the headline numbers below are
+> the pooled (anti-conservative) figures; the honest per-animal verdict is **null**. CA3-DG
+> remains the most consistent *direction* (positive Δ in nearly all configs and 63/66 spatial
+> configs) but is **not significant under a proper per-animal / mixed-effects test**. The real
+> limit is N and pseudoreplication, not the FDR family. A mixed-effects model (animal random
+> effect, landmark as repeated measure) is the correct way to use the landmark-level data.
+
+**Headline (pooled scope — see caveat above):** the most consistent effect is **CA3-DG
+communication strengthening with expertise** (direction-robust; significance pseudoreplicated).
 
 - **Canonical landmark config (`landmark50_res_samp15`), pooled across landmarks:**
   - expert vs naive: median Δmi = **+0.21**, p = 0.0059, **FDR-pass** ✓
