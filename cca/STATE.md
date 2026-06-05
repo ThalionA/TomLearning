@@ -61,8 +61,27 @@ The Arm A (running-state) temporal analysis in `UNDERSTANDING_temporal.md` is de
 > limit is N and pseudoreplication, not the FDR family. A mixed-effects model (animal random
 > effect, landmark as repeated measure) is the correct way to use the landmark-level data.
 
-**Headline (pooled scope — see caveat above):** the most consistent effect is **CA3-DG
-communication strengthening with expertise** (direction-robust; significance pseudoreplicated).
+**Honest verdict (mixed-effects / per-animal tests, 2026-06-05).** Two non-pseudoreplicated
+tests — per-animal collapse and a random-slope LMM (`scripts/learning_changes_mixed.py`,
+`src/tom_cca/mixed_effects.py`), within-pair FDR, no cross-pair correction — reshape the
+headline. Effects appear in the **well-powered pairs (n≈8–10 animals)**, not the pooled favourite:
+- **CA1-RSC** — most reproducible: a directionality (`ifi_weighted`) shift that peaks at the
+  *intermediate* stage (non-monotonic), in ~20 configs across both methods; plus a strength
+  (`mi_sig`) increase in `landmark50_res_samp25` (both methods). n=8.
+- **CA1-DG** — modest monotonic strength increase (expert>naive, +0.05) surviving the LMM in
+  `landmark50_res_samp40` (both methods). n=8.
+- **CA3-DG** — the pooled "headline" — **does not survive** any honest test (only n=4 animals;
+  signed-rank floor p=0.125), though all 4 animals move in the same (+) direction.
+- The large V1-RSC `mi_sig` hits are confined to overfit/high-k 25 ms configs and are
+  non-monotonic — discount.
+Bottom line: with honest statistics the learning effects are **modest, pair-specific, and
+config-dependent**; the N (4–10 animals/pair) is the binding constraint. Most defensible single
+result: **CA1-DG strength ↑ in `landmark50_res_samp40`** (residual, conservative k, survives the
+random-slope LMM).
+
+**Headline (pooled scope — anti-conservative, see caveat above):** the most consistent effect is
+**CA3-DG communication strengthening with expertise** — direction-robust, but its significance is
+pseudoreplicated and it does **not** survive the honest tests above.
 
 - **Canonical landmark config (`landmark50_res_samp15`), pooled across landmarks:**
   - expert vs naive: median Δmi = **+0.21**, p = 0.0059, **FDR-pass** ✓
