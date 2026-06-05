@@ -1,18 +1,26 @@
 # Tom-learning CCA pipeline
 
-Spatial CCA pipeline for inter-areal communication across spatial learning in
+> **Start with [`STATE.md`](STATE.md)** — it reconciles the two analysis arms
+> (spatial + landmark), names the canonical configs, and states the current findings.
+> This README is quick-start only.
+
+CCA pipeline for inter-areal communication across spatial learning in
 the Tom (hippocampal / cortical) cohort. Direct Python port of the striatum
 CCA pipeline (`StriatumACC/Striatum project/cca/`); same analyses, same code
-backbone, Tom's data layout + pair list.
+backbone, Tom's data layout + pair list. Two arms now exist: a **spatial**
+full-corridor sweep (66 configs) and a **landmark** event-locked sweep (44
+configs); see `STATE.md` and `UNDERSTANDING_temporal.md`.
 
 Eight area pairs (the list hardcoded in
 `HC_V1_Code/HC_V1_temporal.m` and the legacy spatial-CCA scripts):
 
   CA1-V1, CA1-DG, CA1-CA3, CA1-RSC, CA1-SUB, V1-RSC, RSC-SUB, CA3-DG
 
-Spatial-only; 200 bins x 2.5 cm. Fast-spiking units excluded (Tom's
-convention: V1/RSC/CA1/CA3 only). Sweep covers CCA type, z-scoring,
-min-units, LP criterion, PC-count rule -- **264 configs**.
+200 bins x 2.5 cm (spatial arm). Fast-spiking units excluded (Tom's
+convention: V1/RSC/CA1/CA3 only). After commit pass 1 (z-scoring fixed on,
+min_units=5, Tom's LP, learners only), the spatial sweep is **66 configs**
+(`{res,sig}` x 11 PC-count rules x 3 lag windows); the landmark arm is a
+further **44 configs**. See `STATE.md`.
 
 ## Data layout
 
@@ -74,7 +82,7 @@ Results go to `cca/results/`, figures to `cca/figures/`.
         stage3.py           # membership + principal angles driver
         subspace.py         # principal angles, split-half noise floor
         surrogate.py        # circshift / trial-permutation nulls
-        sweep.py            # Tom sweep grid (264 configs)
+        sweep.py            # Tom sweep grid (66 configs post commit-pass-1)
       scripts/              # see UNDERSTANDING.md sec. 7
-      tests/                # pytest suite (109 tests)
+      tests/                # pytest suite
       results/, figures/    # outputs (gitignored or empty initially)

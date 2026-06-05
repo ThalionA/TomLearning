@@ -137,7 +137,7 @@ def main():
 
     with open(config.FIGURES_DIR / "committed_ifi.csv", "w",
               newline="") as fh:
-        wr = csv.writer(fh)
+        wr = csv.writer(fh, lineterminator="\n")
         wr.writerow(["pair", "window", "n_naive", "ifi_naive", "p_naive_vs0",
                      "n_expert", "ifi_expert", "p_expert_vs0",
                      "ifi_diff_expert_minus_naive", "p_naive_vs_expert"])

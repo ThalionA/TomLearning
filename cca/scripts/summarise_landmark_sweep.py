@@ -231,7 +231,7 @@ def main():
                   "mean_n_sig", "median_cc_sig", "median_ifi_sig",
                   "n_sig_dims_total"]
     with open(out_csv, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
     print(f"wrote {out_csv}  ({len(rows)} rows)")

@@ -1,7 +1,23 @@
 # Tom-learning CCA -- development notes
 
 Running log. The *spec* lives in `UNDERSTANDING.md` (decisions + edit log);
-this file is the chronological work log.
+the *current state, canonical configs, and findings* live in `STATE.md`
+(read that first); this file is the chronological work log.
+
+---
+
+## 2026-06-05 -- consolidation pass: STATE.md + verdict
+
+Wrote `STATE.md` reconciling the spatial and landmark arms. Settled the
+learning verdict from the existing `learning_changes_*.csv`: the one robust,
+reproducible effect is **CA3-DG coupling strengthening at the expert stage**
+(committed `landmark50_res_samp15`, pooled scope: expert>naive Δ+0.21 p=0.006
+FDR-pass; expert>intermediate Δ+0.15 p=0.004 FDR-pass; reproducible in 18/40
+non-overfit landmark configs). Nothing survives the per-landmark (48-test)
+FDR family in any config. Excluded the 4 overfit configs
+(`landmark50_res_{fix30,var75,var85,var95}`). Found + fixed a CRLF gotcha in
+the learning-changes CSVs (see `GOTCHAS.md`). Spatial arm has no paired
+learning test -- flagged as an open decision in `STATE.md` §5.
 
 ---
 

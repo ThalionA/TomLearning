@@ -5,6 +5,7 @@ __pycache__/
 results/*.pkl
 results/*.tmp
 results/*.done
+results/.sandbox_scratch/
 figures/*.png
 figures/*.csv
 figures/*.xlsx

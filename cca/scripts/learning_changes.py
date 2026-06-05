@@ -199,7 +199,7 @@ def _write_csv(rows: list[dict], path: Path):
     fieldnames = ["scope", "pair", "landmark", "stat", "contrast",
                   "n", "median_delta", "wilcoxon_W", "p", "p_fdr_pass"]
     with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         w.writeheader()
         for r in rows:
             w.writerow({k: r.get(k, "") for k in fieldnames})
