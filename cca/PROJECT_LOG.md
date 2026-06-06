@@ -115,6 +115,18 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Parametric stats + epoch analysis
+- Added `mixed_effects.lmm_slope` (random-slope LMM population slope; pools all windows; +2 tests)
+  and a parametric section to `analyze_trajectory.py` (per-animal-slope **t-test** + **LMM**
+  beside Wilcoxon). Result: **CA1-RSC Gini↓ is decisive** — Wilcoxon 0.008 / t 0.003 / **LMM
+  4e-5** (n=8, all agree); CA1-DG solid (all ~0.02–0.04); CA1-V1 borderline (~0.05–0.06).
+  CA3-DG/CA1-SUB significant under LMM only → over-confident at n=4 (random slope unidentifiable;
+  t-test disagrees) → suggestive only. **Rule: where t-test and LMM disagree at small n, trust the
+  t-test.**
+- `run_epochs.py` (full suite on naive/intermediate/expert epoch windows) RUNNING; `analyze_epochs.py`
+  (paired Wilcoxon + paired t + LMM epoch contrasts, all pairs, + epoch figure) ready. TODO when it
+  lands: run analyze_epochs (both report it; possibly FS-incl epoch run), add epoch figure to report.
+
 ### 2026-06-06 — Split-half + FS + figures DONE; rotation=noise; FS-robust
 - Both FS runs complete (`trajectory_windows.csv` FS-excl 636 rows w/ sh_x; `_fsincl.csv` 647).
   Regenerated full figure set both conditions (points+SEM bars, mean±SEM bands+faint lines,
