@@ -114,6 +114,12 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Animals-as-n vs dims-as-n comparison figures
+- `figs_units.py`: per per-dim metric (held-out CC / IFI / optimal lag) a 2-row figure — ANIMALS-as-n
+  (top) vs DIMS-as-n (bottom) × 8 pairs across epochs, points + mean±SEM, vs-0 stars, naive→expert p
+  per panel. Embedded in report §3.2 (ifi/lag) + §3.7 (cc). Population metrics (Gini/n_sig/rotation)
+  have no per-dim analogue → animals-as-n only (epochs figure). Visualises the pseudoreplication.
+
 ### 2026-06-06 — Learning vs time-on-task: de-sparsification is EXPERIENCE-driven (learning unproven)
 - `analyze_learning_vs_time.py`: (1) learner vs non-learner Gini-vs-trial_frac slopes — comparable
   (CA1-RSC -0.13 vs -0.10; between-group n.s.); (2) interaction LMM gini~trial_frac*learner+(trial_frac|animal)
