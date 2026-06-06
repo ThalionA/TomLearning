@@ -115,6 +115,13 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Optimal-lag battery: confirms directionality not robust
+- Generalised `analyze_ifi.py` to per-dim OPTIMAL LAG (`analyze_ifi.py lag`; +kruskal try/except).
+  Agrees with IFI: animals-as-n null for every pair; dims-as-n flags V1-RSC (naive lag>0 t=0.046,
+  nai-vs-exp rank-sum p=0.007, KW p=0.011). Starkest artifact: V1-RSC nai→exp lag Δ=0 (p=1.0) by
+  animal vs p=0.007 by dims. Both directional readouts converge → directionality not robust;
+  dims-as-n manufactures it. Report §3.2 updated.
+
 ### 2026-06-06 — IFI directionality battery (animals & dims as n): directionality NOT robust
 - Added per-dim IFI/optimal-lag to `subspace_window` (+test) and `analyze_ifi.py`: per pair, IFI-vs-0
   per epoch (t + Wilcoxon), naive-vs-expert (paired t), RM-ANOVA + Friedman + Holm post-hoc —

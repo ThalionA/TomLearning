@@ -36,6 +36,11 @@ from tom_cca import config  # noqa: E402
 EPOCHS = ["naive", "intermediate", "expert"]
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
          "RSC-SUB", "V1-RSC"]
+# Set in main() from --metric: directionality readout to test.
+#   ifi -> animal col 'ifi' (dom-dim IFI), dim col 'ifi'
+#   lag -> animal col 'optimal_lag' (dom-dim lag, bins), dim col 'lag'
+ANIMAL_COL = "ifi"
+DIM_COL = "ifi"
 
 
 def _f(x):
@@ -61,16 +66,16 @@ def _star(p):
 
 def animals_block(em, pair):
     g = em[em["pair"] == pair]
-    by_ep = {e: _f(pd.to_numeric(g[g["epoch"] == e]["ifi"], errors="coerce"))
+    by_ep = {e: _f(pd.to_numeric(g[g["epoch"] == e][ANIMAL_COL], errors="coerce"))
              for e in EPOCHS}
     print(f"  ANIMALS-as-n:")
     for e in EPOCHS:
         n, m, tp, wp = _vs0(by_ep[e])
         if n >= 3:
-            print(f"    IFI vs0 {e:12s} n={n} mean={m:+.4f} "
+            print(f"    dir vs0 {e:12s} n={n} mean={m:+.4f} "
                   f"t={tp:.3g}{_star(tp)} W={wp:.3g}{_star(wp)}")
     # naive vs expert (paired, by animal)
-    gp = g.pivot_table(index="animal", columns="epoch", values="ifi", aggfunc="mean")
+    gp = g.pivot_table(index="animal", columns="epoch", values=ANIMAL_COL, aggfunc="mean")
     if {"naive", "expert"} <= set(gp.columns):
         pair_df = gp[["naive", "expert"]].dropna()
         if len(pair_df) >= 3:
@@ -109,15 +114,15 @@ def animals_block(em, pair):
 
 def dims_block(ed, pair):
     g = ed[(ed["pair"] == pair) & (ed["sig"] == 1)].copy()
-    g["ifi"] = pd.to_numeric(g["ifi"], errors="coerce")
-    by_ep = {e: _f(g[g["epoch"] == e]["ifi"]) for e in EPOCHS}
+    g[DIM_COL] = pd.to_numeric(g[DIM_COL], errors="coerce")
+    by_ep = {e: _f(g[g["epoch"] == e][DIM_COL]) for e in EPOCHS}
     if all(v.size < 3 for v in by_ep.values()):
         return
     print(f"  DIMS-as-n (sig dims pooled):")
     for e in EPOCHS:
         n, m, tp, wp = _vs0(by_ep[e])
         if n >= 3:
-            print(f"    IFI vs0 {e:12s} nd={n} mean={m:+.4f} "
+            print(f"    dir vs0 {e:12s} nd={n} mean={m:+.4f} "
                   f"t={tp:.3g}{_star(tp)} W={wp:.3g}{_star(wp)}")
     if by_ep["naive"].size >= 3 and by_ep["expert"].size >= 3:
         up = float(stats.mannwhitneyu(by_ep["expert"], by_ep["naive"],
@@ -126,15 +131,25 @@ def dims_block(ed, pair):
               f"U-p={up:.3g}{_star(up)}")
     present = [by_ep[e] for e in EPOCHS if by_ep[e].size >= 3]
     if len(present) == 3:
-        kp = float(stats.kruskal(*present).pvalue)
-        print(f"    3-epoch Kruskal–Wallis  p={kp:.3g}{_star(kp)}")
+        try:
+            kp = float(stats.kruskal(*present).pvalue)
+            print(f"    3-epoch Kruskal–Wallis  p={kp:.3g}{_star(kp)}")
+        except ValueError:
+            print("    3-epoch Kruskal–Wallis  n/a (ties)")
 
 
 def main():
+    global ANIMAL_COL, DIM_COL
+    metric = sys.argv[1] if len(sys.argv) > 1 else "ifi"
+    if metric not in ("ifi", "lag"):
+        raise SystemExit("usage: analyze_ifi.py [ifi|lag]")
+    ANIMAL_COL = "ifi" if metric == "ifi" else "optimal_lag"
+    DIM_COL = "ifi" if metric == "ifi" else "lag"
+    unit = ">0 = first area leads" if metric == "ifi" else "bins; >0 = first area leads (×25 ms)"
     em = pd.read_csv(config.RESULTS_DIR / "epoch_metrics.csv")
     ed = pd.read_csv(config.RESULTS_DIR / "epoch_dims.csv")
-    print(f"IFI directionality battery — epoch_metrics {len(em)} rows, "
-          f"epoch_dims {len(ed)} dim-rows\n")
+    print(f"DIRECTIONALITY battery — metric = {metric.upper()} ({unit}) | "
+          f"epoch_metrics {len(em)} rows, epoch_dims {len(ed)} dim-rows\n")
     for pair in PAIRS:
         if em[em["pair"] == pair].empty:
             continue
