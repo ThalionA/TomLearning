@@ -14,7 +14,7 @@ narrative + state of play.**
 ## CURRENT STATE (2026-06-06)
 
 **Branch:** `cca-consolidation` (NOT merged to main; nothing pushed). ~10 commits this arc.
-**Tests:** 223 passing (`cd cca && PYTHONPATH=src python -m pytest -q`).
+**Tests:** 222 passing (`cd cca && PYTHONPATH=src python -m pytest -q`).
 
 **Where the project is, in one paragraph.** The original epoch/landmark sweep was statistically
 dead-on-arrival for the *learning* question: ~2,000 samples/fit with `k≈n/15` overfit (held-out
