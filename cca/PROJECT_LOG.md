@@ -44,9 +44,17 @@ rotation) rather than a noisy 3-epoch magnitude contrast.
   subspace rotation angle, sample-matched, learner-split.
 
 **Running / pending right now:**
-- `run_trajectory.py` FULL-suite over all 16 animals — IN PROGRESS (background, ~30–60 min),
-  log `results/.sandbox_scratch/run_trajectory_full.log`. When done: run `analyze_trajectory.py`.
+- `run_trajectory.py` FULL-suite over all 16 animals — IN PROGRESS (background, ~25 min after
+  speed fixes), log `results/.sandbox_scratch/run_trajectory_full.log`; writes
+  `results/trajectory_windows.csv` incrementally per animal. When done: run `analyze_trajectory.py`.
 - `run_transition.py` — to run AFTER trajectory (avoid two 1.6 GB/animal loads at once).
+- **Speed/correctness fixes applied (2026-06-06):** window_subspace was ~11 s/window (significance
+  + 21-lag scan on ~41k samples). Now cap each window to a contiguous ~6 k-bin block (grown to span
+  ≥ N_FOLDS+1 trials so the CV is valid) → ~2.3 s/window. Fixed `n_sig` overcounting: significance
+  now compares the *held-out* per-dim CC to the *dominant*-dim circular-shift threshold (was an
+  in-sample per-dim test → 23 sig dims; now ~3). Driver writes CSV incrementally + unbuffered.
+  CAVEAT: lags are in running-bin units (non-running bins removed), so IFI/optimal-lag are
+  approximate (≈±250 ms); a segment-aware lag is a future refinement.
 
 **Findings so far (honest):**
 - The pooled landmark "CA3-DG strengthens" headline was **pseudoreplication** (n = animals ×

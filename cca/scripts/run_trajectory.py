@@ -34,8 +34,10 @@ from tom_cca import (config, dataio, membership, partial,  # noqa: E402
 K = 30
 N_FOLDS = 5
 MAX_LAG = 10                  # +-10 bins = +-250 ms at 25 ms
-N_SHUFFLES = 30
+N_SHUFFLES = 20
 SAT = 0.99
+MAX_SAMPLES = 6000            # cap bins/window: ~50x>K for a stable fit, keeps
+                              # the contiguous lag structure, ~7x faster fits
 ROT_DIMS = 3                  # dims used for the rotation (dominant subspace)
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
          ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
@@ -88,6 +90,13 @@ def main():
           f"| bin={args.bin_ms}ms window={args.window} step={args.step} "
           f"K={K} pCCA lag+-{MAX_LAG} shuffles={N_SHUFFLES}\n")
 
+    out = config.RESULTS_DIR / "trajectory_windows.csv"
+
+    def _write(rows):
+        with open(out, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=FIELDS, lineterminator="\n")
+            w.writeheader(); w.writerows(rows)
+
     rows = []
     for a in animals:
         try:
@@ -120,16 +129,25 @@ def main():
             Z = np.concatenate(others, axis=1) if others else None
             pwx = pwy = pmx = pmy = None
             for w in windows:
-                mask = np.isin(trial_ids, w)
-                if mask.sum() < K * 50:
+                idx_all = np.where(np.isin(trial_ids, w))[0]
+                if idx_all.size < K * 50:
                     continue
-                Xi, Yi = X[mask], Y[mask]
+                # contiguous cap (keeps lag structure), but grow until it spans
+                # enough whole trials for the held-out CV folds.
+                cap = MAX_SAMPLES
+                idx = idx_all[:cap]
+                while (np.unique(trial_ids[idx]).size < N_FOLDS + 1
+                       and cap < idx_all.size):
+                    cap += 2000
+                    idx = idx_all[:cap]
+                groups = trial_ids[idx]
+                Xi, Yi = X[idx], Y[idx]
                 if Z is not None:
-                    Zi = Z[mask]
+                    Zi = Z[idx]
                     Xi = partial.partial_out(Xi, Zi)
                     Yi = partial.partial_out(Yi, Zi)
                 ws = subspace_window.window_subspace(
-                    Xi, Yi, trial_ids[mask], k=K, max_lag=MAX_LAG,
+                    Xi, Yi, groups, k=K, max_lag=MAX_LAG,
                     n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
                 cc1 = float(ws.cc[0]) if ws.cc.size else float("nan")
                 if not np.isfinite(cc1) or cc1 >= SAT:
@@ -142,7 +160,7 @@ def main():
                     "performance": round(float(np.nanmean(perf[(w - 1).astype(int)])), 4)
                     if perf.size else "",
                     "lp_rel": round(center - lp, 1) if np.isfinite(lp) else "",
-                    "n_bins": int(mask.sum()), "cc1": round(cc1, 4),
+                    "n_bins": int(idx.size), "cc1": round(cc1, 4),
                     "n_sig": ws.n_sig, "mi_sig": round(ws.mi_sig, 4),
                     "ifi": round(ws.ifi, 4), "optimal_lag": ws.optimal_lag,
                     "gini_x": round(ws.gini_x, 4), "gini_y": round(ws.gini_y, 4),
@@ -156,15 +174,13 @@ def main():
                 n_rows_animal += 1
                 pwx, pwy = ws.weights_x, ws.weights_y
                 pmx, pmy = ws.member_x, ws.member_y
+        _write(rows)                                  # incremental: survive a kill
         print(f"  animal {a.animal_id} ({'L' if is_learner else 'n'}): "
-              f"{n_rows_animal} window-rows")
+              f"{n_rows_animal} window-rows ({len(rows)} total)", flush=True)
 
-    out = config.RESULTS_DIR / "trajectory_windows.csv"
-    with open(out, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=FIELDS, lineterminator="\n")
-        w.writeheader(); w.writerows(rows)
-    print(f"\nwrote {out} ({len(rows)} rows). "
-          "Analyse with scripts/analyze_trajectory.py")
+    _write(rows)
+    print(f"\nwrote {config.RESULTS_DIR/'trajectory_windows.csv'} ({len(rows)} rows). "
+          "Analyse with scripts/analyze_trajectory.py", flush=True)
 
 
 if __name__ == "__main__":

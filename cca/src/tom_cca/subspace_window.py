@@ -80,20 +80,26 @@ def _insample_perdim(Sx, Sy):
     return core.cca_score(Sx, Sy, model)
 
 
-def _significance(Sx, Sy, n_shuffles, alpha, seed):
-    """Per-dim significance vs circular-shift surrogate (in-sample comparison)."""
-    real = _insample_perdim(Sx, Sy)
-    d = real.size
+def _significance(Sx, Sy, cc_heldout, n_shuffles, alpha, seed):
+    """Number of significant dims = held-out CC per dim exceeding a circular-shift
+    threshold. The null is the distribution of the *dominant* canonical
+    correlation under circular shift (the hardest bar); a dimension counts as
+    significant only if its cross-validated CC clears that scalar threshold.
+    Comparing the held-out CC (unbiased) to the dominant-dim shuffle avoids the
+    overcounting of an in-sample, per-dim test.
+    """
+    d = cc_heldout.size
+    if n_shuffles < 1 or d == 0:
+        return np.zeros(d, dtype=bool)
     rng = np.random.default_rng(seed + 7)
     n = Sx.shape[0]
-    null = np.zeros((n_shuffles, d))
+    null_top = np.empty(n_shuffles)
     for s in range(n_shuffles):
         shift = int(rng.integers(1, n))
         rs = _insample_perdim(Sx, np.roll(Sy, shift, axis=0))
-        null[s, :rs.size] = rs[:d]
-    thr = np.quantile(null, 1 - alpha, axis=0)
-    sig = real > thr
-    return sig, real
+        null_top[s] = rs[0] if rs.size else 0.0
+    thr = float(np.quantile(null_top, 1 - alpha))
+    return np.asarray(cc_heldout) > thr
 
 
 def _lag_curve(Sx, Sy, lags):
@@ -130,7 +136,7 @@ def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
     cc = _heldout_perdim(Sx, Sy, groups, n_folds, seed)
     if cc is None:
         cc = np.full(d, np.nan)
-    sig, _ = _significance(Sx, Sy, n_shuffles, alpha, seed)
+    sig = _significance(Sx, Sy, np.nan_to_num(cc, nan=-1.0), n_shuffles, alpha, seed)
     sig = sig[:cc.size]
     n_sig = int(np.sum(sig))
     cc_clip = np.clip(cc, 0.0, CC_CLIP)
