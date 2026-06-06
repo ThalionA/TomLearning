@@ -48,6 +48,7 @@ class WindowSubspace:
     n_units_y: int
     split_half_x: float       # within-window split-half angle (deg) — rotation noise floor
     split_half_y: float
+    sig_mask: np.ndarray      # (d,) bool — which canonical dims are significant
 
 
 def _scores(M: np.ndarray, k: int):
@@ -207,4 +208,5 @@ def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
         member_y=membership.member_mask(contrib_y, member_q),
         n_units_x=X.shape[1], n_units_y=Y.shape[1],
         split_half_x=sh_x, split_half_y=sh_y,
+        sig_mask=np.asarray(sig, dtype=bool),
     )

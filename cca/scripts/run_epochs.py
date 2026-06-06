@@ -52,6 +52,7 @@ def main():
           f"| FS {'included' if args.include_fs else 'excluded'}\n")
 
     rows = []
+    dim_rows = []                                     # one row per significant canonical dim
     for a in animals:
         if a.animal_id not in entries:               # epochs require an LP
             continue
@@ -103,13 +104,24 @@ def main():
                     "ifi": round(ws.ifi, 4), "optimal_lag": ws.optimal_lag,
                     "gini_x": round(ws.gini_x, 4), "gini_y": round(ws.gini_y, 4)})
                 n_rows += 1
+                for d in range(int(ws.cc.size)):      # per-dimension (dims-as-n)
+                    dim_rows.append({
+                        "animal": a.animal_id, "pair": f"{ax}-{ay}", "epoch": epoch,
+                        "dim": d + 1, "peak_cc": round(float(ws.cc[d]), 4),
+                        "sig": int(bool(ws.sig_mask[d])) if d < ws.sig_mask.size else 0})
         print(f"  animal {a.animal_id}: lp={entries[a.animal_id].lp} {n_rows} rows")
 
     out = config.RESULTS_DIR / f"epoch_metrics{suffix}.csv"
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS, lineterminator="\n")
         w.writeheader(); w.writerows(rows)
-    print(f"\nwrote {out} ({len(rows)} rows). Analyse with scripts/analyze_epochs.py")
+    out_d = config.RESULTS_DIR / f"epoch_dims{suffix}.csv"
+    with open(out_d, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["animal", "pair", "epoch", "dim",
+                                          "peak_cc", "sig"], lineterminator="\n")
+        w.writeheader(); w.writerows(dim_rows)
+    print(f"\nwrote {out} ({len(rows)} rows) + {out_d} ({len(dim_rows)} dim-rows). "
+          "Analyse with scripts/analyze_epochs.py / analyze_dims_as_n.py")
 
 
 if __name__ == "__main__":
