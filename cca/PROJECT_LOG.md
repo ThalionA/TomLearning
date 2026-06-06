@@ -44,10 +44,9 @@ rotation) rather than a noisy 3-epoch magnitude contrast.
   subspace rotation angle, sample-matched, learner-split.
 
 **Running / pending right now:**
-- `run_trajectory.py` FULL-suite over all 16 animals — IN PROGRESS (background, ~25 min after
-  speed fixes), log `results/.sandbox_scratch/run_trajectory_full.log`; writes
-  `results/trajectory_windows.csv` incrementally per animal. When done: run `analyze_trajectory.py`.
-- `run_transition.py` — to run AFTER trajectory (avoid two 1.6 GB/animal loads at once).
+- Full-suite Frame A trajectory — DONE (636 rows). Findings above.
+- `run_transition.py` (uncued→cued full suite) — IN PROGRESS (background),
+  log `results/.sandbox_scratch/run_transition.log`. When done: report deltas + rotation angle.
 - **Speed/correctness fixes applied (2026-06-06):** window_subspace was ~11 s/window (significance
   + 21-lag scan on ~41k samples). Now cap each window to a contiguous ~6 k-bin block (grown to span
   ≥ N_FOLDS+1 trials so the CV is valid) → ~2.3 s/window. Fixed `n_sig` overcounting: significance
@@ -58,13 +57,28 @@ rotation) rather than a noisy 3-epoch magnitude contrast.
 
 **Findings so far (honest):**
 - The pooled landmark "CA3-DG strengthens" headline was **pseudoreplication** (n = animals ×
-  landmarks). Under honest per-animal / mixed-effects tests, no pair survives well; CA3-DG is
-  directionally consistent but n=4 (signed-rank floor 0.125). See `STATE.md` §3.
-- Continuous-regime pCCA: intra-hippocampal coupling (CA3-DG, CA1-DG, CA1-CA3) > hippocampal-
-  cortical (CA1-RSC, CA1-V1). CA3-DG strongest.
-- Frame A v1 (CC1, trial-fraction axis): within-animal trajectories are often **clean** (|r| up to
-  0.94) but the **slope sign is animal-specific** → across-animal null. Hypothesis: trial-fraction
-  ≠ learning stage under varying learning rates → use performance / LP-relative axes (now built).
+  landmarks). Honest per-animal / mixed-effects tests are ~null for magnitude. See `STATE.md` §3.
+- Continuous-regime pCCA levels: intra-hippocampal (CA3-DG cc1≈0.36, n_sig≈2.9; CA1-CA3 0.31) >
+  hippocampal-cortical (CA1-RSC 0.09, CA1-V1 0.12). CA3-DG strongest/richest subspace.
+- **FULL-SUITE Frame A (636 windows, 16 animals; `results/trajectory_windows.csv`, analyse with
+  `analyze_trajectory.py`) — the payoff of looking beyond CC1:**
+  - **Directionality:** CA1→RSC information flow is significant (mean IFI=+0.010, sign test
+    p=0.008) — hippocampus leads retrosplenial cortex, matching Gonzalez/Buzsáki.
+  - **Learning reshapes STRUCTURE, not magnitude.** Strength (cc1/mi_sig/n_sig) does NOT track
+    learning (underpowered magnitude question, as predicted). But:
+    - **Gini (subspace sparsity) DECREASES with learning** — more units recruited into the
+      communication subspace — in **CA1-RSC (p=0.008/0.039/0.008 across trial-frac/performance/
+      LP-rel — all three axes), CA1-DG (p=0.023/–/0.039), CA1-V1 (p=0.049)**. Robust, multi-axis.
+    - **CA1→DG directionality (IFI) INCREASES with learning** (p=0.016 on trial-frac AND LP-rel;
+      7/8 animals up).
+  - These needed the full suite — CC1 alone showed nothing (vindicates the user's instinct).
+  - **Caveats:** Gini↓ also appears weakly in non-learners (n=3) → can't fully separate learning
+    from time-on-task; the LP-relative-axis significance argues for learning-relevance. Many
+    comparisons (8 metrics × 3 axes × 8 pairs), no formal correction — credibility rests on the
+    **multi-axis consistency** (CA1-RSC Gini across all 3 axes; CA1-DG IFI across 2), not isolated
+    p's. Small N (4–10/pair). Lags are running-bin-approximate (≈±250 ms).
+- Frame A v1 (CC1 only): within-animal trajectories clean (|r| up to 0.94) but slope sign
+  animal-specific → magnitude null. Resolved by reading structure instead of magnitude.
 
 **Data facts (Tom cohort):**
 - 16 animals, **1 session each**, ~100–320 cued trials. Learners (have LP): 28,34,36,41,52,61,63,
@@ -90,6 +104,13 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 ---
 
 ## LOG ENTRIES (newest first)
+
+### 2026-06-06 — Full-suite Frame A landed; structural learning effect
+- Ran full-suite trajectory (16 animals, 636 windows) after speed/n_sig fixes. KEY RESULT: learning
+  reshapes subspace STRUCTURE not magnitude — Gini↓ (more units recruited) in CA1-RSC/CA1-DG/CA1-V1
+  (CA1-RSC robust across all 3 axes incl. LP-relative), CA1→DG IFI↑ with learning; CA1→RSC flow
+  significant at baseline. Strength (cc1/mi_sig) does not track learning. Details + caveats above.
+- Launched `run_transition.py` (uncued→cued full suite).
 
 ### 2026-06-06 — Full subspace suite + all-animals + transition
 - Built `subspace_window` (n_sig, mi_sig, IFI, optimal lag, Gini, weights/members) — TDD, committed.
