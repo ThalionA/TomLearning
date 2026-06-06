@@ -115,6 +115,14 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Dimensions-as-n check (Buzsáki unit): strength-null is genuine
+- Added per-dim export (`subspace_window.sig_mask`, `run_epochs` -> `epoch_dims.csv` 2311 dim-rows /
+  224 sig) + `analyze_dims_as_n.py` (pool sig canonical dims across animals, rank-sum across epochs).
+  **Result: per-dimension CC flat across learning for every pair (all U-p>0.05; V1-RSC borderline
+  ~0.06).** Since dims-as-n inflates N ~5-15x, this confirms the coupling-STRENGTH null is real, not
+  power-limited -> learning signal is participation (Gini) + direction (IFI), not magnitude. Report
+  §3.7 + methods + synthesis updated. Caveat (nested unit) stated; not our inferential test.
+
 ### 2026-06-06 — Parametric stats + epoch analysis
 - Added `mixed_effects.lmm_slope` (random-slope LMM population slope; pools all windows; +2 tests)
   and a parametric section to `analyze_trajectory.py` (per-animal-slope **t-test** + **LMM**
