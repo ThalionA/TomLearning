@@ -14,7 +14,7 @@ narrative + state of play.**
 ## CURRENT STATE (2026-06-06)
 
 **Branch:** `cca-consolidation` (NOT merged to main; nothing pushed). ~10 commits this arc.
-**Tests:** 217 passing (`cd cca && PYTHONPATH=src python -m pytest -q`).
+**Tests:** 223 passing (`cd cca && PYTHONPATH=src python -m pytest -q`).
 
 **Where the project is, in one paragraph.** The original epoch/landmark sweep was statistically
 dead-on-arrival for the *learning* question: ~2,000 samples/fit with `k≈n/15` overfit (held-out
@@ -70,23 +70,22 @@ Epistemic state: Contested.
   landmarks). Honest per-animal / mixed-effects tests are ~null for magnitude. See `STATE.md` §3.
 - Continuous-regime pCCA levels: intra-hippocampal (CA3-DG cc1≈0.36, n_sig≈2.9; CA1-CA3 0.31) >
   hippocampal-cortical (CA1-RSC 0.09, CA1-V1 0.12). CA3-DG strongest/richest subspace.
-- **FULL-SUITE Frame A (636 windows, 16 animals; `results/trajectory_windows.csv`, analyse with
-  `analyze_trajectory.py`) — the payoff of looking beyond CC1:**
-  - **Directionality:** CA1→RSC information flow is significant (mean IFI=+0.010, sign test
-    p=0.008) — hippocampus leads retrosplenial cortex, matching Gonzalez/Buzsáki.
-  - **Learning reshapes STRUCTURE, not magnitude.** Strength (cc1/mi_sig/n_sig) does NOT track
-    learning (underpowered magnitude question, as predicted). But:
-    - **Gini (subspace sparsity) DECREASES with learning** — more units recruited into the
-      communication subspace — in **CA1-RSC (p=0.008/0.039/0.008 across trial-frac/performance/
-      LP-rel — all three axes), CA1-DG (p=0.023/–/0.039), CA1-V1 (p=0.049)**. Robust, multi-axis.
-    - **CA1→DG directionality (IFI) INCREASES with learning** (p=0.016 on trial-frac AND LP-rel;
-      7/8 animals up).
-  - These needed the full suite — CC1 alone showed nothing (vindicates the user's instinct).
-  - **Caveats:** Gini↓ also appears weakly in non-learners (n=3) → can't fully separate learning
-    from time-on-task; the LP-relative-axis significance argues for learning-relevance. Many
-    comparisons (8 metrics × 3 axes × 8 pairs), no formal correction — credibility rests on the
-    **multi-axis consistency** (CA1-RSC Gini across all 3 axes; CA1-DG IFI across 2), not isolated
-    p's. Small N (4–10/pair). Lags are running-bin-approximate (≈±250 ms).
+- **FINAL VERDICT after the full interrogation (the one robust signal, and what it is NOT):**
+  - **The ONE robust effect: the communication subspace DE-SPARSIFIES over the session** (Gini↓ =
+    more neurons recruited), CA1-RSC & CA1-DG, **early (naive→intermediate), plateaus post-LP**.
+    All tests agree: Wilcoxon/t/LMM; trajectory LMM p=4e-5; epoch naive→int LMM p~1e-5; FS-invariant.
+  - **But it is most parsimoniously EXPERIENCE / time-on-task, NOT learning-specific** —
+    non-learners de-sparsify comparably; the trial_frac×learner interaction is n.s. for every pair
+    (p=0.26-0.97); the LP-plateau is suggestive of a learning component but unproven (n=4 non-learners,
+    pre-LP windows n=2). See 2026-06-06 learning-vs-time entry.
+  - **Everything else is a NULL or an artifact:** coupling STRENGTH flat (cc1/mi_sig/n_sig; flat even
+    under dims-as-n → genuine, not power); DIRECTION null (IFI *and* optimal lag null at animals-as-n;
+    the dims-as-n "hits" CA1-RSC/V1-RSC are pseudoreplication — e.g. V1-RSC nai→exp lag Δ=0 p=1.0 by
+    animal vs p=0.007 by dims); ROTATION at the split-half noise floor (no reorientation).
+  - **dims-as-n (Buzsáki unit) lesson:** inflates N ~5-15× and manufactures significant strength/
+    direction results that vanish at the animal level — included for comparison, not inference.
+  - Caveats: small N (4-10/pair); no cross-pair MC correction (rely on cross-axis/cross-test
+    consistency); IFI from in-sample lag curves (optimal-lag agrees); lags running-bin-approximate.
 - Frame A v1 (CC1 only): within-animal trajectories clean (|r| up to 0.94) but slope sign
   animal-specific → magnitude null. Resolved by reading structure instead of magnitude.
 
