@@ -34,7 +34,7 @@ from tom_cca import (config, dataio, membership, partial,  # noqa: E402
 K = 30
 N_FOLDS = 5
 MAX_LAG = 10                  # +-10 bins = +-250 ms at 25 ms
-N_SHUFFLES = 20
+N_SHUFFLES = config.SURROGATE_SHUFFLES   # centralised (see config)
 SAT = 0.99
 MAX_SAMPLES = 6000            # cap bins/window: ~50x>K for a stable fit, keeps
                               # the contiguous lag structure, ~7x faster fits

@@ -11,6 +11,28 @@ narrative + state of play.**
 
 ---
 
+## ⚠ RE-RUN PENDING (shuffle 20→100) — TO BE CONTINUED
+
+The surrogate shuffle count was raised 20→100 (now `config.SURROGATE_SHUFFLES`, used by all drivers).
+**Regenerated @100 already:** the EPOCH analyses — `results/epoch_metrics.csv`, `epoch_dims.csv`,
+and their figures (`HCV1_CCA_fsexcl_epochs.png`, `HCV1_CCA_fsexcl_units_{cc,ifi,lag}.png`) + tables.
+The Gini epoch result is UNCHANGED at 100 shuffles (Gini is shuffle-independent).
+
+**Still reflect 20 shuffles (STALE, re-run when continuing):**
+- `results/trajectory_windows.csv` (FS-excl) and `trajectory_windows_fsincl.csv` (FS-incl)
+- `results/transition_uncued_cued.csv`
+**What's affected by the shuffle count:** only `n_sig`, `mi_sig`, and the dims-as-n significant-dim
+pools. **UNAFFECTED (shuffle-independent):** `gini_x/y`, `cc1`, `ifi`, `optimal_lag`, `rot_x/y`,
+`sh_x/y`, and every slope/contrast computed on those — so **the headline (Gini↓ de-sparsification)
+and all directionality/strength/rotation conclusions stand regardless of the re-run.**
+**Commands to refresh (each ~25 min; background):**
+```
+PYTHONPATH=src python scripts/run_trajectory.py              # FS-excl
+PYTHONPATH=src python scripts/run_trajectory.py --include-fs # FS-incl
+PYTHONPATH=src python scripts/run_transition.py
+PYTHONPATH=src python scripts/figs_report.py && PYTHONPATH=src python scripts/figs_units.py
+```
+
 ## CURRENT STATE (2026-06-06)
 
 **Branch:** `cca-consolidation` (NOT merged to main; nothing pushed). ~10 commits this arc.
@@ -113,6 +135,14 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 ---
 
 ## LOG ENTRIES (newest first)
+
+### 2026-06-06 — Shuffle count centralised (config.SURROGATE_SHUFFLES=100); epochs re-run; re-run pending
+- All drivers now read `config.SURROGATE_SHUFFLES` (=100) — no more per-driver drift. Epoch analyses
+  re-run @100 (epoch_metrics/epoch_dims/figs regenerated); **Gini result unchanged** (shuffle-independent).
+  dims-as-n V1-RSC "hits" persist even capped to ≤3 dims/animal (animal-level still null).
+- **TRAJECTORY + TRANSITION CSVs still reflect 20 shuffles** → re-run pending (only n_sig/mi_sig/dims-pools
+  affected; Gini/CC/IFI/lag/rotation + the headline are shuffle-independent). See the "RE-RUN PENDING"
+  block at top for commands. Documented as to-be-continued.
 
 ### 2026-06-06 — Significance shuffles 20→100; dims-as-n capped to 3/animal; §3.6 clarified
 - Significance of canonical dims = circular-shift surrogate (roll one area, refit pCCA, record

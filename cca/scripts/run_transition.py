@@ -30,7 +30,7 @@ from tom_cca import (config, dataio, membership, paired_stats,  # noqa: E402
 
 K = 15
 N_FOLDS = 4
-N_SHUFFLES = 20
+N_SHUFFLES = config.SURROGATE_SHUFFLES   # centralised (see config)
 MAX_LAG = 8
 ROT_DIMS = 3
 MAX_SAMPLES = 6000            # cap matched block size (speed; stays >> 50*K)

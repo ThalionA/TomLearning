@@ -67,6 +67,13 @@ PAIRS: tuple[tuple[str, str], ...] = (
 # four areas; we copy that convention verbatim.
 FS_AREAS: tuple[str, ...] = ("V1", "RSC", "CA1", "CA3")
 
+# --- Surrogate / significance ------------------------------------------------
+# Shuffle count for the circular-shift surrogate used to test canonical-dimension
+# significance (95th-percentile threshold). Centralised so all continuous-regime
+# drivers (run_trajectory / run_transition / run_epochs) stay consistent; 100
+# matches the reference papers (20 is too few for a stable 95th percentile).
+SURROGATE_SHUFFLES: int = 100
+
 # --- Spatial geometry --------------------------------------------------------
 # Tom's track is 500 cm long, binned into 200 spatial bins at 2.5 cm each
 # (see HC_V1_Code/legacy/CCA_HC_V1_spatial_v2.m).

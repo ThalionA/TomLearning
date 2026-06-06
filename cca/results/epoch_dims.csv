@@ -112,7 +112,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 28,CA1-V1,intermediate,19,0.0009,0,-0.0548,-2
 28,CA1-V1,intermediate,20,0.0072,0,-0.3473,-2
 28,CA1-V1,expert,1,0.2129,1,0.0227,0
-28,CA1-V1,expert,2,0.1752,1,-0.014,-1
+28,CA1-V1,expert,2,0.1752,0,-0.014,-1
 28,CA1-V1,expert,3,0.0838,0,-0.0292,-8
 28,CA1-V1,expert,4,0.0948,0,-0.0374,-7
 28,CA1-V1,expert,5,0.0618,0,-0.0017,0
@@ -131,7 +131,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 28,CA1-V1,expert,18,-0.0041,0,-0.0619,-7
 28,CA1-V1,expert,19,-0.0017,0,-0.0733,-7
 28,CA1-V1,expert,20,-0.0101,0,0.0129,1
-28,CA3-DG,naive,1,0.1361,0,-0.0254,0
+28,CA3-DG,naive,1,0.1361,1,-0.0254,0
 28,CA3-DG,naive,2,0.0446,0,-0.0843,0
 28,CA3-DG,naive,3,0.0117,0,-0.0517,0
 28,CA3-DG,naive,4,0.0013,0,-0.0256,-5
@@ -183,7 +183,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 34,CA1-CA3,intermediate,8,0.0281,0,0.0469,2
 34,CA1-CA3,expert,1,0.4107,1,-0.0001,0
 34,CA1-CA3,expert,2,0.1603,1,0.0402,1
-34,CA1-CA3,expert,3,0.1029,0,-0.0385,0
+34,CA1-CA3,expert,3,0.1029,1,-0.0385,0
 34,CA1-CA3,expert,4,0.0301,0,-0.0217,0
 34,CA1-CA3,expert,5,0.0197,0,-0.0301,0
 34,CA1-CA3,expert,6,0.0147,0,-0.0098,1
@@ -545,7 +545,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 52,CA1-V1,intermediate,19,0.0071,0,0.0923,2
 52,CA1-V1,intermediate,20,-0.0064,0,-0.3996,-7
 52,CA1-V1,expert,1,0.3196,1,-0.0003,0
-52,CA1-V1,expert,2,0.2707,0,-0.0152,0
+52,CA1-V1,expert,2,0.2707,1,-0.0152,0
 52,CA1-V1,expert,3,0.1957,0,-0.0628,-4
 52,CA1-V1,expert,4,0.1009,0,0.0028,3
 52,CA1-V1,expert,5,0.1127,0,-0.0345,-2
@@ -686,8 +686,8 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 61,CA1-RSC,intermediate,19,-0.0114,0,0.0167,-5
 61,CA1-RSC,intermediate,20,-0.0043,0,-0.1875,7
 61,CA1-RSC,expert,1,0.1915,1,-0.0028,0
-61,CA1-RSC,expert,2,0.1246,1,0.0575,8
-61,CA1-RSC,expert,3,0.1308,1,0.0385,0
+61,CA1-RSC,expert,2,0.1246,0,0.0575,8
+61,CA1-RSC,expert,3,0.1308,0,0.0385,0
 61,CA1-RSC,expert,4,0.0865,0,0.0009,1
 61,CA1-RSC,expert,5,0.0949,0,-0.0019,0
 61,CA1-RSC,expert,6,0.0317,0,-0.0172,0
@@ -727,7 +727,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 61,CA1-CA3,naive,20,0.0097,0,-0.0256,-1
 61,CA1-CA3,intermediate,1,0.2108,1,0.0192,0
 61,CA1-CA3,intermediate,2,0.102,0,0.033,0
-61,CA1-CA3,intermediate,3,0.106,0,0.0,0
+61,CA1-CA3,intermediate,3,0.106,1,0.0,0
 61,CA1-CA3,intermediate,4,0.0912,0,0.0056,0
 61,CA1-CA3,intermediate,5,0.0498,0,-0.0012,0
 61,CA1-CA3,intermediate,6,0.0573,0,-0.0029,0
@@ -968,8 +968,8 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 61,V1-RSC,intermediate,1,0.3581,1,0.0115,0
 61,V1-RSC,intermediate,2,0.3328,1,0.0057,0
 61,V1-RSC,intermediate,3,0.2758,1,-0.0184,0
-61,V1-RSC,intermediate,4,0.1846,1,0.0155,0
-61,V1-RSC,intermediate,5,0.169,1,0.0105,0
+61,V1-RSC,intermediate,4,0.1846,0,0.0155,0
+61,V1-RSC,intermediate,5,0.169,0,0.0105,0
 61,V1-RSC,intermediate,6,0.0761,0,0.0232,-1
 61,V1-RSC,intermediate,7,0.0654,0,0.0276,6
 61,V1-RSC,intermediate,8,0.032,0,0.0532,5
@@ -1201,7 +1201,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 66,CA1-V1,expert,18,0.0133,0,0.0067,-5
 66,CA1-V1,expert,19,0.0125,0,-0.1205,-2
 66,CA1-SUB,naive,1,0.1692,1,0.0023,0
-66,CA1-SUB,naive,2,0.1001,1,0.008,0
+66,CA1-SUB,naive,2,0.1001,0,0.008,0
 66,CA1-SUB,naive,3,0.0559,0,-0.0038,0
 66,CA1-SUB,naive,4,0.0841,0,0.0142,0
 66,CA1-SUB,naive,5,0.0064,0,0.0097,5
@@ -1780,7 +1780,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 73,V1-RSC,naive,17,0.0161,0,0.0534,0
 73,V1-RSC,naive,18,-0.0001,0,0.0992,6
 73,V1-RSC,intermediate,1,0.2378,1,0.0292,2
-73,V1-RSC,intermediate,2,0.1354,1,0.0862,3
+73,V1-RSC,intermediate,2,0.1354,0,0.0862,3
 73,V1-RSC,intermediate,3,0.1044,0,0.0654,2
 73,V1-RSC,intermediate,4,0.1025,0,0.0654,1
 73,V1-RSC,intermediate,5,0.0217,0,0.0482,1
@@ -1836,8 +1836,8 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 75,CA1-RSC,naive,19,-0.0106,0,-0.056,0
 75,CA1-RSC,naive,20,0.0041,0,0.1269,0
 75,CA1-RSC,intermediate,1,0.1636,1,0.04,0
-75,CA1-RSC,intermediate,2,0.1293,1,0.0221,0
-75,CA1-RSC,intermediate,3,0.132,1,0.0162,0
+75,CA1-RSC,intermediate,2,0.1293,0,0.0221,0
+75,CA1-RSC,intermediate,3,0.132,0,0.0162,0
 75,CA1-RSC,intermediate,4,0.0733,0,-0.005,0
 75,CA1-RSC,intermediate,5,0.0888,0,0.0145,0
 75,CA1-RSC,intermediate,6,0.0488,0,0.0229,0
@@ -1856,7 +1856,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 75,CA1-RSC,intermediate,19,-0.0085,0,-0.18,-3
 75,CA1-RSC,intermediate,20,0.0058,0,-0.2805,-4
 75,CA1-RSC,expert,1,0.1988,1,0.0304,0
-75,CA1-RSC,expert,2,0.1342,1,0.0404,1
+75,CA1-RSC,expert,2,0.1342,0,0.0404,1
 75,CA1-RSC,expert,3,0.0923,0,0.0079,0
 75,CA1-RSC,expert,4,0.0732,0,0.0243,2
 75,CA1-RSC,expert,5,0.046,0,0.0284,1
@@ -2036,9 +2036,9 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 75,CA1-SUB,intermediate,19,-0.0046,0,-0.0632,-6
 75,CA1-SUB,intermediate,20,-0.0059,0,0.0369,-6
 75,CA1-SUB,expert,1,0.161,1,0.031,0
-75,CA1-SUB,expert,2,0.0936,1,0.008,0
+75,CA1-SUB,expert,2,0.0936,0,0.008,0
 75,CA1-SUB,expert,3,0.0554,0,0.0126,0
-75,CA1-SUB,expert,4,0.0936,1,0.0066,0
+75,CA1-SUB,expert,4,0.0936,0,0.0066,0
 75,CA1-SUB,expert,5,0.063,0,-0.0033,0
 75,CA1-SUB,expert,6,0.053,0,-0.0181,0
 75,CA1-SUB,expert,7,0.0424,0,0.0099,5
@@ -2158,7 +2158,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 75,V1-RSC,expert,1,0.5145,1,0.0115,0
 75,V1-RSC,expert,2,0.3996,1,-0.0151,0
 75,V1-RSC,expert,3,0.3224,1,0.0222,0
-75,V1-RSC,expert,4,0.2634,1,0.0382,0
+75,V1-RSC,expert,4,0.2634,0,0.0382,0
 75,V1-RSC,expert,5,0.201,0,-0.0291,0
 75,V1-RSC,expert,6,0.1037,0,-0.0073,0
 75,V1-RSC,expert,7,0.1095,0,-0.0081,0
@@ -2270,7 +2270,7 @@ animal,pair,epoch,dim,peak_cc,sig,ifi,lag
 77,RSC-SUB,intermediate,6,0.0145,0,0.1563,4
 77,RSC-SUB,expert,1,0.1818,1,0.02,0
 77,RSC-SUB,expert,2,0.1026,1,-0.0234,-1
-77,RSC-SUB,expert,3,0.0947,1,0.0058,0
+77,RSC-SUB,expert,3,0.0947,0,0.0058,0
 77,RSC-SUB,expert,4,0.028,0,0.0695,2
 77,RSC-SUB,expert,5,0.0172,0,0.0464,-1
 77,RSC-SUB,expert,6,0.0245,0,-0.0006,5
