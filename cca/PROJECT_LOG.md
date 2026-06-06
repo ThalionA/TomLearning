@@ -115,6 +115,21 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — IFI directionality battery (animals & dims as n): directionality NOT robust
+- Added per-dim IFI/optimal-lag to `subspace_window` (+test) and `analyze_ifi.py`: per pair, IFI-vs-0
+  per epoch (t + Wilcoxon), naive-vs-expert (paired t), RM-ANOVA + Friedman + Holm post-hoc —
+  ANIMALS-as-n; and dims-as-n (t/Wilcoxon vs0, rank-sum, Kruskal-Wallis).
+- **Result: animals-as-n IFI is NULL for every pair** (no IFI!=0 per epoch, no naive→exp change,
+  RM-ANOVA n.s.; only fragile n=4 single-test hits RSC-SUB/CA1-SUB). **dims-as-n manufactures
+  "significant" directionality** (CA1-RSC int IFI>0 t=5e-4; V1-RSC naive IFI>0 + naive-vs-exp + KW)
+  that VANISHES at the animal level → pseudoreplication false-positives (great illustration of the
+  dims-as-n hazard). Earlier trajectory IFI trends (CA1→DG/CA1→RSC) downgraded to suggestive.
+- CAVEAT: epoch windows short (~10 trials) + in-sample lag curves → IFI is the noisiest readout;
+  per-dim OPTIMAL LAG is more robust (battery-testable if directionality pursued).
+- **Robust learning signal stands: Gini↓ (participation), early (naive→int), LMM p~1e-5.** Strength
+  flat (even dims-as-n). Rotation = noise. Direction = weak/artifact. Report §3.2 + synthesis +
+  headline updated.
+
 ### 2026-06-06 — Dimensions-as-n check (Buzsáki unit): strength-null is genuine
 - Added per-dim export (`subspace_window.sig_mask`, `run_epochs` -> `epoch_dims.csv` 2311 dim-rows /
   224 sig) + `analyze_dims_as_n.py` (pool sig canonical dims across animals, rank-sum across epochs).
