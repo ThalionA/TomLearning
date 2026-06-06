@@ -53,6 +53,29 @@ def test_optimal_lag_recovers_known_shift():
     assert np.isfinite(r.ifi)
 
 
+def test_split_half_floor_small_for_stable_subspace():
+    # A strong, stable shared subspace -> the two halves agree -> small angle.
+    rng = np.random.default_rng(7)
+    n = 9000
+    lat = rng.normal(0, 1, (n, 3))            # 3 shared latents == the 3 compared dims
+    X = rng.normal(0, 0.3, (n, 8)); X[:, :3] += 1.8 * lat
+    Y = rng.normal(0, 0.3, (n, 8)); Y[:, :3] += 1.8 * lat
+    g = np.arange(n) // 300
+    r = sw.window_subspace(X, Y, g, k=6, max_lag=3, n_shuffles=10)
+    assert np.isfinite(r.split_half_x)
+    assert r.split_half_x < 45     # halves agree -> well below orthogonal
+
+
+def test_split_half_floor_large_for_noise():
+    rng = np.random.default_rng(8)
+    n = 8000
+    X = rng.normal(0, 1, (n, 8)); Y = rng.normal(0, 1, (n, 8))
+    g = np.arange(n) // 400
+    r = sw.window_subspace(X, Y, g, k=6, max_lag=3, n_shuffles=10)
+    # no real shared structure -> dominant direction unstable -> large angle
+    assert r.split_half_x > 45
+
+
 def test_gini_and_members_present():
     rng = np.random.default_rng(3)
     n = 4000

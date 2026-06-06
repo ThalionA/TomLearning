@@ -24,7 +24,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import core, lagged, membership
+from . import core, lagged, membership, subspace
 
 CC_CLIP = 0.999
 
@@ -46,6 +46,8 @@ class WindowSubspace:
     member_y: np.ndarray      # (n_units_y,) bool
     n_units_x: int
     n_units_y: int
+    split_half_x: float       # within-window split-half angle (deg) — rotation noise floor
+    split_half_y: float
 
 
 def _scores(M: np.ndarray, k: int):
@@ -121,6 +123,44 @@ def _lag_curve(Sx, Sy, lags):
     return out
 
 
+def _max_angle(wa, wb, d_use):
+    d = int(min(d_use, wa.shape[1], wb.shape[1]))
+    if d < 1:
+        return float("nan")
+    qa, _ = np.linalg.qr(wa[:, :d])
+    qb, _ = np.linalg.qr(wb[:, :d])
+    return float(np.degrees(np.nanmax(subspace.principal_angles(qa, qb))))
+
+
+def _half_weights(X, Y, mask, k, d_use):
+    if np.sum(mask) < 3 * (d_use + 1):
+        return None, None
+    Sx, cx = _scores(X[mask], int(min(k, X.shape[1])))
+    Sy, cy = _scores(Y[mask], int(min(k, Y.shape[1])))
+    model = core.cca_fit(Sx, Sy)
+    d = int(min(d_use, cx.shape[1], cy.shape[1], model.A.shape[1]))
+    return (membership.canonical_weight_scores(cx, model.A, d),
+            membership.canonical_weight_scores(cy, model.B, d))
+
+
+def _split_half_angles(X, Y, groups, k, d_use, seed):
+    """Rotation NOISE FLOOR: max principal angle between subspaces fit on two
+    random halves of the window's trials. A genuine cross-window rotation only
+    means reorientation if it exceeds this within-window floor."""
+    uniq = np.unique(groups)
+    if uniq.size < 4:
+        return float("nan"), float("nan")
+    rng = np.random.default_rng(seed + 11)
+    perm = rng.permutation(uniq)
+    h1 = perm[: uniq.size // 2]
+    m1 = np.isin(groups, h1)
+    wx1, wy1 = _half_weights(X, Y, m1, k, d_use)
+    wx2, wy2 = _half_weights(X, Y, ~m1, k, d_use)
+    if wx1 is None or wx2 is None:
+        return float("nan"), float("nan")
+    return _max_angle(wx1, wx2, d_use), _max_angle(wy1, wy2, d_use)
+
+
 def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
                     n_shuffles: int = 30, alpha: float = 0.05,
                     n_folds: int = 5, member_q: float = 0.75,
@@ -157,6 +197,7 @@ def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
     wy = membership.canonical_weight_scores(cy, model.B, d)
     contrib_x = membership.subspace_contribution(wx)
     contrib_y = membership.subspace_contribution(wy)
+    sh_x, sh_y = _split_half_angles(X, Y, groups, k, d_use=3, seed=seed)
     return WindowSubspace(
         cc=cc, n_sig=n_sig, mi_sig=mi_sig, ifi=ifi, optimal_lag=optimal_lag,
         lags=lags, lag_cc1=lag_cc1,
@@ -165,4 +206,5 @@ def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
         member_x=membership.member_mask(contrib_x, member_q),
         member_y=membership.member_mask(contrib_y, member_q),
         n_units_x=X.shape[1], n_units_y=Y.shape[1],
+        split_half_x=sh_x, split_half_y=sh_y,
     )

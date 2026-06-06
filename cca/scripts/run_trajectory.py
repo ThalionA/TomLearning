@@ -49,6 +49,9 @@ def parse_args():
     p.add_argument("--window", type=int, default=30)
     p.add_argument("--step", type=int, default=15)
     p.add_argument("--min-window", type=int, default=20)
+    p.add_argument("--include-fs", action="store_true",
+                   help="keep fast-spiking units (default: FS-excluded in "
+                        "V1/RSC/CA1/CA3 per Tom convention); writes a _fsincl CSV")
     return p.parse_args()
 
 
@@ -75,12 +78,15 @@ def _rotation(prev_w, cur_w, d_use=ROT_DIMS) -> float:
 
 FIELDS = ["animal", "learner", "pair", "center_trial", "trial_frac",
           "performance", "lp_rel", "n_bins", "cc1", "n_sig", "mi_sig", "ifi",
-          "optimal_lag", "gini_x", "gini_y", "rot_x", "rot_y", "jac_x", "jac_y"]
+          "optimal_lag", "gini_x", "gini_y", "rot_x", "rot_y", "jac_x", "jac_y",
+          "sh_x", "sh_y"]
 
 
 def main():
     args = parse_args()
-    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms)
+    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
+                              exclude_fast_spiking=not args.include_fs)
+    suffix = "_fsincl" if args.include_fs else ""
     animals = dataio.load_animals(config.DATA_DIR)
     behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
     entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)
@@ -90,7 +96,7 @@ def main():
           f"| bin={args.bin_ms}ms window={args.window} step={args.step} "
           f"K={K} pCCA lag+-{MAX_LAG} shuffles={N_SHUFFLES}\n")
 
-    out = config.RESULTS_DIR / "trajectory_windows.csv"
+    out = config.RESULTS_DIR / f"trajectory_windows{suffix}.csv"
 
     def _write(rows):
         with open(out, "w", newline="") as f:
@@ -170,6 +176,8 @@ def main():
                     if pmx is not None else "",
                     "jac_y": round(membership.jaccard(pmy, ws.member_y), 4)
                     if pmy is not None else "",
+                    "sh_x": round(ws.split_half_x, 2) if np.isfinite(ws.split_half_x) else "",
+                    "sh_y": round(ws.split_half_y, 2) if np.isfinite(ws.split_half_y) else "",
                 })
                 n_rows_animal += 1
                 pwx, pwy = ws.weights_x, ws.weights_y

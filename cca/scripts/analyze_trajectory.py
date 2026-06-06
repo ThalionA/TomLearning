@@ -64,11 +64,33 @@ def sign_table(pairs_slopes, indent="    "):
 
 
 def main():
-    path = config.RESULTS_DIR / "trajectory_windows.csv"
+    name = sys.argv[1] if len(sys.argv) > 1 else "trajectory_windows.csv"
+    path = config.RESULTS_DIR / name
     df = pd.read_csv(path)
     learn = df[df["learner"] == 1]
     print(f"{path.name}: {len(df)} window-rows, "
           f"{df['animal'].nunique()} animals ({learn['animal'].nunique()} learners)\n")
+
+    # Rotation vs the split-half noise floor (only if the column is present).
+    if "sh_x" in df.columns:
+        print("=" * 70)
+        print("ROTATION vs NOISE FLOOR (per-animal median; sign test rot - floor > 0)")
+        print("=" * 70)
+        for pair in PAIR_ORDER:
+            g = learn[learn["pair"] == pair]
+            diffs = []
+            for _, sub in g.groupby("animal"):
+                r = _num(sub["rot_x"]).median(); f = _num(sub["sh_x"]).median()
+                if np.isfinite(r) and np.isfinite(f):
+                    diffs.append(r - f)
+            if len(diffs) < 3:
+                continue
+            _, med, _, p = paired_stats.wilcoxon_signed(diffs)
+            star = "  *" if (np.isfinite(p) and p < 0.05) else ""
+            mr = _num(g["rot_x"]).median(); mf = _num(g["sh_x"]).median()
+            print(f"    {pair:9s} n={len(diffs):<2d} rot={mr:>5.1f}° floor={mf:>5.1f}° "
+                  f"Δ(med)={med:>+6.1f}° p={p:.3g}{star}")
+        print()
 
     print("=" * 70)
     print("LEVELS (mean over learner windows; IFI/lag one-sample sign test vs 0)")
