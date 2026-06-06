@@ -161,32 +161,55 @@ def fig_slopes_heatmap(df, tag):
         plt.close(fig)
 
 
-def fig_gini_traj(df, tag):
+def _grid_traj(df, metric, axis, tag, fname, ylabel, suptitle, hline0=False):
+    """2x4 grid: one subplot per area pair, mean±SEM band + faint per-animal."""
     learn = df[df["learner"] == 1]
-    pairs = ["CA1-RSC", "CA1-DG", "CA1-V1"]
-    fig, axes = plt.subplots(1, 3, figsize=(13, 4))
-    for ax, p in zip(axes, pairs):
-        _band(ax, learn, p, "gini_x", "trial_frac")
-        med, pv, n = _slope_quant(learn, "gini_x", "trial_frac", p)
-        ax.set_xlabel("trial fraction"); ax.set_ylabel("Gini (area X)")
-        ax.set_title(f"{p}: slope={med:+.3f}, p={pv:.3g} (n={n})", fontsize=10)
-        ax.legend(fontsize=8)
-    fig.suptitle(f"Subspace sparsity vs learning — {tag} (mean ± SEM band, faint = animals)")
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_gini_traj.png", dpi=150)
+    fig, axes = plt.subplots(2, 4, figsize=(18, 8))
+    for ax, p in zip(axes.ravel(), PAIRS):
+        _band(ax, learn, p, metric, axis)
+        if hline0:
+            ax.axhline(0, color="k", lw=0.5)
+        med, pv, n = _slope_quant(learn, metric, axis, p)
+        star = " *" if (np.isfinite(pv) and pv < 0.05) else ""
+        ax.set_title(f"{p}: slope={med:+.3f} p={pv:.3g} n={n}{star}", fontsize=9)
+        ax.set_xlabel(f"{axis}"); ax.set_ylabel(ylabel)
+    fig.suptitle(suptitle, fontsize=12)
+    fig.tight_layout(); fig.savefig(ATT / fname, dpi=150)
     plt.close(fig)
 
 
+def fig_gini_traj(df, tag):
+    _grid_traj(df, "gini_x", "trial_frac", tag, f"HCV1_CCA_{tag}_gini_traj.png",
+               "Gini (area X)",
+               f"Subspace sparsity vs learning — ALL pairs — {tag} "
+               "(red = mean±SEM, faint = animals)")
+
+
 def fig_ifi_traj(df, tag):
-    learn = df[df["learner"] == 1]
-    fig, ax = plt.subplots(figsize=(5, 4))
-    _band(ax, learn, "CA1-DG", "ifi", "trial_frac")
-    med, pv, n = _slope_quant(learn, "ifi", "trial_frac", "CA1-DG")
-    ax.axhline(0, color="k", lw=0.5)
-    ax.set_xlabel("trial fraction"); ax.set_ylabel("IFI (CA1→DG)")
-    ax.set_title(f"CA1→DG directionality vs learning — {tag}\nslope={med:+.3f}, p={pv:.3g} (n={n})",
-                 fontsize=10)
-    ax.legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_ifi_traj.png", dpi=150)
+    _grid_traj(df, "ifi", "trial_frac", tag, f"HCV1_CCA_{tag}_ifi_traj.png",
+               "IFI (>0: X leads Y)",
+               f"Directionality vs learning — ALL pairs — {tag} "
+               "(red = mean±SEM, faint = animals)", hline0=True)
+
+
+def fig_transition():
+    path = RES / "transition_uncued_cued.csv"
+    if not path.is_file():
+        return
+    t = pd.read_csv(path)
+    learn = t[t["learner"] == 1]
+    metrics = [("d_cc1", "Δ CC$_1$"), ("d_n_sig", "Δ n_sig"),
+               ("d_mi_sig", "Δ MI$_{sig}$"), ("d_ifi", "Δ IFI")]
+    fig, axes = plt.subplots(2, 2, figsize=(13, 8))
+    for ax, (m, lab) in zip(axes.ravel(), metrics):
+        ser = {p: _num(learn[learn["pair"] == p][m]).dropna().tolist() for p in PAIRS}
+        star = {p: paired_stats.wilcoxon_signed(ser[p])[3] if len(ser[p]) >= 3 else np.nan
+                for p in PAIRS}
+        _bar_points_sem(ax, PAIRS, ser, f"{lab} (cued − uncued)",
+                        f"{lab}: uncued→cued", star_p=star)
+    fig.suptitle("Uncued→cued transition — ALL pairs (points = animals, bar = mean ± SEM, "
+                 "* = signed-rank p<0.05)", fontsize=12)
+    fig.tight_layout(); fig.savefig(ATT / "HCV1_CCA_transition.png", dpi=150)
     plt.close(fig)
 
 
@@ -264,6 +287,7 @@ def main():
             make_all(csv, tag)
         else:
             print(f"  (missing {csv.name} — skip {tag})")
+    fig_transition()                       # all pairs; transition CSV is FS-excluded
     print("figures ->", ATT)
 
 
