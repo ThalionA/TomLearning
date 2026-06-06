@@ -123,9 +123,12 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
   CA3-DG/CA1-SUB significant under LMM only → over-confident at n=4 (random slope unidentifiable;
   t-test disagrees) → suggestive only. **Rule: where t-test and LMM disagree at small n, trust the
   t-test.**
-- `run_epochs.py` (full suite on naive/intermediate/expert epoch windows) RUNNING; `analyze_epochs.py`
-  (paired Wilcoxon + paired t + LMM epoch contrasts, all pairs, + epoch figure) ready. TODO when it
-  lands: run analyze_epochs (both report it; possibly FS-incl epoch run), add epoch figure to report.
+- **Epoch analysis DONE** (`results/epoch_metrics.csv`, 148 rows; `analyze_epochs.py`, fig
+  `HCV1_CCA_fsexcl_epochs.png`). **TIMING: de-sparsification is EARLY (naive→intermediate), then
+  plateaus.** CA1-RSC: int−nai Δ=-0.054 (W=0.039/t=0.016/**LMM=7e-5**), exp−nai (W=0.008/t=0.005/
+  **LMM=8.5e-6**), exp−int **n.s.** CA1-DG same pattern (int−nai LMM=1.9e-5; exp−int n.s.). CA1-V1
+  same sign, borderline. n=4 pairs: paired-t hits but LMM unidentifiable → suggestive. Report §3.6
+  + methods §2.10/2.10b updated. FS-incl epoch run launched for completeness.
 
 ### 2026-06-06 — Split-half + FS + figures DONE; rotation=noise; FS-robust
 - Both FS runs complete (`trajectory_windows.csv` FS-excl 636 rows w/ sh_x; `_fsincl.csv` 647).
