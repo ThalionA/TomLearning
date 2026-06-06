@@ -115,6 +115,16 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Learning vs time-on-task: de-sparsification is EXPERIENCE-driven (learning unproven)
+- `analyze_learning_vs_time.py`: (1) learner vs non-learner Gini-vs-trial_frac slopes — comparable
+  (CA1-RSC -0.13 vs -0.10; between-group n.s.); (2) interaction LMM gini~trial_frac*learner+(trial_frac|animal)
+  — trial_frac×learner n.s. for ALL pairs (p=0.26-0.97); (3) post-LP plateau (learners) — Gini slope
+  ~0 post-LP (p>0.8), doesn't keep dropping with time, but pre-LP windows too few (n=2) to clinch.
+- **Verdict: the Gini↓ de-sparsification is robust but most parsimoniously EXPERIENCE/time-on-task;
+  a learning-specific component (LP-locked plateau) is suggestive but NOT statistically established**
+  (non-learners drop comparably; n=4 non-learners underpowers the interaction). Report §3.3/synthesis/
+  headline tempered: "learning de-sparsifies" → "experience de-sparsifies; learning-specificity unproven".
+
 ### 2026-06-06 — Optimal-lag battery: confirms directionality not robust
 - Generalised `analyze_ifi.py` to per-dim OPTIMAL LAG (`analyze_ifi.py lag`; +kruskal try/except).
   Agrees with IFI: animals-as-n null for every pair; dims-as-n flags V1-RSC (naive lag>0 t=0.046,
