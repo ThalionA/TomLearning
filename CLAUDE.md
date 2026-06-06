@@ -112,3 +112,19 @@ Before claiming a result:
 ## Project-specific notes
 
 <!-- Append project-specific conventions, dataset quirks, and known gotchas below this line. -->
+
+### Project log — read first, write last (MANDATORY)
+
+Context must survive between sessions. For any work in `cca/`:
+
+1. **At the start of a session/task, READ `cca/PROJECT_LOG.md` first** (its top "CURRENT STATE"
+   block), then `cca/STATE.md`. Together they tell you the branch, what's built, what's running,
+   the current findings, and the next steps — resume from there, do not re-derive.
+2. **After any meaningful work, APPEND a dated entry** to `cca/PROJECT_LOG.md` (newest on top) and
+   update its "CURRENT STATE" block — what changed, what's running, decisions + rationale, next
+   steps. Keep entries terse but self-contained.
+3. Treat `PROJECT_LOG.md` as the source of truth for *state of play*; `STATE.md` for *findings*;
+   `OPPORTUNITIES.md` for *direction*; `GOTCHAS.md` for *bugs*. Keep them consistent.
+
+This is a hard requirement, not a suggestion: never end a turn that changed the project without
+updating `PROJECT_LOG.md`.
