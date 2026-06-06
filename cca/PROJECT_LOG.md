@@ -43,10 +43,15 @@ rotation) rather than a noisy 3-epoch magnitude contrast.
 - `scripts/run_transition.py` — uncued→cued (world 4→3) full-suite comparison + cross-condition
   subspace rotation angle, sample-matched, learner-split.
 
-**Running / pending right now:**
-- Full-suite Frame A trajectory — DONE (636 rows). Findings above.
-- `run_transition.py` (uncued→cued full suite) — IN PROGRESS (background),
-  log `results/.sandbox_scratch/run_transition.log`. When done: report deltas + rotation angle.
+**Running / pending right now:** nothing running. Both full-suite analyses DONE.
+- Transition (uncued→cued, 13 animals, 58 rows, `results/transition_uncued_cued.csv`): NO abrupt
+  strength jump (cc1/mi_sig/n_sig deltas n.s.). **CA1→DG directionality increases uncued→cued**
+  (d_ifi +0.019, p=0.016 learners) — same direction as the trajectory's CA1→DG-IFI-rises-with-
+  learning. Subspace rotation uncued→cued is ~75–88° for most pairs BUT that ≈ the trajectory's
+  window-to-window rotation (so ~80° is the noise floor, NOT reorientation); **CA3-DG is the
+  exception (41–51°) = genuinely stable across the transition**, consistent with it being the
+  strongest/richest subspace. CAVEAT: rotation needs a within-condition split-half floor to claim
+  reorientation (next step); uncued phase short (K=15, n=3–8/pair).
 - **Speed/correctness fixes applied (2026-06-06):** window_subspace was ~11 s/window (significance
   + 21-lag scan on ~41k samples). Now cap each window to a contiguous ~6 k-bin block (grown to span
   ≥ N_FOLDS+1 trials so the CV is valid) → ~2.3 s/window. Fixed `n_sig` overcounting: significance

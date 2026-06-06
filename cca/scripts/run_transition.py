@@ -33,6 +33,7 @@ N_FOLDS = 4
 N_SHUFFLES = 20
 MAX_LAG = 8
 ROT_DIMS = 3
+MAX_SAMPLES = 6000            # cap matched block size (speed; stays >> 50*K)
 WORLD_UNCUED, WORLD_CUED = 4, 3
 DELTAS = ["cc1", "n_sig", "mi_sig", "ifi", "optimal_lag", "gini_x", "gini_y"]
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
@@ -90,7 +91,7 @@ def main():
             continue
         is_learner = a.animal_id in entries
         cue_idx = np.where(cue)[0]
-        m = int(min(unc.sum(), cue_idx.size))
+        m = int(min(unc.sum(), cue_idx.size, MAX_SAMPLES))
         cue_early = np.zeros(n_bins, bool); cue_early[cue_idx[:m]] = True
         unc_idx = np.where(unc)[0]
         if unc_idx.size > m:
