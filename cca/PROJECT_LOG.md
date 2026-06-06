@@ -115,6 +115,18 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Split-half + FS + figures DONE; rotation=noise; FS-robust
+- Both FS runs complete (`trajectory_windows.csv` FS-excl 636 rows w/ sh_x; `_fsincl.csv` 647).
+  Regenerated full figure set both conditions (points+SEM bars, mean±SEM bands+faint lines,
+  all-relationship slope heatmaps, rotation-vs-floor, learners-vs-non) → vault attachments. Updated
+  the vault report (§3.1–3.5, synthesis table, methods, next-steps) + vault `log.md`.
+- **Rotation = NOISE:** cross-window rotation ≤ split-half floor for every pair (all p>0.05, both
+  FS) → no reorientation; retracted "CA3-DG stable backbone" (its low rotation tracks its low floor).
+- **FS-robust:** FS-incl reproduces CA1-RSC Gini↓ (3/3 axes p=0.008/0.039/0.008) + rotation=noise;
+  CA1-DG/V1 Gini slightly attenuated. Surviving signals: Gini↓ + CA1→DG IFI↑; strength flat.
+- NEXT: neuron-count-matched subsampling; learning-vs-time-on-task (more non-learners / pre-post-LP);
+  (deferred) depth/ISI membership×properties.
+
 ### 2026-06-06 — Split-half noise floor + FS toggle + figure overhaul (in progress)
 - Added within-window split-half principal-angle floor to `subspace_window` (sh_x/sh_y; +2 tests).
   **Result: cross-window rotation does NOT exceed the floor for any pair** (Δ(rot−floor) negative or
