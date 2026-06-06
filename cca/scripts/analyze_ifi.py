@@ -114,6 +114,9 @@ def animals_block(em, pair):
 
 def dims_block(ed, pair):
     g = ed[(ed["pair"] == pair) & (ed["sig"] == 1)].copy()
+    g["peak_cc"] = pd.to_numeric(g["peak_cc"], errors="coerce")
+    g = g.sort_values("peak_cc", ascending=False).groupby(
+        ["animal", "epoch"]).head(3)                     # cap top-3 dims/animal/epoch
     g[DIM_COL] = pd.to_numeric(g[DIM_COL], errors="coerce")
     by_ep = {e: _f(g[g["epoch"] == e][DIM_COL]) for e in EPOCHS}
     if all(v.size < 3 for v in by_ep.values()):

@@ -41,9 +41,21 @@ METRICS = [("cc", "cc1", "peak_cc", "held-out CC"),
            ("lag", "optimal_lag", "lag", "optimal lag (bins)")]
 
 
+CAP_DIMS = 3                  # cap significant dims per animal per epoch (top-N by CC)
+
+
 def _f(s):
     v = pd.to_numeric(s, errors="coerce").to_numpy()
     return v[np.isfinite(v)]
+
+
+def _cap(g, cap=CAP_DIMS):
+    """Keep the top-`cap` significant dims per (animal, epoch) by held-out CC,
+    bounding each animal's contribution and curbing the dims-as-n imbalance."""
+    g = g.copy()
+    g["peak_cc"] = pd.to_numeric(g["peak_cc"], errors="coerce")
+    return g.sort_values("peak_cc", ascending=False).groupby(
+        ["animal", "epoch"]).head(cap)
 
 
 def _star(p):
@@ -90,8 +102,8 @@ def fig_metric(em, ed, label, acol, dcol, ylab):
         ax.set_title(f"{pair}{ne}", fontsize=7)
         if j == 0:
             ax.set_ylabel(f"ANIMALS-as-n\n{ylab}", fontsize=8)
-        # DIMS-as-n (bottom)
-        gd = ed[(ed["pair"] == pair) & (ed["sig"] == 1)]
+        # DIMS-as-n (bottom) — capped to top-CAP_DIMS sig dims per animal/epoch
+        gd = _cap(ed[(ed["pair"] == pair) & (ed["sig"] == 1)])
         by_ep = {e: _f(gd[gd["epoch"] == e][dcol]) for e in EPOCHS}
         ax = axes[1][j]
         _panel(ax, by_ep, hline0)
@@ -104,9 +116,9 @@ def fig_metric(em, ed, label, acol, dcol, ylab):
         ax.set_title(f"{pair} (nd={nd}){ne}", fontsize=7)
         if j == 0:
             ax.set_ylabel(f"DIMS-as-n\n{ylab}", fontsize=8)
-    fig.suptitle(f"{ylab}: animals-as-n (top) vs significant-dims-as-n (bottom) "
-                 "across epochs — points=units, red=mean±SEM, *=vs0 p<0.05; "
-                 "title=naive→expert p", fontsize=11)
+    fig.suptitle(f"{ylab}: animals-as-n (top) vs significant-dims-as-n "
+                 f"(bottom, ≤{CAP_DIMS} dims/animal) across epochs — points=units, "
+                 "red=mean±SEM, *=vs0 p<0.05; title=naive→expert p", fontsize=11)
     fig.tight_layout()
     ATT.mkdir(parents=True, exist_ok=True)
     fig.savefig(ATT / f"HCV1_CCA_fsexcl_units_{label}.png", dpi=150)

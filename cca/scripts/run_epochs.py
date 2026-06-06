@@ -23,7 +23,7 @@ from tom_cca import config, dataio, partial, subspace_window  # noqa: E402
 K = 20
 N_FOLDS = 5
 MAX_LAG = 8
-N_SHUFFLES = 20
+N_SHUFFLES = 100              # circular-shift surrogate for dim significance (95th pct)
 SAT = 0.99
 EPOCHS = ["naive", "intermediate", "expert"]
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),

@@ -31,9 +31,14 @@ CONTRASTS = [("expert", "naive"), ("expert", "intermediate"), ("intermediate", "
 
 def main():
     name = sys.argv[1] if len(sys.argv) > 1 else "epoch_dims.csv"
+    cap = int(sys.argv[2]) if len(sys.argv) > 2 else 3   # top-N sig dims/animal/epoch
     df = pd.read_csv(config.RESULTS_DIR / name)
     sig = df[df["sig"] == 1].copy()
     sig["peak_cc"] = pd.to_numeric(sig["peak_cc"], errors="coerce")
+    if cap > 0:
+        sig = sig.sort_values("peak_cc", ascending=False).groupby(
+            ["animal", "epoch"]).head(cap)
+        print(f"(capped to top-{cap} significant dims per animal per epoch)")
     print(f"{name}: {len(df)} dim-rows, {len(sig)} significant; "
           f"{df['animal'].nunique()} animals\n")
     print("Per-dimension held-out CC compared across epochs — rank-sum (Mann–Whitney U).")

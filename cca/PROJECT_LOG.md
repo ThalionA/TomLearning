@@ -114,6 +114,16 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Significance shuffles 20→100; dims-as-n capped to 3/animal; §3.6 clarified
+- Significance of canonical dims = circular-shift surrogate (roll one area, refit pCCA, record
+  DOMINANT shuffled CC), threshold = 95th pct, held-out CC must exceed it. **Bumped N_SHUFFLES 20→100**
+  in run_epochs (re-run) — 20 was too few for a stable 95th pct. Documented in report §2.6.
+- **dims-as-n now capped to top-3 sig dims/animal/epoch** (by held-out CC) in figs_units + analyze_ifi
+  + analyze_dims_as_n, to curb the per-animal imbalance.
+- §3.6 (epoch timing) is Gini = POPULATION metric → animals-as-n only (no per-dim analogue). The
+  per-dim metrics from the same epoch fits (CC, IFI, lag) ARE shown both-units (capped) in §3.2/§3.7
+  (figs_units). Clarified in report.
+
 ### 2026-06-06 — Animals-as-n vs dims-as-n comparison figures
 - `figs_units.py`: per per-dim metric (held-out CC / IFI / optimal lag) a 2-row figure — ANIMALS-as-n
   (top) vs DIMS-as-n (bottom) × 8 pairs across epochs, points + mean±SEM, vs-0 stars, naive→expert p
