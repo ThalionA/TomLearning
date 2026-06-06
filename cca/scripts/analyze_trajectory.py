@@ -21,9 +21,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, paired_stats, trajectory  # noqa: E402
+from tom_cca import config, mixed_effects, paired_stats, trajectory  # noqa: E402
 
 AXES = ["trial_frac", "performance", "lp_rel"]
 SLOPE_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "gini_x", "rot_x", "jac_x"]
@@ -138,6 +139,31 @@ def main():
                 if any(np.isfinite(s) for _, s in sl_non):
                     print(f"  axis={axis} (non-learners):")
                     sign_table(sl_non)
+
+    # Parametric / powerful tests for the key metrics: per-animal-slope t-test
+    # AND a random-slope LMM population slope (pools all windows).
+    print("\n" + "=" * 70)
+    print("PARAMETRIC slope tests (learners): Wilcoxon | t-test(slopes) | LMM(all windows)")
+    print("=" * 70)
+    for metric in ["gini_x", "ifi", "mi_sig", "cc1", "n_sig"]:
+        print(f"\n[{metric}]")
+        for axis in AXES:
+            print(f"  axis={axis}")
+            sl = per_animal_slopes(learn, metric, axis)
+            for pair in PAIR_ORDER:
+                vals = [s for (pr, s) in sl if pr == pair and np.isfinite(s)]
+                if len(vals) < 3:
+                    continue
+                _, _, wp = (None, None, paired_stats.wilcoxon_signed(vals)[3])
+                t_p = float(stats.ttest_1samp(vals, 0.0).pvalue)
+                g = learn[learn["pair"] == pair][["animal", axis, metric]].rename(
+                    columns={"animal": "animal_id", axis: "axis", metric: "value"})
+                lmm = mixed_effects.lmm_slope(g.to_dict("records"))
+                lp_p = lmm["p"] if lmm["ok"] else float("nan")
+                mark = lambda p: "*" if (np.isfinite(p) and p < 0.05) else " "
+                print(f"    {pair:9s} n={len(vals):<2d} med={np.median(vals):>+8.4f} "
+                      f"| W p={wp:.3g}{mark(wp)} | t p={t_p:.3g}{mark(t_p)} "
+                      f"| LMM β={lmm['estimate']:+.4f} p={lp_p:.3g}{mark(lp_p)}")
 
 
 if __name__ == "__main__":

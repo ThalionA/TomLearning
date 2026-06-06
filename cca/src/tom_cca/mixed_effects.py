@@ -63,6 +63,44 @@ def collapsed_epoch_contrasts(records, value: str = "value",
     return out
 
 
+def lmm_slope(records, value: str = "value", group: str = "animal_id",
+              axis: str = "axis") -> dict:
+    """Population slope of ``value`` on a continuous ``axis`` via a random-slope
+    LMM (``value ~ axis`` with ``~axis`` random effects per animal).
+
+    Pools ALL windows across animals (more powerful than a per-animal-slope sign
+    test) while accounting for within-animal correlation. Returns the fixed-effect
+    slope, its Wald p-value, ``n_animals`` and ``n_obs``. ``ok=False`` (NaN p) if
+    fewer than MIN_ANIMALS animals or the fit fails.
+    """
+    df = pd.DataFrame(records)
+    out = _na("not_fit")
+    if df.empty or value not in df or axis not in df:
+        return out
+    df = df.dropna(subset=[value, group, axis])
+    n_animals = int(df[group].nunique())
+    if n_animals < MIN_ANIMALS or df[axis].nunique() < 3:
+        return {**_na("too_few"), "n_animals": n_animals}
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            model = smf.mixedlm(f"{value} ~ {axis}", df, groups=df[group],
+                                re_formula=f"~{axis}")
+            fit = model.fit(reml=False, method="lbfgs")
+    except Exception as exc:                                # noqa: BLE001
+        return {**_na(f"fit_failed:{type(exc).__name__}"), "n_animals": n_animals}
+    if axis not in fit.fe_params.index:
+        return {**_na("no_slope_term"), "n_animals": n_animals}
+    est = float(fit.fe_params[axis])
+    var = float(fit.cov_params().loc[axis, axis])
+    if not np.isfinite(var) or var <= 0:
+        return {**_na("bad_variance"), "n_animals": n_animals}
+    from scipy import stats as _st
+    p = float(2 * _st.norm.sf(abs(est / np.sqrt(var))))
+    return {"estimate": est, "p": p, "n_animals": n_animals,
+            "n_obs": int(len(df)), "ok": True, "reason": ""}
+
+
 def lmm_epoch_contrasts(records, value: str = "value",
                         group: str = "animal_id", epoch: str = "epoch",
                         landmark: str | None = "landmark",

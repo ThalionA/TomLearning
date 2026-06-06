@@ -103,6 +103,35 @@ def test_insufficient_animals_returns_not_ok():
     assert np.isnan(out["expert-naive"]["p"])
 
 
+def test_lmm_slope_detects_population_trend():
+    # Each animal has windows along an axis with a positive mean slope.
+    rng = np.random.default_rng(20)
+    recs = []
+    for a in range(8):
+        base = rng.normal(0, 0.5)
+        slope = 0.4 + rng.normal(0, 0.1)        # positive across animals
+        for x in np.linspace(0, 1, 8):
+            recs.append({"animal_id": a, "axis": float(x),
+                         "value": base + slope * x + rng.normal(0, 0.05)})
+    out = mixed_effects.lmm_slope(recs)
+    assert out["ok"] and out["n_animals"] == 8
+    assert out["estimate"] > 0.2 and out["p"] < 0.05
+
+
+def test_lmm_slope_null_not_significant():
+    rng = np.random.default_rng(21)
+    recs = []
+    for a in range(8):
+        base = rng.normal(0, 0.5)
+        slope = rng.normal(0, 0.3)              # mean ~0 across animals
+        for x in np.linspace(0, 1, 8):
+            recs.append({"animal_id": a, "axis": float(x),
+                         "value": base + slope * x + rng.normal(0, 0.05)})
+    out = mixed_effects.lmm_slope(recs)
+    assert out["ok"]
+    assert out["p"] > 0.05
+
+
 def test_degenerate_fit_not_trusted():
     # Constant values -> zero residual variance -> the random-slope fit cannot
     # converge. The result must be ok=False with a NaN p (never a spurious tiny
