@@ -115,6 +115,20 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-06 — Split-half noise floor + FS toggle + figure overhaul (in progress)
+- Added within-window split-half principal-angle floor to `subspace_window` (sh_x/sh_y; +2 tests).
+  **Result: cross-window rotation does NOT exceed the floor for any pair** (Δ(rot−floor) negative or
+  ~0, all p>0.05; CA1-RSC/CA1-CA3 even trend rotation<floor). So the ~80° window-to-window rotation
+  is **estimation noise, not reorientation** — kills any "subspace rotates with learning" reading;
+  real signals remain Gini↓ and IFI. (Well-controlled null.)
+- `run_trajectory --include-fs` (FS-included variant) + FS-excluded re-run with split-half: FS-excl
+  DONE (`trajectory_windows.csv`, now has sh_x; levels/IFI reproduce prior run exactly), FS-incl
+  RUNNING (`trajectory_windows_fsincl.csv`). `figs_report.py` overhauled: per-animal points+SEM bars,
+  mean±SEM bands + faint per-animal lines, ALL-relationship slope heatmaps, rotation-vs-floor,
+  learners-vs-non, FS-excl/incl. `analyze_trajectory.py`: CSV arg + rotation-vs-floor table.
+- TODO when FS-incl lands: regenerate both figure sets, update vault report (rotation=noise; FS
+  comparison; new plot styles), commit results.
+
 ### 2026-06-06 — Vault report + figures
 - Wrote the Hippocampus-V1 communication-subspace report in ResearchVault (full LaTeX methods,
   4 wiki-linked figures via `scripts/figs_report.py`), linked from the project hub, vault `log.md`
