@@ -108,7 +108,10 @@ def main():
                     dim_rows.append({
                         "animal": a.animal_id, "pair": f"{ax}-{ay}", "epoch": epoch,
                         "dim": d + 1, "peak_cc": round(float(ws.cc[d]), 4),
-                        "sig": int(bool(ws.sig_mask[d])) if d < ws.sig_mask.size else 0})
+                        "sig": int(bool(ws.sig_mask[d])) if d < ws.sig_mask.size else 0,
+                        "ifi": round(float(ws.ifi_per_dim[d]), 4)
+                        if d < ws.ifi_per_dim.size else "",
+                        "lag": int(ws.lag_per_dim[d]) if d < ws.lag_per_dim.size else ""})
         print(f"  animal {a.animal_id}: lp={entries[a.animal_id].lp} {n_rows} rows")
 
     out = config.RESULTS_DIR / f"epoch_metrics{suffix}.csv"
@@ -118,7 +121,8 @@ def main():
     out_d = config.RESULTS_DIR / f"epoch_dims{suffix}.csv"
     with open(out_d, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["animal", "pair", "epoch", "dim",
-                                          "peak_cc", "sig"], lineterminator="\n")
+                                          "peak_cc", "sig", "ifi", "lag"],
+                           lineterminator="\n")
         w.writeheader(); w.writerows(dim_rows)
     print(f"\nwrote {out} ({len(rows)} rows) + {out_d} ({len(dim_rows)} dim-rows). "
           "Analyse with scripts/analyze_epochs.py / analyze_dims_as_n.py")

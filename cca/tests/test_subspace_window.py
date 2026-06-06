@@ -76,6 +76,24 @@ def test_split_half_floor_large_for_noise():
     assert r.split_half_x > 45
 
 
+def test_per_dim_ifi_and_lag():
+    # dim-1 latent: X leads Y by +3 bins; dim-2 latent: Y leads X by 2 bins.
+    rng = np.random.default_rng(9)
+    n = 9000
+    l1 = rng.normal(0, 1, n); l2 = rng.normal(0, 1, n)
+    X = rng.normal(0, 0.3, (n, 6)); Y = rng.normal(0, 0.3, (n, 6))
+    X[:, 0] += l1; Y[3:, 0] += l1[:-3]              # Y lags X by 3 (X leads, +)
+    Y[:, 1] += l2; X[2:, 1] += l2[:-2]              # X lags Y by 2 (Y leads, -)
+    g = np.arange(n) // 450
+    r = sw.window_subspace(X, Y, g, k=5, max_lag=8, n_shuffles=10)
+    assert r.ifi_per_dim.shape == r.cc.shape
+    assert r.lag_per_dim[0] > 0                     # dim-1: X leads (robust readout)
+    assert r.lag_per_dim[1] < 0                     # dim-2: Y leads
+    # IFI ordering tracks the lags (dim-1 more X-leading than dim-2); absolute
+    # magnitude is weak because the lag curve is in-sample (a known caveat).
+    assert r.ifi_per_dim[0] > r.ifi_per_dim[1]
+
+
 def test_gini_and_members_present():
     rng = np.random.default_rng(3)
     n = 4000

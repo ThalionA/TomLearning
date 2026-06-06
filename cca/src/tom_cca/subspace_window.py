@@ -38,6 +38,8 @@ class WindowSubspace:
     optimal_lag: int
     lags: np.ndarray
     lag_cc1: np.ndarray
+    ifi_per_dim: np.ndarray   # (d,) IFI for each canonical dimension
+    lag_per_dim: np.ndarray   # (d,) optimal lag (bins) for each canonical dimension
     gini_x: float
     gini_y: float
     weights_x: np.ndarray     # (n_units_x, d)
@@ -105,14 +107,14 @@ def _significance(Sx, Sy, cc_heldout, n_shuffles, alpha, seed):
     return np.asarray(cc_heldout) > thr
 
 
-def _lag_curve(Sx, Sy, lags):
-    """Dominant-dim in-sample correlation as a function of integer bin lag.
+def _lag_curve_perdim(Sx, Sy, lags, d):
+    """Per-dimension in-sample canonical correlation vs integer bin lag → (n_lags, d).
 
-    Positive lag = Y delayed relative to X (X leads). In-sample is sufficient
-    for the *shape* used by IFI / optimal lag; both signs are equally biased.
+    Positive lag = Y delayed relative to X (X leads). In-sample is sufficient for
+    the *shape* used by IFI / optimal lag; both signs are equally biased.
     """
     n = Sx.shape[0]
-    out = np.full(lags.size, np.nan)
+    out = np.full((lags.size, d), np.nan)
     for i, L in enumerate(lags):
         if L >= 0:
             a, b = Sx[:n - L] if L else Sx, Sy[L:] if L else Sy
@@ -120,7 +122,9 @@ def _lag_curve(Sx, Sy, lags):
             a, b = Sx[-L:], Sy[:n + L]
         if a.shape[0] < 10:
             continue
-        out[i] = _insample_perdim(a, b)[0]
+        r = _insample_perdim(a, b)
+        m = int(min(d, r.size))
+        out[i, :m] = r[:m]
     return out
 
 
@@ -189,9 +193,14 @@ def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
         mi_sig = 0.0
 
     lags = np.arange(-max_lag, max_lag + 1)
-    lag_cc1 = _lag_curve(Sx, Sy, lags)
+    lc = _lag_curve_perdim(Sx, Sy, lags, d)              # (n_lags, d)
+    lag_cc1 = lc[:, 0]
     ifi = lagged.information_flow_index(lags, lag_cc1)
     optimal_lag = int(lags[int(np.nanargmax(lag_cc1))]) if np.any(np.isfinite(lag_cc1)) else 0
+    ifi_per_dim = np.array([lagged.information_flow_index(lags, lc[:, j])
+                            for j in range(d)])
+    lag_per_dim = np.array([int(lags[int(np.nanargmax(lc[:, j]))])
+                            if np.any(np.isfinite(lc[:, j])) else 0 for j in range(d)])
 
     model = core.cca_fit(Sx, Sy)
     wx = membership.canonical_weight_scores(cx, model.A, d)   # (n_units_x, d)
@@ -201,7 +210,7 @@ def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
     sh_x, sh_y = _split_half_angles(X, Y, groups, k, d_use=3, seed=seed)
     return WindowSubspace(
         cc=cc, n_sig=n_sig, mi_sig=mi_sig, ifi=ifi, optimal_lag=optimal_lag,
-        lags=lags, lag_cc1=lag_cc1,
+        lags=lags, lag_cc1=lag_cc1, ifi_per_dim=ifi_per_dim, lag_per_dim=lag_per_dim,
         gini_x=membership.gini(contrib_x), gini_y=membership.gini(contrib_y),
         weights_x=wx, weights_y=wy,
         member_x=membership.member_mask(contrib_x, member_q),
