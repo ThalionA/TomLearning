@@ -1,0 +1,43 @@
+Uncued->cued transition (full suite) | K=15 pCCA, sample-matched
+
+  animal 41 (L): uncued_run=11581 bins, 2 pairs
+  animal 52 (L): uncued_run=12388 bins, 6 pairs
+  animal 61 (L): uncued_run=4215 bins, 6 pairs
+  animal 63 (L): uncued_run=4479 bins, 1 pairs
+  animal 66 (L): uncued_run=5422 bins, 6 pairs
+  animal 68 (L): uncued_run=4119 bins, 4 pairs
+  animal 70 (n): uncued_run=12694 bins, 0 pairs
+  animal 71 (n): uncued_run=5222 bins, 8 pairs
+  animal 73 (L): uncued_run=8430 bins, 6 pairs
+  animal 75 (L): uncued_run=5133 bins, 6 pairs
+  animal 77 (L): uncued_run=4907 bins, 6 pairs
+  animal 98 (n): uncued_run=6559 bins, 1 pairs
+  animal 100 (n): uncued_run=4331 bins, 6 pairs
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/transition_uncued_cued.csv (58 rows)
+
+Transition: delta = cued - uncued (sign test); rot = uncued->cued subspace angle
+[all]
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4102: UserWarning: Sample size too small for normal approximation.
+  warnings.warn("Sample size too small for normal approximation.")
+  CA1-RSC   n=11 rot_x= 82.7deg | d_cc1=+0.004p=0.76  | d_n_sig=+0.000p=0.16  | d_mi_sig=+0.000p=0.18  | d_ifi=+0.025p=0.28 
+  CA1-CA3   n=5  rot_x= 76.1deg | d_cc1=+0.006p=0.81  | d_n_sig=+1.000p=0.1  | d_mi_sig=+0.013p=0.068  | d_ifi=-0.023p=0.31 
+  CA1-DG    n=9  rot_x= 74.3deg | d_cc1=-0.006p=0.82  | d_n_sig=+0.000p=0.56  | d_mi_sig=+0.000p=0.8  | d_ifi=+0.015p=0.098 
+  CA1-V1    n=9  rot_x= 86.6deg | d_cc1=+0.053p=0.16  | d_n_sig=+0.000p=0.56  | d_mi_sig=+0.000p=1  | d_ifi=-0.015p=0.13 
+  CA3-DG    n=4  rot_x= 51.4deg | d_cc1=-0.047p=0.25  | d_n_sig=+0.500p=1  | d_mi_sig=-0.004p=0.62  | d_ifi=+0.003p=0.88 
+  CA1-SUB   n=6  rot_x= 86.2deg | d_cc1=+0.024p=0.84  | d_n_sig=+0.000p=0.16  | d_mi_sig=+0.000p=0.18  | d_ifi=-0.007p=0.84 
+  RSC-SUB   n=6  rot_x= 88.4deg | d_cc1=-0.001p=0.84  | d_n_sig=+0.000p=0.56  | d_mi_sig=+0.005p=0.14  | d_ifi=-0.011p=0.69 
+  V1-RSC    n=8  rot_x= 82.4deg | d_cc1=-0.012p=0.64  | d_n_sig=+0.000p=0.46  | d_mi_sig=+0.002p=0.64  | d_ifi=-0.018p=0.95 
+[learners]
+  CA1-RSC   n=8  rot_x= 82.8deg | d_cc1=+0.001p=0.95  | d_n_sig=+0.000p=0.16  | d_mi_sig=+0.000p=0.18  | d_ifi=+0.033p=0.64 
+  CA1-CA3   n=4  rot_x= 82.3deg | d_cc1=-0.002p=1  | d_n_sig=+1.000p=0.16  | d_mi_sig=+0.019p=0.11  | d_ifi=-0.002p=0.62 
+  CA1-DG    n=7  rot_x= 74.3deg | d_cc1=-0.015p=0.58  | d_n_sig=+0.000p=0.16  | d_mi_sig=+0.000p=0.69  | d_ifi=+0.019p=0.016*
+  CA1-V1    n=7  rot_x= 86.6deg | d_cc1=+0.019p=0.38  | d_n_sig=+0.000p=1  | d_mi_sig=+0.000p=0.65  | d_ifi=-0.015p=0.22 
+  CA3-DG    n=3  rot_x= 41.3deg | d_cc1=-0.052p=0.25  | d_n_sig=+1.000p=1  | d_mi_sig=-0.018p=0.5  | d_ifi=+0.022p=0.5 
+  CA1-SUB   n=4  rot_x= 85.6deg | d_cc1=+0.068p=0.25  | d_n_sig=+0.500p=0.16  | d_mi_sig=+0.004p=0.18  | d_ifi=+0.014p=0.62 
+  RSC-SUB   n=4  rot_x= 86.8deg | d_cc1=-0.016p=0.88  | d_n_sig=+0.000p=1  | d_mi_sig=+0.005p=0.29  | d_ifi=-0.018p=0.62 
+  V1-RSC    n=6  rot_x= 82.4deg | d_cc1=-0.012p=0.84  | d_n_sig=+0.000p=1  | d_mi_sig=-0.004p=1  | d_ifi=+0.017p=1 
+[non-learners]
+  CA1-RSC   n=3  rot_x= 82.0deg | d_cc1=+0.033p=0.5  | d_n_sig=+0.000p=nan  | d_mi_sig=+0.000p=nan  | d_ifi=+0.023p=0.25 

@@ -1,0 +1,28 @@
+Frame A: bin=25ms, window=30 trials, step=15, PCA K=30, pCCA, 5-fold CV
+
+  animal 28: 4 pair-trajectories
+  animal 34: 2 pair-trajectories
+  animal 36: 1 pair-trajectories
+  animal 41: 2 pair-trajectories
+  animal 52: 6 pair-trajectories
+  animal 61: 6 pair-trajectories
+  animal 63: 1 pair-trajectories
+  animal 66: 6 pair-trajectories
+  animal 68: 4 pair-trajectories
+  animal 73: 6 pair-trajectories
+  animal 75: 6 pair-trajectories
+  animal 77: 6 pair-trajectories
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_windows.csv (452 rows)
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_slopes.csv (50 rows)
+
+Across-animal trajectory test (does CA1/... communication track learning?):
+  pair      n_animals  median_slope  n_up  p_signrank
+  CA1-RSC           8       -0.0150   3/8       0.9453
+  CA1-CA3           6       +0.0462   4/6            1
+  CA1-DG            8       -0.0272   1/8       0.1094
+  CA1-V1           10       -0.0147   5/10      0.4922
+  CA3-DG            4       +0.0497   3/4         0.25
+  CA1-SUB           4       -0.0159   1/4        0.375
+  RSC-SUB           4       -0.0587   0/4        0.125
+  V1-RSC            6       -0.0266   3/6       0.4375

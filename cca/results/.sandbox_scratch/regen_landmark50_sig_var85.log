@@ -1,0 +1,69 @@
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/plot_landmark.py:202: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4102: UserWarning: Sample size too small for normal approximation.
+  warnings.warn("Sample size too small for normal approximation.")
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4102: UserWarning: Sample size too small for normal approximation.
+  warnings.warn("Sample size too small for normal approximation.")
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4102: UserWarning: Sample size too small for normal approximation.
+  warnings.warn("Sample size too small for normal approximation.")
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/plot_landmark.py:202: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+[plot_landmark] tag=landmark50_sig_var85: 50 fits, 8 pairs -> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/coverage_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_comm_strength_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_subspace_dim_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_lag_curves_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_per_landmark_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_ifi_win01_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_ifi_win02_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_ifi_win03_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_ifi_win04_landmark50_sig_var85.png
+  wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/stage2_ifi_win05_landmark50_sig_var85.png
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4102: UserWarning: Sample size too small for normal approximation.
+  warnings.warn("Sample size too small for normal approximation.")
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/learning_changes_landmark50_sig_var85.csv
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/learning_changes_perlandmark_mi.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/learning_changes_perlandmark_ifi.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark50_sig_var85/learning_changes_pooled.png
+
+Pooled per-pair survivors (FDR < q):

@@ -1,0 +1,68 @@
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4102: UserWarning: Sample size too small for normal approximation.
+  warnings.warn("Sample size too small for normal approximation.")
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4088: UserWarning: Exact p-value calculation does not work if there are zeros. Switching to normal approximation.
+  warnings.warn("Exact p-value calculation does not work if there are "
+/opt/anaconda3/lib/python3.11/site-packages/scipy/stats/_morestats.py:4102: UserWarning: Sample size too small for normal approximation.
+  warnings.warn("Sample size too small for normal approximation.")
+found 44 done configs
+  landmark25_res_fix03: 50 fits, 8 pairs
+  landmark25_res_fix05: 50 fits, 8 pairs
+  landmark25_res_fix10: 50 fits, 8 pairs
+  landmark25_res_fix20: 50 fits, 8 pairs
+  landmark25_res_fix30: 50 fits, 8 pairs
+  landmark25_res_samp15: 50 fits, 8 pairs
+  landmark25_res_samp25: 50 fits, 8 pairs
+  landmark25_res_samp40: 50 fits, 8 pairs
+  landmark25_res_var75: 50 fits, 8 pairs
+  landmark25_res_var85: 50 fits, 8 pairs
+  landmark25_res_var95: 50 fits, 8 pairs
+  landmark25_sig_fix03: 50 fits, 8 pairs
+  landmark25_sig_fix05: 50 fits, 8 pairs
+  landmark25_sig_fix10: 50 fits, 8 pairs
+  landmark25_sig_fix20: 50 fits, 8 pairs
+  landmark25_sig_fix30: 50 fits, 8 pairs
+  landmark25_sig_samp15: 50 fits, 8 pairs
+  landmark25_sig_samp25: 50 fits, 8 pairs
+  landmark25_sig_samp40: 50 fits, 8 pairs
+  landmark25_sig_var75: 50 fits, 8 pairs
+  landmark25_sig_var85: 50 fits, 8 pairs
+  landmark25_sig_var95: 50 fits, 8 pairs
+  landmark50_res_fix03: 50 fits, 8 pairs
+  landmark50_res_fix05: 50 fits, 8 pairs
+  landmark50_res_fix10: 50 fits, 8 pairs
+  landmark50_res_fix20: 50 fits, 8 pairs
+  landmark50_res_fix30: 50 fits, 8 pairs
+  landmark50_res_samp15: 50 fits, 8 pairs
+  landmark50_res_samp25: 50 fits, 8 pairs
+  landmark50_res_samp40: 50 fits, 8 pairs
+  landmark50_res_var75: 50 fits, 8 pairs
+  landmark50_res_var85: 50 fits, 8 pairs
+  landmark50_res_var95: 50 fits, 8 pairs
+  landmark50_sig_fix03: 50 fits, 8 pairs
+  landmark50_sig_fix05: 50 fits, 8 pairs
+  landmark50_sig_fix10: 50 fits, 8 pairs
+  landmark50_sig_fix20: 50 fits, 8 pairs
+  landmark50_sig_fix30: 50 fits, 8 pairs
+  landmark50_sig_samp15: 50 fits, 8 pairs
+  landmark50_sig_samp25: 50 fits, 8 pairs
+  landmark50_sig_samp40: 50 fits, 8 pairs
+  landmark50_sig_var75: 50 fits, 8 pairs
+  landmark50_sig_var85: 50 fits, 8 pairs
+  landmark50_sig_var95: 50 fits, 8 pairs
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/sweep_landmark_summary.csv  (1056 rows)
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_strength_naive.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_strength_intermediate.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_strength_expert.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_n_sig_naive.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_n_sig_intermediate.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_n_sig_expert.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_ifi_expert.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_lr_change_cc.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_lr_change_n_sig.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_frac_sig_cells_naive.png
+computing p-values + IFI-window grids...
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_ifi_window_per_pair_expert.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_ifi_window_lr_change.png
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/figures/landmark_sweep/sweep_pvalues_summary.png
