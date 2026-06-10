@@ -20,7 +20,7 @@ Instructions for Claude Code when working in this scientific repository. Follow 
 - For numerical/scientific code, include tests on synthetic data with known ground truth (e.g. known means, known parameters of a generative process).
 
 ### Use git aggressively
-- Work on feature branches, not `main`/`master`.
+- Commit directly to `main` — do **not** create feature branches (project preference, 2026-06-10).
 - Commit at logical checkpoints with descriptive messages. Never bundle unrelated changes.
 - Delete dead code with confidence — git is the backup. Do not leave commented-out code blocks.
 - Before any large refactor or destructive change, confirm the working tree is clean.
