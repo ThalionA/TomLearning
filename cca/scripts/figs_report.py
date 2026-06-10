@@ -34,7 +34,8 @@ RES = config.RESULTS_DIR
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
          "RSC-SUB", "V1-RSC"]
 AXES = ["trial_frac", "performance", "lp_rel"]
-SLOPE_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "gini_x", "rot_x", "jac_x"]
+SLOPE_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "gini_x", "gini_pearson_x",
+                 "rot_x", "jac_x"]
 
 
 def _num(s):
@@ -135,21 +136,22 @@ def fig_levels(df, tag):
 
 def fig_slopes_heatmap(df, tag):
     learn = df[df["learner"] == 1]
+    metrics = [m for m in SLOPE_METRICS if m in df.columns]
     for axis in AXES:
-        M = np.full((len(PAIRS), len(SLOPE_METRICS)), np.nan)
+        M = np.full((len(PAIRS), len(metrics)), np.nan)
         P = np.full_like(M, np.nan)
         for i, p in enumerate(PAIRS):
-            for j, m in enumerate(SLOPE_METRICS):
+            for j, m in enumerate(metrics):
                 med, pp, n = _slope_quant(learn, m, axis, p)
                 M[i, j] = med; P[i, j] = pp
         # normalise each metric column to its max abs for visual comparability
         norm = M / (np.nanmax(np.abs(M), 0, keepdims=True) + 1e-12)
-        fig, ax = plt.subplots(figsize=(1.1 * len(SLOPE_METRICS) + 2, 0.6 * len(PAIRS) + 2))
+        fig, ax = plt.subplots(figsize=(1.1 * len(metrics) + 2, 0.6 * len(PAIRS) + 2))
         im = ax.imshow(norm, cmap="RdBu_r", vmin=-1, vmax=1, aspect="auto")
-        ax.set_xticks(range(len(SLOPE_METRICS))); ax.set_xticklabels(SLOPE_METRICS, rotation=45, ha="right")
+        ax.set_xticks(range(len(metrics))); ax.set_xticklabels(metrics, rotation=45, ha="right")
         ax.set_yticks(range(len(PAIRS))); ax.set_yticklabels(PAIRS)
         for i in range(len(PAIRS)):
-            for j in range(len(SLOPE_METRICS)):
+            for j in range(len(metrics)):
                 if np.isfinite(M[i, j]):
                     star = "*" if (np.isfinite(P[i, j]) and P[i, j] < 0.05) else ""
                     ax.text(j, i, f"{M[i, j]:+.3f}{star}", ha="center", va="center",
@@ -247,6 +249,43 @@ def fig_rotation_floor(df, tag):
     plt.close(fig)
 
 
+def fig_gini_control(df, tag, axis="trial_frac"):
+    """CCA-independent control: per-pair median slope of the canonical-weight Gini
+    (gini_x) vs the raw cross-correlation coupling Gini (gini_pearson_x). If the
+    de-sparsification is real, both fall together — Pearson is computed with no CCA."""
+    if "gini_pearson_x" not in df.columns:
+        return
+    learn = df[df["learner"] == 1]
+    fig, ax = plt.subplots(figsize=(8.5, 4))
+    xs = np.arange(len(PAIRS)); w = 0.38
+    for off, metric, lab, col in [(-w / 2, "gini_x", "Gini (CCA weights)", "#c0392b"),
+                                  (+w / 2, "gini_pearson_x",
+                                   "Gini (Pearson coupling — CCA-free)", "#8e44ad")]:
+        slopes = per_animal_slopes(learn, metric, axis)     # once per metric
+        meds, sems, stars = [], [], []
+        for p in PAIRS:
+            sl = slopes.get(p, [])
+            if len(sl) >= 3:
+                _, med, _, pv = paired_stats.wilcoxon_signed(sl)
+            else:
+                med, pv = np.nan, np.nan
+            meds.append(med); sems.append(_sem(sl)[1]); stars.append(pv)
+        ax.bar(xs + off, meds, w, yerr=sems, capsize=3, label=lab, color=col, alpha=0.85)
+        for i, (m, pv) in enumerate(zip(meds, stars)):
+            if np.isfinite(pv) and pv < 0.05 and np.isfinite(m):
+                ax.text(xs[i] + off, m, "*", ha="center",
+                        va="bottom" if m >= 0 else "top", fontsize=11)
+    ax.axhline(0, color="k", lw=0.5)
+    ax.set_xticks(xs); ax.set_xticklabels(PAIRS, rotation=45, ha="right", fontsize=8)
+    ax.set_ylabel(f"median per-animal slope d(Gini)/d({axis})")
+    ax.set_title(f"De-sparsification control — CCA-weight Gini vs CCA-free Pearson Gini — "
+                 f"{tag}, learners\n(both negative ⇒ not a CCA-weight artefact; shares the "
+                 "residualisation, so not orthogonal to it; * = signed-rank p<0.05)", fontsize=8)
+    ax.legend(fontsize=8)
+    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_gini_control.png", dpi=150)
+    plt.close(fig)
+
+
 def fig_learner_vs_non(df, tag, metric="gini_x", axis="trial_frac"):
     fig, ax = plt.subplots(figsize=(8, 4))
     xs = np.arange(len(PAIRS)); w = 0.38
@@ -275,6 +314,7 @@ def make_all(csv, tag):
     fig_direction(df, tag)
     if "sh_x" in df.columns:
         fig_rotation_floor(df, tag)
+    fig_gini_control(df, tag)
     fig_learner_vs_non(df, tag)
     print(f"  {tag}: figures written ({len(df)} rows)")
 

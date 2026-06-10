@@ -28,7 +28,7 @@ import h5py
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import (config, dataio, membership, partial,  # noqa: E402
+from tom_cca import (config, dataio, membership,  # noqa: E402
                      subspace, subspace_window, trajectory)
 
 K = 30
@@ -78,8 +78,8 @@ def _rotation(prev_w, cur_w, d_use=ROT_DIMS) -> float:
 
 FIELDS = ["animal", "learner", "pair", "center_trial", "trial_frac",
           "performance", "lp_rel", "n_bins", "cc1", "n_sig", "mi_sig", "ifi",
-          "optimal_lag", "gini_x", "gini_y", "rot_x", "rot_y", "jac_x", "jac_y",
-          "sh_x", "sh_y"]
+          "optimal_lag", "gini_x", "gini_y", "gini_pearson_x", "gini_pearson_y",
+          "rot_x", "rot_y", "jac_x", "jac_y", "sh_x", "sh_y"]
 
 
 def main():
@@ -148,12 +148,11 @@ def main():
                     idx = idx_all[:cap]
                 groups = trial_ids[idx]
                 Xi, Yi = X[idx], Y[idx]
-                if Z is not None:
-                    Zi = Z[idx]
-                    Xi = partial.partial_out(Xi, Zi)
-                    Yi = partial.partial_out(Yi, Zi)
+                Zi = Z[idx] if Z is not None else None
+                # Z is partialled out INSIDE window_subspace — full-window for the
+                # in-sample readouts, per-fold (train-only) for the held-out CC.
                 ws = subspace_window.window_subspace(
-                    Xi, Yi, groups, k=K, max_lag=MAX_LAG,
+                    Xi, Yi, groups, Z=Zi, k=K, max_lag=MAX_LAG,
                     n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
                 cc1 = float(ws.cc[0]) if ws.cc.size else float("nan")
                 if not np.isfinite(cc1) or cc1 >= SAT:
@@ -170,6 +169,8 @@ def main():
                     "n_sig": ws.n_sig, "mi_sig": round(ws.mi_sig, 4),
                     "ifi": round(ws.ifi, 4), "optimal_lag": ws.optimal_lag,
                     "gini_x": round(ws.gini_x, 4), "gini_y": round(ws.gini_y, 4),
+                    "gini_pearson_x": round(ws.gini_pearson_x, 4),
+                    "gini_pearson_y": round(ws.gini_pearson_y, 4),
                     "rot_x": round(_rotation(pwx, ws.weights_x), 2),
                     "rot_y": round(_rotation(pwy, ws.weights_y), 2),
                     "jac_x": round(membership.jaccard(pmx, ws.member_x), 4)
@@ -187,7 +188,7 @@ def main():
               f"{n_rows_animal} window-rows ({len(rows)} total)", flush=True)
 
     _write(rows)
-    print(f"\nwrote {config.RESULTS_DIR/'trajectory_windows.csv'} ({len(rows)} rows). "
+    print(f"\nwrote {out} ({len(rows)} rows). "
           "Analyse with scripts/analyze_trajectory.py", flush=True)
 
 

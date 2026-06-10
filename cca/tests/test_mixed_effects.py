@@ -118,6 +118,23 @@ def test_lmm_slope_detects_population_trend():
     assert out["estimate"] > 0.2 and out["p"] < 0.05
 
 
+def test_lmm_slope_rejects_random_slope_below_four_animals():
+    # A continuous random slope needs a 2x2 RE covariance (3 params) -> with only
+    # 3 animals it is unidentifiable and the Wald p is anticonservative; the guard
+    # must return ok=False / NaN p (mirrors lmm_epoch_contrasts) instead of fitting.
+    rng = np.random.default_rng(22)
+    recs = []
+    for a in range(3):                              # only 3 animals
+        for x in np.linspace(0, 1, 8):
+            recs.append({"animal_id": a, "axis": float(x),
+                         "value": 0.4 * x + rng.normal(0, 0.05)})
+    out = mixed_effects.lmm_slope(recs)
+    assert not out["ok"]
+    assert np.isnan(out["p"])
+    assert out["n_animals"] == 3
+    assert out["reason"] == "too_few_animals_for_random_slope"
+
+
 def test_lmm_slope_null_not_significant():
     rng = np.random.default_rng(21)
     recs = []

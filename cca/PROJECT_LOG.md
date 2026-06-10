@@ -11,27 +11,70 @@ narrative + state of play.**
 
 ---
 
-## ⚠ RE-RUN PENDING (shuffle 20→100) — TO BE CONTINUED
+## ✓ DONE (2026-06-07) — NONLINEAR (kernel) CCA full suite + report §5
 
-The surrogate shuffle count was raised 20→100 (now `config.SURROGATE_SHUFFLES`, used by all drivers).
-**Regenerated @100 already:** the EPOCH analyses — `results/epoch_metrics.csv`, `epoch_dims.csv`,
-and their figures (`HCV1_CCA_fsexcl_epochs.png`, `HCV1_CCA_fsexcl_units_{cc,ifi,lag}.png`) + tables.
-The Gini epoch result is UNCHANGED at 100 shuffles (Gini is shuffle-independent).
+Complete **kernel-CCA analogue of the whole pipeline** built, run (all 16 animals, FS inc/exc,
+learners/non via session+epoch scopes, cued/uncued), analysed, figured, and written into report **§5
+"Nonlinear (kernel) CCA"** (4 figures: vs_linear/levels/epochs/transition × FS). 241 tests pass.
+**VERDICT: the communication subspace is LARGELY LINEAR.** Kernel CCA edges linear by only a small,
+consistent margin — median Δ(KCCA−linear) held-out CC = +0.016/+0.014 (FS-excl/incl), KCCA>linear in
+66%/58% of cells — significant per-pair only in **V1-RSC** (FS-incl p=0.02) and **CA1-V1** (FS-excl
+p=0.033); for the strongest subspaces (CA3-DG ~0.34/0.45, CA1-CA3) **KCCA≈linear**. Strength flat
+naive→expert (mirrors linear); structure-coeff **Gini de-sparsifies naive→expert in CA1-V1** (FS-incl
+LMM 3e-5) — the §3.3 de-sparsification echoes in the NONLINEAR membership (leading pair shifts
+CA1-RSC→CA1-V1). Cued: CA1-V1 cc↑ (p=0.047), V1-RSC Gini↓ (p=0.031). No nonlinear effect overturns a
+linear conclusion → modest cortically-localised nonlinear add-on, not missed dominant structure.
+**Compute choices (in report):** fixed ridge reg=10 (optimism-free vs linear), n cap 900, 10 shuffles,
+±4 lags, structure-coeff membership; trajectory deferred. NOTHING committed yet.
+- **GOTCHA fixed this build:** KCCA transition cued cell returned NaN held-out CC at CAP=900 because
+  the sample-matched cued block spanned <N_FOLDS whole trials → switched BOTH conditions to
+  position-based CV folds (run_kcca_transition.py). KCCA `kcca_fit` sped up ~10× via Cholesky+ARPACK
+  top-d (non-symmetric dense eig was the bottleneck; 10-min test → 25 s).
+- **Review workflow done (16 findings, 11 confirmed):** fixed _heldout to pair KCCA+linear per fold
+  (superiority Δ over SAME folds — verified output IDENTICAL on animal 52, no re-run needed);
+  KCCAResult.r docstring (it's the ridge-penalised value, under-estimates corr; used only to scale
+  beta). Report §5 fixed: per-pair superiority "neither FS-robust"; surrogate-clearance 86/82% FS-excl
+  vs 100% FS-incl; "Uncued→cued" label; single-split surrogate/IFI disclosed. IFI single-split + epoch
+  LMM-vs-Wilcoxon kept as documented caveats. 254 tests pass.
 
-**Still reflect 20 shuffles (STALE, re-run when continuing):**
-- `results/trajectory_windows.csv` (FS-excl) and `trajectory_windows_fsincl.csv` (FS-incl)
-- `results/transition_uncued_cued.csv`
-**What's affected by the shuffle count:** only `n_sig`, `mi_sig`, and the dims-as-n significant-dim
-pools. **UNAFFECTED (shuffle-independent):** `gini_x/y`, `cc1`, `ifi`, `optimal_lag`, `rot_x/y`,
-`sh_x/y`, and every slope/contrast computed on those — so **the headline (Gini↓ de-sparsification)
-and all directionality/strength/rotation conclusions stand regardless of the re-run.**
-**Commands to refresh (each ~25 min; background):**
-```
-PYTHONPATH=src python scripts/run_trajectory.py              # FS-excl
-PYTHONPATH=src python scripts/run_trajectory.py --include-fs # FS-incl
-PYTHONPATH=src python scripts/run_transition.py
-PYTHONPATH=src python scripts/figs_report.py && PYTHONPATH=src python scripts/figs_units.py
-```
+### (prior in-flight, now done) NONLINEAR build details
+- **New code (TDD):** `src/tom_cca/kernel_cca.py` (regularised RBF KCCA — Hardoon ridge form;
+  Cholesky+ARPACK top-d for speed; `kcca_fit/score/variates`, `median_gamma`, `kcca_lagged_heldout`
+  for direction); `src/tom_cca/kcca_window.py` (full per-cell suite: held-out KCCA **and** linear CC
+  on same folds = superiority; shift-surrogate n_sig; held-out lagged IFI; structure-coefficient
+  Gini); `membership.variate_structure_coefficients` (method-agnostic membership — KCCA has no neuron
+  weights). Drivers/analyze/figs as above.
+- **Compute choices (state in report):** fixed ridge reg=10 (prototype sweet spot; fair vs linear, no
+  selection optimism); n capped 900/cell; 10 shuffles; lags ±4; PCA→K then KCCA. Sliding-window
+  trajectory DEFERRED (≈10× cost; epochs give the learning axis).
+- **Prototype verdict (prototype_kcca.py, pre-build):** KCCA in-sample SATURATES at our n (gap ~0.40,
+  0/36 held-out ≥0.99 → held-out mandatory); clears its surrogate in 19/36 (intra-hippocampal pairs);
+  KCCA≈linear at reg=1 (Δ=−0.02), modest edge at reg=10 in some pairs → **leaning: subspace largely
+  linear**, full suite quantifies it.
+
+## ✓ DONE (2026-06-07) — Pearson control + leak-free CV (verified)
+
+- **Pearson control** (`membership.pearson_coupling_scores` → `gini_pearson_x/y`): the CCA-free Gini
+  de-sparsifies in the **same (negative) direction** as the weight-Gini (CA1-RSC trial_frac med −0.053
+  vs −0.132) but **attenuated / mostly n.s.** (W 0.11, LMM 0.056) — corroborates directionally, not
+  decisively (unit-count noise floor; slope-only). Headline = NOT a pure CCA-weight artifact.
+- **Leak-free held-out CC** (`window_subspace(...,Z=...)` per-fold residualise+PCA+CCA): re-ran
+  trajectory FS-excl/incl + transition + epochs FS-excl/incl. **`gini_x` byte-identical** (trajectory
+  max|Δ|=0.0 on 636 windows; epochs 0/148) → de-sparsification headline + IFI direction UNCHANGED;
+  only cc1/n_sig/mi_sig shifted (more conservative, still null). All 22+ figures regenerated.
+- **Code-review fixes:** lmm_slope small-N guard; wilcoxon zero-handling; legacy `partial_cca_cv`
+  caveat; dead-field removal; misc. NOTHING committed yet.
+
+## ✓ RE-RUN COMPLETE (shuffle 20→100) — 2026-06-06
+
+All analyses now at `config.SURROGATE_SHUFFLES = 100`. Trajectory (FS-excl 636 rows, FS-incl 647),
+transition (58 rows), and epochs were all re-run/regenerated @100; all 22 vault figures refreshed
+(`attachments/HCV1_CCA_*`, 2026-06-06 21:54). **No conclusion changed** — confirmed identical:
+CA1-RSC Gini↓ LMM β=-0.159 p=4.25e-05; CA1→DG IFI↑ uncued→cued d=+0.019 p=0.016 (learners); rotation
+at/below split-half floor. As expected: `gini`, `cc1`, `ifi`, `optimal_lag`, `rot/sh` are
+shuffle-independent; only `n_sig`/`mi_sig`/dims-pools could move, and they remain null.
+**Sig threshold decision (this session):** kept the 95th-pct circular-shift threshold (Han uses
+mean+3sd ≈99.9th pct); divergence documented in report §2.6. Nothing committed yet.
 
 ## CURRENT STATE (2026-06-06)
 
@@ -135,6 +178,29 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 ---
 
 ## LOG ENTRIES (newest first)
+
+### 2026-06-06 — Methods-note audit (vault CCA report); threshold decision; 20→100 re-run launched
+- Read the new vault note `Methods/CCA in Systems Neuroscience — Research Report.md` (full-text audit
+  of our exact lineage: Han&Helmchen = template, Gonzalez/Buzsáki = pCCA antecedent) against our code.
+  **Verdict: pipeline already aligned on ~everything** (PCA→30, n≫p continuous, pCCA third-area control,
+  residual-on-condition-mean, circular-shift null, held-out CV + split-half floor, session-as-unit,
+  IFI/optimal-lag, low-dim 1–3 sig answer). **No reframe warranted** — the note vindicates the path.
+- **One concrete discrepancy found & decided:** our sig threshold is the **95th pct** of the dominant
+  circular-shifted CC (`subspace_window._significance`, `np.quantile(null_top, 1-alpha)`), whereas
+  Han uses **mean+3sd** (≈99.9th pct) — much stricter. Likely why we count ~3 sig dims vs Han's 1–2.
+  **DECISION (user): keep 95th pct, document divergence.** Only moves the already-null
+  n_sig/mi_sig/dims-as-n metrics; Gini headline + all threshold-independent conclusions untouched.
+  Documented in report §2.6.
+- Three other items are caveat/optional only, NO reframe: (2) optional Pearson-correlation control for
+  the Gini↓ headline (Han step 6, not done — cheap robustness add if desired); (3) temporal-autocorr/
+  effective-N caveat — our circular-shift is the *recommended* mitigation, just state it explicitly;
+  (4) weight-interpretation caveat — frame Gini as a distributional claim, don't over-read membership.
+  Kornblith p≥n / CKA degeneracy does NOT bite us (firmly n≫p) — reassurance only.
+- **Re-run COMPLETE (background, parallel, all exit 0):** run_trajectory FS-excl (636 rows, 21:50) +
+  FS-incl (647, 21:53) + run_transition (58 rows, 21:09), all @ SURROGATE_SHUFFLES=100. Regenerated
+  all 22 vault figures (figs_report + figs_units, 21:54). **CONFIRMED: no conclusion changed** —
+  CA1-RSC Gini↓ LMM p=4.25e-05 (identical), CA1-RSC IFI p=0.0078, CA1→DG IFI↑ uncued→cued p=0.016
+  (learners), rotation ≤ split-half floor. n_sig/mi_sig remain null. See the RE-RUN COMPLETE block at top.
 
 ### 2026-06-06 — Shuffle count centralised (config.SURROGATE_SHUFFLES=100); epochs re-run; re-run pending
 - All drivers now read `config.SURROGATE_SHUFFLES` (=100) — no more per-driver drift. Epoch analyses

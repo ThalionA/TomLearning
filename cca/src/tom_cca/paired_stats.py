@@ -14,24 +14,26 @@ from scipy import stats
 def wilcoxon_signed(deltas) -> tuple[int, float, float, float]:
     """Two-sided Wilcoxon signed-rank on per-animal deltas.
 
-    Returns ``(n, median, statistic, p)``. ``p`` is NaN when there are fewer
-    than 3 finite, non-zero deltas (the signed-rank test is not meaningful) or
-    when every delta is zero.
+    Returns ``(n, median, statistic, p)`` where ``n`` is the number of finite
+    deltas (the sample size displayed by callers). The signed-rank test ignores
+    zero deltas, so ``p`` is computed only when **at least 3 non-zero** deltas
+    remain — otherwise ``p`` is NaN. Zeros are stripped *before* the scipy call
+    so it never silently falls back to an invalid small-sample normal
+    approximation (which it does when zeros are present at small n); the
+    zero-free array uses the exact distribution.
     """
     arr = np.asarray(deltas, dtype=float)
     arr = arr[np.isfinite(arr)]
     n = arr.size
-    if n < 3 or np.all(arr == 0):
-        return (n, float(np.nanmedian(arr) if n else np.nan),
-                float("nan"), float("nan"))
+    med = float(np.median(arr)) if n else float("nan")
+    nz = arr[arr != 0.0]                                # signed-rank drops zeros
+    if nz.size < 3:                                     # too few non-zero to test
+        return (n, med, float("nan"), float("nan"))
     try:
-        res = stats.wilcoxon(arr, zero_method="wilcox",
-                             alternative="two-sided",
-                             nan_policy="omit", method="auto")
-        return (n, float(np.median(arr)), float(res.statistic),
-                float(res.pvalue))
-    except ValueError:                                  # degenerate / all-zero
-        return (n, float(np.median(arr)), float("nan"), float("nan"))
+        res = stats.wilcoxon(nz, alternative="two-sided", method="auto")
+        return (n, med, float(res.statistic), float(res.pvalue))
+    except ValueError:                                  # degenerate
+        return (n, med, float("nan"), float("nan"))
 
 
 def fdr_bh(pvals, q: float = 0.05) -> np.ndarray:

@@ -104,3 +104,39 @@ def test_gini_and_members_present():
     r = sw.window_subspace(X, Y, g, k=5, max_lag=3, n_shuffles=10)
     assert 0.0 <= r.gini_x <= 1.0
     assert r.member_x.sum() >= 1                  # at least one member
+
+
+def test_z_control_removes_confound_mediated_coupling_leakfree():
+    # X and Y are coupled ONLY through a third area Z. Without Z the held-out CC
+    # is high; partialling Z out (per-fold, train-only inside window_subspace)
+    # collapses it — the leak-free held-out CC must not retain Z-driven coupling.
+    rng = np.random.default_rng(5)
+    n = 8000
+    z = rng.normal(0, 1, (n, 6))
+    X = rng.normal(0, 0.3, (n, 8)); X[:, :6] += z
+    Y = rng.normal(0, 0.3, (n, 8)); Y[:, :6] += z       # shared only via z
+    g = _grouped(n, 10, rng)
+    plain = sw.window_subspace(X, Y, g, k=6, max_lag=3, n_shuffles=10)
+    controlled = sw.window_subspace(X, Y, g, Z=z, k=6, max_lag=3, n_shuffles=10)
+    assert plain.cc[0] > 0.6                             # strong Z-mediated coupling
+    assert controlled.cc[0] < 0.3                        # collapses once Z removed
+    assert controlled.n_sig <= plain.n_sig
+
+
+def test_pearson_control_gini_present_and_tracks_concentration():
+    # CCA-independent control. A coupling carried by ONE unit gives a higher
+    # Pearson-coupling Gini than the SAME coupling spread over MANY units — the
+    # de-sparsification the control is meant to corroborate.
+    rng = np.random.default_rng(4)
+    n = 5000
+    lat = rng.normal(0, 1, n)
+    g = _grouped(n, 10, rng)
+    Xc = rng.normal(0, 0.3, (n, 12)); Xc[:, 0] += lat        # concentrated
+    Yc = rng.normal(0, 0.3, (n, 12)); Yc[:, 0] += lat
+    Xd = rng.normal(0, 0.3, (n, 12)) + lat[:, None]          # distributed
+    Yd = rng.normal(0, 0.3, (n, 12)); Yd[:, 0] += lat
+    rc = sw.window_subspace(Xc, Yc, g, k=6, max_lag=3, n_shuffles=10)
+    rd = sw.window_subspace(Xd, Yd, g, k=6, max_lag=3, n_shuffles=10)
+    assert 0.0 <= rc.gini_pearson_x <= 1.0
+    assert 0.0 <= rd.gini_pearson_x <= 1.0
+    assert rc.gini_pearson_x > rd.gini_pearson_x            # 1-unit > many-unit

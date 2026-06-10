@@ -14,17 +14,30 @@ import numpy as np
 from . import core
 
 
-def partial_out(target: np.ndarray, confound: np.ndarray) -> np.ndarray:
-    """Least-squares residual of ``target`` after regressing out ``confound``.
+def partial_out_cv(target: np.ndarray, confound: np.ndarray,
+                   train_mask: np.ndarray) -> np.ndarray:
+    """Residual of ``target`` on ``confound`` with coefficients fit on
+    ``train_mask`` rows ONLY, then applied to every row.
 
-    Both are ``(n_samples, n_features)``; the regression is over samples. The
-    coefficients are estimated on the finite (non-missing) rows only; missing
-    rows are returned as NaN and dropped later, at fit time.
+    This is the leak-free form: when residualising before a cross-validated fit,
+    the confound regression must not see the held-out fold, or the "held-out"
+    score is optimistic. Coefficients use the finite training rows; the result is
+    ``target - confound @ coef`` for all rows (NaN where inputs are NaN).
     """
-    valid = (np.all(np.isfinite(target), axis=1)
-             & np.all(np.isfinite(confound), axis=1))
-    coef, *_ = np.linalg.lstsq(confound[valid], target[valid], rcond=None)
+    fit = (np.asarray(train_mask, dtype=bool)
+           & np.all(np.isfinite(target), axis=1)
+           & np.all(np.isfinite(confound), axis=1))
+    coef, *_ = np.linalg.lstsq(confound[fit], target[fit], rcond=None)
     return target - confound @ coef
+
+
+def partial_out(target: np.ndarray, confound: np.ndarray) -> np.ndarray:
+    """Least-squares residual of ``target`` after regressing out ``confound``,
+    with coefficients estimated on ALL finite rows (the in-sample / descriptive
+    form). For a leak-free pre-CV residualisation use :func:`partial_out_cv`.
+    """
+    return partial_out_cv(target, confound,
+                          np.ones(target.shape[0], dtype=bool))
 
 
 def partial_out_tensor(tensor: np.ndarray, confound: np.ndarray) -> np.ndarray:
@@ -49,6 +62,12 @@ def partial_cca_cv(
     Z is regressed out of both X and Y over the flattened (trial, bin) samples;
     the residuals are reshaped back to (n_trials, n_bins, k) and passed to the
     standard whole-trial cross-validated CCA.
+
+    NOTE: the Z-regression here is fit on the FULL window (in-sample), so the
+    held-out CC carries a small optimistic bias. This is the legacy
+    landmark/spatial-arm path (run_partial.py). The continuous-regime path
+    (subspace_window.window_subspace, Z=...) does the confound regression
+    per-fold on training trials only and is leak-free; prefer it for new work.
     """
     n_tr, n_bins, _ = scores_x.shape
     fx = scores_x.reshape(n_tr * n_bins, -1)

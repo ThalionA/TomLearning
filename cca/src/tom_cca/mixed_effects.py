@@ -81,6 +81,13 @@ def lmm_slope(records, value: str = "value", group: str = "animal_id",
     n_animals = int(df[group].nunique())
     if n_animals < MIN_ANIMALS or df[axis].nunique() < 3:
         return {**_na("too_few"), "n_animals": n_animals}
+    # A random slope on a continuous axis gives each animal a random
+    # intercept AND a random slope -> a 2x2 RE covariance (3 free params). It is
+    # unidentifiable unless there are more animals than covariance parameters;
+    # below that the fit degenerates and the Wald p collapses to an
+    # anticonservative value (same hazard guarded in lmm_epoch_contrasts).
+    if n_animals <= 3:
+        return {**_na("too_few_animals_for_random_slope"), "n_animals": n_animals}
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

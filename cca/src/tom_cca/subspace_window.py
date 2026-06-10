@@ -24,7 +24,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import core, lagged, membership, subspace
+from . import core, lagged, membership, partial, subspace
 
 CC_CLIP = 0.999
 
@@ -36,31 +36,47 @@ class WindowSubspace:
     mi_sig: float
     ifi: float
     optimal_lag: int
-    lags: np.ndarray
-    lag_cc1: np.ndarray
     ifi_per_dim: np.ndarray   # (d,) IFI for each canonical dimension
     lag_per_dim: np.ndarray   # (d,) optimal lag (bins) for each canonical dimension
     gini_x: float
     gini_y: float
+    gini_pearson_x: float     # CCA-INDEPENDENT control: Gini of raw cross-corr coupling
+    gini_pearson_y: float
     weights_x: np.ndarray     # (n_units_x, d)
     weights_y: np.ndarray     # (n_units_y, d)
     member_x: np.ndarray      # (n_units_x,) bool
     member_y: np.ndarray      # (n_units_y,) bool
-    n_units_x: int
-    n_units_y: int
     split_half_x: float       # within-window split-half angle (deg) — rotation noise floor
     split_half_y: float
     sig_mask: np.ndarray      # (d,) bool — which canonical dims are significant
 
 
-def _scores(M: np.ndarray, k: int):
+def _pca_fit(M: np.ndarray, k: int):
+    """Fit a k-component PCA: returns ``(mean, components (n_units, k))``."""
     mu = M.mean(0)
     _, _, vt = np.linalg.svd(M - mu, full_matrices=False)
-    comp = vt[:k].T                                  # (n_units, k)
-    return (M - mu) @ comp, comp
+    return mu, vt[:k].T
 
 
-def _heldout_perdim(Sx, Sy, groups, n_folds, seed):
+def _project(M: np.ndarray, mu: np.ndarray, comp: np.ndarray) -> np.ndarray:
+    return (M - mu) @ comp
+
+
+def _scores(M: np.ndarray, k: int):
+    mu, comp = _pca_fit(M, k)
+    return _project(M, mu, comp), comp
+
+
+def _heldout_perdim_cv(X, Y, Z, groups, kx, ky, n_folds, seed):
+    """LEAK-FREE held-out per-dim canonical correlation.
+
+    For each whole-trial fold, the confound regression (partial-out Z), the PCA,
+    and the CCA are all fit on the TRAINING trials only; the held-out trials are
+    then residualised with the train coefficients, projected onto the train PCs,
+    and scored. This keeps the held-out fold out of every preprocessing step, so
+    the reported CC is an honest out-of-sample estimate. Returns the
+    fold-averaged per-dim CC, or None if there are too few trials.
+    """
     uniq = np.unique(groups)
     if uniq.size < n_folds:
         return None
@@ -72,8 +88,14 @@ def _heldout_perdim(Sx, Sy, groups, n_folds, seed):
         tr = ~te
         if np.sum(tr) < 3:
             continue
-        model = core.cca_fit(Sx[tr], Sy[tr])
-        per.append(core.cca_score(Sx[te], Sy[te], model))
+        Xr = partial.partial_out_cv(X, Z, tr) if Z is not None else X
+        Yr = partial.partial_out_cv(Y, Z, tr) if Z is not None else Y
+        mux, compx = _pca_fit(Xr[tr], kx)
+        muy, compy = _pca_fit(Yr[tr], ky)
+        model = core.cca_fit(_project(Xr[tr], mux, compx),
+                             _project(Yr[tr], muy, compy))
+        per.append(core.cca_score(_project(Xr[te], mux, compx),
+                                  _project(Yr[te], muy, compy), model))
     if not per:
         return None
     d = min(p.size for p in per)
@@ -166,19 +188,25 @@ def _split_half_angles(X, Y, groups, k, d_use, seed):
     return _max_angle(wx1, wx2, d_use), _max_angle(wy1, wy2, d_use)
 
 
-def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
+def window_subspace(X, Y, groups, Z=None, k: int = 30, max_lag: int = 10,
                     n_shuffles: int = 30, alpha: float = 0.05,
                     n_folds: int = 5, member_q: float = 0.75,
                     seed: int = 0) -> WindowSubspace:
-    """Full subspace readout for one window. ``X``/``Y`` are (n_samples, n_units),
-    already residualised on the control area(s) by the caller."""
-    kx = int(min(k, X.shape[1]))
-    ky = int(min(k, Y.shape[1]))
-    Sx, cx = _scores(X, kx)
-    Sy, cy = _scores(Y, ky)
+    """Full subspace readout for one window. ``X``/``Y`` are (n_samples, n_units)
+    raw activity; ``Z`` (optional, (n_samples, n_confound)) is the third-area
+    control to partial out. The IN-SAMPLE / descriptive readouts (Gini, weights,
+    significance null, IFI, split-half, Pearson control) use the full-window
+    residual; the held-out CC is computed LEAK-FREE — Z is partialled out, and the
+    PCA and CCA are fit, on the training trials of each fold only."""
+    Xr = partial.partial_out(X, Z) if Z is not None else X
+    Yr = partial.partial_out(Y, Z) if Z is not None else Y
+    kx = int(min(k, Xr.shape[1]))
+    ky = int(min(k, Yr.shape[1]))
+    Sx, cx = _scores(Xr, kx)
+    Sy, cy = _scores(Yr, ky)
     d = min(kx, ky)
 
-    cc = _heldout_perdim(Sx, Sy, groups, n_folds, seed)
+    cc = _heldout_perdim_cv(X, Y, Z, groups, kx, ky, n_folds, seed)
     if cc is None:
         cc = np.full(d, np.nan)
     sig = _significance(Sx, Sy, np.nan_to_num(cc, nan=-1.0), n_shuffles, alpha, seed)
@@ -207,15 +235,20 @@ def window_subspace(X, Y, groups, k: int = 30, max_lag: int = 10,
     wy = membership.canonical_weight_scores(cy, model.B, d)
     contrib_x = membership.subspace_contribution(wx)
     contrib_y = membership.subspace_contribution(wy)
-    sh_x, sh_y = _split_half_angles(X, Y, groups, k, d_use=3, seed=seed)
+    # CCA-independent control: Gini of raw cross-area Pearson coupling (same
+    # residualised window data, no CCA) — rules out the (p)CCA *weight machinery*
+    # as the explanation for the weight-Gini de-sparsification. (It shares the
+    # caller's residualisation/run-bin masking, so it is not orthogonal to those.)
+    cpx, cpy = membership.pearson_coupling_scores(Xr, Yr)
+    sh_x, sh_y = _split_half_angles(Xr, Yr, groups, k, d_use=3, seed=seed)
     return WindowSubspace(
         cc=cc, n_sig=n_sig, mi_sig=mi_sig, ifi=ifi, optimal_lag=optimal_lag,
-        lags=lags, lag_cc1=lag_cc1, ifi_per_dim=ifi_per_dim, lag_per_dim=lag_per_dim,
+        ifi_per_dim=ifi_per_dim, lag_per_dim=lag_per_dim,
         gini_x=membership.gini(contrib_x), gini_y=membership.gini(contrib_y),
+        gini_pearson_x=membership.gini(cpx), gini_pearson_y=membership.gini(cpy),
         weights_x=wx, weights_y=wy,
         member_x=membership.member_mask(contrib_x, member_q),
         member_y=membership.member_mask(contrib_y, member_q),
-        n_units_x=X.shape[1], n_units_y=Y.shape[1],
         split_half_x=sh_x, split_half_y=sh_y,
         sig_mask=np.asarray(sig, dtype=bool),
     )

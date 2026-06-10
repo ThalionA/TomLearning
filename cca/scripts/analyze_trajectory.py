@@ -27,7 +27,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import config, mixed_effects, paired_stats, trajectory  # noqa: E402
 
 AXES = ["trial_frac", "performance", "lp_rel"]
-SLOPE_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "gini_x", "rot_x", "jac_x"]
+# gini_pearson_x = CCA-independent control for the gini_x de-sparsification headline.
+# It is interpreted via its within-animal SLOPE only — its absolute level carries a
+# partner-unit-count noise floor, so it is excluded from the cross-pair LEVELS table.
+SLOPE_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "gini_x", "gini_pearson_x",
+                 "rot_x", "jac_x"]
 LEVEL_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "optimal_lag", "gini_x",
                  "rot_x", "jac_x"]
 PAIR_ORDER = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG",
@@ -68,6 +72,11 @@ def main():
     name = sys.argv[1] if len(sys.argv) > 1 else "trajectory_windows.csv"
     path = config.RESULTS_DIR / name
     df = pd.read_csv(path)
+    # Drop any battery metric absent from this CSV (e.g. gini_pearson_x in a
+    # pre-control run) so the script still runs on older tables.
+    present = set(df.columns)
+    slope_metrics = [m for m in SLOPE_METRICS if m in present]
+    level_metrics = [m for m in LEVEL_METRICS if m in present]
     learn = df[df["learner"] == 1]
     print(f"{path.name}: {len(df)} window-rows, "
           f"{df['animal'].nunique()} animals ({learn['animal'].nunique()} learners)\n")
@@ -96,17 +105,17 @@ def main():
     print("=" * 70)
     print("LEVELS (mean over learner windows; IFI/lag one-sample sign test vs 0)")
     print("=" * 70)
-    hdr = "  ".join(f"{m:>9}" for m in LEVEL_METRICS)
+    hdr = "  ".join(f"{m:>14}" for m in level_metrics)
     print(f"{'pair':9s}  {hdr}")
     for pair in PAIR_ORDER:
         g = learn[learn["pair"] == pair]
         if g.empty:
             continue
         cells = []
-        for m in LEVEL_METRICS:
+        for m in level_metrics:
             v = _num(g[m]).to_numpy()
             v = v[np.isfinite(v)]
-            cells.append(f"{np.mean(v):>9.3f}" if v.size else f"{'-':>9}")
+            cells.append(f"{np.mean(v):>14.3f}" if v.size else f"{'-':>14}")
         print(f"{pair:9s}  " + "  ".join(cells))
     # directionality: is IFI consistently non-zero per pair (per-animal mean)?
     print("\n  IFI directionality (per-animal mean IFI, sign test vs 0; "
@@ -127,7 +136,7 @@ def main():
     print("\n" + "=" * 70)
     print("SLOPES vs learning axes (across-animal sign test of per-animal slope)")
     print("=" * 70)
-    for metric in SLOPE_METRICS:
+    for metric in slope_metrics:
         print(f"\n[{metric}]")
         for axis in AXES:
             sl_learn = per_animal_slopes(learn, metric, axis)
@@ -145,7 +154,9 @@ def main():
     print("\n" + "=" * 70)
     print("PARAMETRIC slope tests (learners): Wilcoxon | t-test(slopes) | LMM(all windows)")
     print("=" * 70)
-    for metric in ["gini_x", "ifi", "mi_sig", "cc1", "n_sig"]:
+    param_metrics = [m for m in ["gini_x", "gini_pearson_x", "ifi", "mi_sig",
+                                 "cc1", "n_sig"] if m in present]
+    for metric in param_metrics:
         print(f"\n[{metric}]")
         for axis in AXES:
             print(f"  axis={axis}")

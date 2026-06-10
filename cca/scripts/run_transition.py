@@ -26,7 +26,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import (config, dataio, membership, paired_stats,  # noqa: E402
-                     partial, subspace, subspace_window)
+                     subspace, subspace_window)
 
 K = 15
 N_FOLDS = 4
@@ -51,11 +51,10 @@ def _world_50ms(animal, cfg, n_bins):
 
 
 def _fit(X, Y, Z, groups):
-    if Z is not None:
-        X = partial.partial_out(X, Z)
-        Y = partial.partial_out(Y, Z)
+    # Z partialled out inside window_subspace (full-window for in-sample readouts,
+    # per-fold train-only for the leak-free held-out CC).
     return subspace_window.window_subspace(
-        X, Y, groups, k=K, max_lag=MAX_LAG, n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
+        X, Y, groups, Z=Z, k=K, max_lag=MAX_LAG, n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
 
 
 def _angle(wa, wb, d_use=ROT_DIMS):

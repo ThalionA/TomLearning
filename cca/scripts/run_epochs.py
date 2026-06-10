@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, dataio, partial, subspace_window  # noqa: E402
+from tom_cca import config, dataio, subspace_window  # noqa: E402
 
 K = 20
 N_FOLDS = 5
@@ -87,12 +87,11 @@ def main():
                 if mask.sum() < K * 30:
                     continue
                 Xi, Yi = X[mask], Y[mask]
-                if Z is not None:
-                    Zi = Z[mask]
-                    Xi = partial.partial_out(Xi, Zi)
-                    Yi = partial.partial_out(Yi, Zi)
+                Zi = Z[mask] if Z is not None else None
+                # Z partialled out inside window_subspace (full-window for in-sample
+                # readouts, per-fold train-only for the leak-free held-out CC).
                 ws = subspace_window.window_subspace(
-                    Xi, Yi, trial_ids[mask], k=K, max_lag=MAX_LAG,
+                    Xi, Yi, trial_ids[mask], Z=Zi, k=K, max_lag=MAX_LAG,
                     n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
                 cc1 = float(ws.cc[0]) if ws.cc.size else float("nan")
                 if not np.isfinite(cc1) or cc1 >= SAT:
