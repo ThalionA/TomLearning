@@ -72,7 +72,7 @@ def main():
             "cc_trials", "cc_circshift", "ifi_trials", "ifi_circshift"]
     with open(config.FIGURES_DIR / "null_comparison.csv", "w",
               newline="") as fh:
-        wr = csv.writer(fh)
+        wr = csv.writer(fh, lineterminator="\n")
         wr.writerow(cols)
         for r in rows:
             wr.writerow(["" if isinstance(r.get(c), float)

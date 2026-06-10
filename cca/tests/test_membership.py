@@ -62,6 +62,117 @@ def test_member_mask_selects_top_quartile():
 
 
 # ---------------------------------------------------------------------------
+# variate structure coefficients (method-agnostic membership, used by KCCA)
+# ---------------------------------------------------------------------------
+def test_variate_structure_coefficients_recover_the_tracking_neuron():
+    rng = np.random.default_rng(0)
+    n = 2000
+    variate = rng.standard_normal((n, 1))
+    neurons = rng.standard_normal((n, 5)) * 0.5
+    neurons[:, 2] += variate[:, 0]                 # neuron 2 tracks the variate
+    sc = membership.variate_structure_coefficients(neurons, variate)
+    assert sc.shape == (5, 1)
+    assert sc[2, 0] > 0.7                          # tracking neuron loads high
+    assert abs(sc[0, 0]) < 0.3                     # others ~ uncorrelated
+    assert np.all(np.abs(sc) <= 1.0 + 1e-9)
+
+
+def test_variate_structure_coefficient_gini_tracks_concentration():
+    # Concentrated membership (one neuron tracks the variate) is higher-Gini than
+    # distributed membership (all neurons track it) — the property the KCCA Gini
+    # de-sparsification readout relies on.
+    rng = np.random.default_rng(1)
+    n = 3000
+    v = rng.standard_normal((n, 1))
+    conc = rng.standard_normal((n, 10)) * 0.5; conc[:, 0] += v[:, 0]
+    dist = rng.standard_normal((n, 10)) * 0.5 + v
+    g_conc = membership.gini(membership.subspace_contribution(
+        membership.variate_structure_coefficients(conc, v)))
+    g_dist = membership.gini(membership.subspace_contribution(
+        membership.variate_structure_coefficients(dist, v)))
+    assert g_conc > g_dist + 0.2
+
+
+# ---------------------------------------------------------------------------
+# Pearson coupling scores (CCA-independent control for the weight Gini)
+# ---------------------------------------------------------------------------
+def test_pearson_coupling_shapes():
+    rng = np.random.default_rng(0)
+    X = rng.standard_normal((2000, 6))
+    Y = rng.standard_normal((2000, 9))
+    cx, cy = membership.pearson_coupling_scores(X, Y)
+    assert cx.shape == (6,) and cy.shape == (9,)
+    assert np.all(cx >= 0) and np.all(cy >= 0)
+
+
+def test_pearson_coupling_isolates_the_coupled_neuron():
+    # Only X-neuron 0 carries Y's shared latent -> it has the largest coupling.
+    rng = np.random.default_rng(1)
+    n = 4000
+    s = rng.standard_normal(n)
+    X = rng.standard_normal((n, 10)) * 0.3
+    Y = rng.standard_normal((n, 10)) * 0.3
+    X[:, 0] += s
+    Y[:, 0] += s
+    cx, _ = membership.pearson_coupling_scores(X, Y)
+    assert int(np.argmax(cx)) == 0
+    assert cx[0] > 3 * np.median(cx)              # stands well clear of the rest
+
+
+def test_pearson_gini_concentrated_exceeds_distributed():
+    # The property the control relies on: a coupling carried by ONE neuron is
+    # high-Gini; the SAME coupling spread over all neurons is low-Gini. So a
+    # de-sparsifying (1->many) shift shows up as Gini falling.
+    rng = np.random.default_rng(2)
+    n = 5000
+    s = rng.standard_normal(n)
+    # concentrated: only neuron 0 of X couples to Y
+    Xc = rng.standard_normal((n, 12)) * 0.3
+    Xc[:, 0] += s
+    # distributed: every neuron of X carries the same coupling
+    Xd = rng.standard_normal((n, 12)) * 0.3
+    Xd += s[:, None]
+    Y = rng.standard_normal((n, 12)) * 0.3
+    Y[:, 0] += s
+    gini_c = membership.gini(membership.pearson_coupling_scores(Xc, Y)[0])
+    gini_d = membership.gini(membership.pearson_coupling_scores(Xd, Y)[0])
+    assert gini_c > gini_d + 0.2
+
+
+def test_pearson_coupling_drops_nonfinite_rows():
+    rng = np.random.default_rng(3)
+    n = 3000
+    s = rng.standard_normal(n)
+    X = rng.standard_normal((n, 5)) * 0.3; X[:, 0] += s
+    Y = rng.standard_normal((n, 5)) * 0.3; Y[:, 0] += s
+    cx_clean, _ = membership.pearson_coupling_scores(X, Y)
+    Xn = X.copy(); Xn[7, 2] = np.nan; Yn = Y.copy(); Yn[11, 0] = np.inf
+    cx_nan, _ = membership.pearson_coupling_scores(Xn, Yn)
+    assert np.all(np.isfinite(cx_nan))
+    assert np.allclose(cx_clean, cx_nan, atol=2e-2)   # two dropped rows ~ no change
+
+
+def test_pearson_coupling_too_few_samples_is_zero():
+    cx, cy = membership.pearson_coupling_scores(np.ones((1, 4)), np.ones((1, 3)))
+    assert cx.shape == (4,) and np.all(cx == 0)
+    assert cy.shape == (3,) and np.all(cy == 0)
+
+
+def test_pearson_gini_noise_floor_is_sample_size_invariant():
+    # The slope analysis relies on the no-coupling Gini floor being independent of
+    # window sample count N — else shrinking late-session windows could fake a
+    # Gini trend. Verify the mean uncoupled Gini matches across very different N.
+    def mean_gini(n, reps=40):
+        gs = []
+        for r in range(reps):
+            rng = np.random.default_rng(1000 + r)
+            X = rng.standard_normal((n, 12)); Y = rng.standard_normal((n, 12))
+            gs.append(membership.gini(membership.pearson_coupling_scores(X, Y)[0]))
+        return float(np.mean(gs))
+    assert abs(mean_gini(300) - mean_gini(6000)) < 0.02   # N-invariant floor
+
+
+# ---------------------------------------------------------------------------
 # Jaccard
 # ---------------------------------------------------------------------------
 def test_jaccard_identical_and_disjoint():

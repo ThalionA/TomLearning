@@ -31,6 +31,35 @@ def test_partial_out_keeps_the_orthogonal_part():
 
 
 # ---------------------------------------------------------------------------
+# partial_out_cv (train-only coefficients — leak-free pre-CV residualisation)
+# ---------------------------------------------------------------------------
+def test_partial_out_cv_fits_on_train_rows_only():
+    # The confound->target map differs between train and test halves. Coefficients
+    # fit on the train half must residualise train ~exactly but NOT the test half
+    # (whose different map the train fit never saw) — that is the leak-free
+    # property: the held-out rows do not inform their own residualisation.
+    rng = np.random.default_rng(11)
+    n = 400
+    confound = rng.standard_normal((n, 3))
+    train = np.zeros(n, dtype=bool); train[: n // 2] = True
+    b_train = rng.standard_normal((3, 2))
+    b_test = rng.standard_normal((3, 2))                # different relationship
+    target = np.where(train[:, None], confound @ b_train, confound @ b_test)
+    resid = partial.partial_out_cv(target, confound, train)
+    assert np.allclose(resid[train], 0.0, atol=1e-8)        # train map removed
+    assert np.linalg.norm(resid[~train]) > 1.0              # test map NOT removed
+
+
+def test_partial_out_cv_all_train_equals_partial_out():
+    rng = np.random.default_rng(12)
+    confound = rng.standard_normal((150, 2))
+    target = confound @ rng.standard_normal((2, 3)) + rng.standard_normal((150, 3))
+    allrows = np.ones(150, dtype=bool)
+    assert np.allclose(partial.partial_out_cv(target, confound, allrows),
+                       partial.partial_out(target, confound))
+
+
+# ---------------------------------------------------------------------------
 # partial_out_tensor
 # ---------------------------------------------------------------------------
 def test_partial_out_tensor_preserves_shape():

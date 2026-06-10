@@ -1,0 +1,346 @@
+# PROJECT LOG — Tom-learning CCA
+
+**Purpose.** Durable, cross-session memory. Read this first (with `STATE.md`) at the start of any
+session; append a dated entry after any meaningful work. Newest entry on top. Keep entries terse
+but self-contained — a future session must be able to resume from here alone.
+
+**Doc map.** `STATE.md` = current findings + canonical configs (the verdict). `OPPORTUNITIES.md` =
+the two-paper reframe + plan. `GOTCHAS.md` = bugs not to reintroduce. `NOTES.md` = older dev log.
+`UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` = original specs. **This file = the running
+narrative + state of play.**
+
+---
+
+## ✓ DONE (2026-06-07) — NONLINEAR (kernel) CCA full suite + report §5
+
+Complete **kernel-CCA analogue of the whole pipeline** built, run (all 16 animals, FS inc/exc,
+learners/non via session+epoch scopes, cued/uncued), analysed, figured, and written into report **§5
+"Nonlinear (kernel) CCA"** (4 figures: vs_linear/levels/epochs/transition × FS). 241 tests pass.
+**VERDICT: the communication subspace is LARGELY LINEAR.** Kernel CCA edges linear by only a small,
+consistent margin — median Δ(KCCA−linear) held-out CC = +0.016/+0.014 (FS-excl/incl), KCCA>linear in
+66%/58% of cells — significant per-pair only in **V1-RSC** (FS-incl p=0.02) and **CA1-V1** (FS-excl
+p=0.033); for the strongest subspaces (CA3-DG ~0.34/0.45, CA1-CA3) **KCCA≈linear**. Strength flat
+naive→expert (mirrors linear); structure-coeff **Gini de-sparsifies naive→expert in CA1-V1** (FS-incl
+LMM 3e-5) — the §3.3 de-sparsification echoes in the NONLINEAR membership (leading pair shifts
+CA1-RSC→CA1-V1). Cued: CA1-V1 cc↑ (p=0.047), V1-RSC Gini↓ (p=0.031). No nonlinear effect overturns a
+linear conclusion → modest cortically-localised nonlinear add-on, not missed dominant structure.
+**Compute choices (in report):** fixed ridge reg=10 (optimism-free vs linear), n cap 900, 10 shuffles,
+±4 lags, structure-coeff membership; trajectory deferred. NOTHING committed yet.
+- **GOTCHA fixed this build:** KCCA transition cued cell returned NaN held-out CC at CAP=900 because
+  the sample-matched cued block spanned <N_FOLDS whole trials → switched BOTH conditions to
+  position-based CV folds (run_kcca_transition.py). KCCA `kcca_fit` sped up ~10× via Cholesky+ARPACK
+  top-d (non-symmetric dense eig was the bottleneck; 10-min test → 25 s).
+- **Review workflow done (16 findings, 11 confirmed):** fixed _heldout to pair KCCA+linear per fold
+  (superiority Δ over SAME folds — verified output IDENTICAL on animal 52, no re-run needed);
+  KCCAResult.r docstring (it's the ridge-penalised value, under-estimates corr; used only to scale
+  beta). Report §5 fixed: per-pair superiority "neither FS-robust"; surrogate-clearance 86/82% FS-excl
+  vs 100% FS-incl; "Uncued→cued" label; single-split surrogate/IFI disclosed. IFI single-split + epoch
+  LMM-vs-Wilcoxon kept as documented caveats. 254 tests pass.
+
+### (prior in-flight, now done) NONLINEAR build details
+- **New code (TDD):** `src/tom_cca/kernel_cca.py` (regularised RBF KCCA — Hardoon ridge form;
+  Cholesky+ARPACK top-d for speed; `kcca_fit/score/variates`, `median_gamma`, `kcca_lagged_heldout`
+  for direction); `src/tom_cca/kcca_window.py` (full per-cell suite: held-out KCCA **and** linear CC
+  on same folds = superiority; shift-surrogate n_sig; held-out lagged IFI; structure-coefficient
+  Gini); `membership.variate_structure_coefficients` (method-agnostic membership — KCCA has no neuron
+  weights). Drivers/analyze/figs as above.
+- **Compute choices (state in report):** fixed ridge reg=10 (prototype sweet spot; fair vs linear, no
+  selection optimism); n capped 900/cell; 10 shuffles; lags ±4; PCA→K then KCCA. Sliding-window
+  trajectory DEFERRED (≈10× cost; epochs give the learning axis).
+- **Prototype verdict (prototype_kcca.py, pre-build):** KCCA in-sample SATURATES at our n (gap ~0.40,
+  0/36 held-out ≥0.99 → held-out mandatory); clears its surrogate in 19/36 (intra-hippocampal pairs);
+  KCCA≈linear at reg=1 (Δ=−0.02), modest edge at reg=10 in some pairs → **leaning: subspace largely
+  linear**, full suite quantifies it.
+
+## ✓ DONE (2026-06-07) — Pearson control + leak-free CV (verified)
+
+- **Pearson control** (`membership.pearson_coupling_scores` → `gini_pearson_x/y`): the CCA-free Gini
+  de-sparsifies in the **same (negative) direction** as the weight-Gini (CA1-RSC trial_frac med −0.053
+  vs −0.132) but **attenuated / mostly n.s.** (W 0.11, LMM 0.056) — corroborates directionally, not
+  decisively (unit-count noise floor; slope-only). Headline = NOT a pure CCA-weight artifact.
+- **Leak-free held-out CC** (`window_subspace(...,Z=...)` per-fold residualise+PCA+CCA): re-ran
+  trajectory FS-excl/incl + transition + epochs FS-excl/incl. **`gini_x` byte-identical** (trajectory
+  max|Δ|=0.0 on 636 windows; epochs 0/148) → de-sparsification headline + IFI direction UNCHANGED;
+  only cc1/n_sig/mi_sig shifted (more conservative, still null). All 22+ figures regenerated.
+- **Code-review fixes:** lmm_slope small-N guard; wilcoxon zero-handling; legacy `partial_cca_cv`
+  caveat; dead-field removal; misc. NOTHING committed yet.
+
+## ✓ RE-RUN COMPLETE (shuffle 20→100) — 2026-06-06
+
+All analyses now at `config.SURROGATE_SHUFFLES = 100`. Trajectory (FS-excl 636 rows, FS-incl 647),
+transition (58 rows), and epochs were all re-run/regenerated @100; all 22 vault figures refreshed
+(`attachments/HCV1_CCA_*`, 2026-06-06 21:54). **No conclusion changed** — confirmed identical:
+CA1-RSC Gini↓ LMM β=-0.159 p=4.25e-05; CA1→DG IFI↑ uncued→cued d=+0.019 p=0.016 (learners); rotation
+at/below split-half floor. As expected: `gini`, `cc1`, `ifi`, `optimal_lag`, `rot/sh` are
+shuffle-independent; only `n_sig`/`mi_sig`/dims-pools could move, and they remain null.
+**Sig threshold decision (this session):** kept the 95th-pct circular-shift threshold (Han uses
+mean+3sd ≈99.9th pct); divergence documented in report §2.6. Nothing committed yet.
+
+## CURRENT STATE (2026-06-06)
+
+**Branch:** `cca-consolidation` (NOT merged to main; nothing pushed). ~10 commits this arc.
+**Tests:** 222 passing (`cd cca && PYTHONPATH=src python -m pytest -q`).
+
+**Where the project is, in one paragraph.** The original epoch/landmark sweep was statistically
+dead-on-arrival for the *learning* question: ~2,000 samples/fit with `k≈n/15` overfit (held-out
+CC→0.999 in high-k configs), and the cross-animal contrast is intrinsically underpowered (1 session
+/animal, 12 learners + 4 non-learners, 4–10 animals/pair). We diagnosed this, read the two
+reference papers our pipeline descends from, and **reframed** onto their regime: fit pCCA on
+**continuous running data** (25 ms, ~100k+ samples/session, PCA→30, samples/k ≫ 50 — no overfitting,
+validated), **control the third area** (pCCA primary), and ask the questions the data can support —
+**within-animal learning trajectory** and **structure** (dimensionality, direction, membership,
+rotation) rather than a noisy 3-epoch magnitude contrast.
+
+**What is built & committed (this arc):**
+- `src/tom_cca/paired_stats.py` — Wilcoxon + BH-FDR (shared).
+- `src/tom_cca/mixed_effects.py` — random-slope LMM + per-animal collapse (honest learning tests).
+- `src/tom_cca/subspace_stats.epoch_subspace_stats` — spatial (lag-0) analogue of the landmark cell stats.
+- `scripts/learning_changes_spatial.py`, `scripts/learning_changes_mixed.py` — honest learning tests.
+- `scripts/prototype_continuous_pcca.py` — **validated the continuous regime** (median held-out CC
+  0.18, 0/36 saturated; CA3-DG strongest up to 0.56; CA1-RSC weak 0.04–0.17).
+- `src/tom_cca/trajectory.py` — sliding windows, CV pCCA held-out CC, linear slope (Frame A core).
+- `src/tom_cca/subspace_window.py` — **FULL per-window readout**: held-out CC per dim, n_sig
+  (circular-shift surrogate), mi_sig, IFI, optimal lag, Gini, canonical weights + member masks.
+- `scripts/run_trajectory.py` — Frame A driver: full suite per window over trials, 3 learning axes
+  (trial-fraction / performance / LP-relative), cross-window rotation + Jaccard, learner flag →
+  writes rich `results/trajectory_windows.csv`.
+- `scripts/analyze_trajectory.py` — fast slopes/sign-tests/levels from that CSV (no re-fit).
+- `scripts/run_transition.py` — uncued→cued (world 4→3) full-suite comparison + cross-condition
+  subspace rotation angle, sample-matched, learner-split.
+
+**Report (external):** `ResearchVault/Projects/Hippocampus-V1/Hippocampus-V1 Communication-Subspace
+Learning Report.md` — full methods (LaTeX) + 4 embedded figures (`attachments/HCV1_CCA_*.png`,
+generated by `scripts/figs_report.py`), linked from the vault project hub; vault `log.md` updated.
+Epistemic state: Contested.
+
+**Running / pending right now:** nothing running. Both full-suite analyses DONE.
+- Transition (uncued→cued, 13 animals, 58 rows, `results/transition_uncued_cued.csv`): NO abrupt
+  strength jump (cc1/mi_sig/n_sig deltas n.s.). **CA1→DG directionality increases uncued→cued**
+  (d_ifi +0.019, p=0.016 learners) — same direction as the trajectory's CA1→DG-IFI-rises-with-
+  learning. Subspace rotation uncued→cued is ~75–88° for most pairs BUT that ≈ the trajectory's
+  window-to-window rotation (so ~80° is the noise floor, NOT reorientation); **CA3-DG is the
+  exception (41–51°) = genuinely stable across the transition**, consistent with it being the
+  strongest/richest subspace. CAVEAT: rotation needs a within-condition split-half floor to claim
+  reorientation (next step); uncued phase short (K=15, n=3–8/pair).
+- **Speed/correctness fixes applied (2026-06-06):** window_subspace was ~11 s/window (significance
+  + 21-lag scan on ~41k samples). Now cap each window to a contiguous ~6 k-bin block (grown to span
+  ≥ N_FOLDS+1 trials so the CV is valid) → ~2.3 s/window. Fixed `n_sig` overcounting: significance
+  now compares the *held-out* per-dim CC to the *dominant*-dim circular-shift threshold (was an
+  in-sample per-dim test → 23 sig dims; now ~3). Driver writes CSV incrementally + unbuffered.
+  CAVEAT: lags are in running-bin units (non-running bins removed), so IFI/optimal-lag are
+  approximate (≈±250 ms); a segment-aware lag is a future refinement.
+
+**Findings so far (honest):**
+- The pooled landmark "CA3-DG strengthens" headline was **pseudoreplication** (n = animals ×
+  landmarks). Honest per-animal / mixed-effects tests are ~null for magnitude. See `STATE.md` §3.
+- Continuous-regime pCCA levels: intra-hippocampal (CA3-DG cc1≈0.36, n_sig≈2.9; CA1-CA3 0.31) >
+  hippocampal-cortical (CA1-RSC 0.09, CA1-V1 0.12). CA3-DG strongest/richest subspace.
+- **FINAL VERDICT after the full interrogation (the one robust signal, and what it is NOT):**
+  - **The ONE robust effect: the communication subspace DE-SPARSIFIES over the session** (Gini↓ =
+    more neurons recruited), CA1-RSC & CA1-DG, **early (naive→intermediate), plateaus post-LP**.
+    All tests agree: Wilcoxon/t/LMM; trajectory LMM p=4e-5; epoch naive→int LMM p~1e-5; FS-invariant.
+  - **But it is most parsimoniously EXPERIENCE / time-on-task, NOT learning-specific** —
+    non-learners de-sparsify comparably; the trial_frac×learner interaction is n.s. for every pair
+    (p=0.26-0.97); the LP-plateau is suggestive of a learning component but unproven (n=4 non-learners,
+    pre-LP windows n=2). See 2026-06-06 learning-vs-time entry.
+  - **Everything else is a NULL or an artifact:** coupling STRENGTH flat (cc1/mi_sig/n_sig; flat even
+    under dims-as-n → genuine, not power); DIRECTION null (IFI *and* optimal lag null at animals-as-n;
+    the dims-as-n "hits" CA1-RSC/V1-RSC are pseudoreplication — e.g. V1-RSC nai→exp lag Δ=0 p=1.0 by
+    animal vs p=0.007 by dims); ROTATION at the split-half noise floor (no reorientation).
+  - **dims-as-n (Buzsáki unit) lesson:** inflates N ~5-15× and manufactures significant strength/
+    direction results that vanish at the animal level — included for comparison, not inference.
+  - Caveats: small N (4-10/pair); no cross-pair MC correction (rely on cross-axis/cross-test
+    consistency); IFI from in-sample lag curves (optimal-lag agrees); lags running-bin-approximate.
+- Frame A v1 (CC1 only): within-animal trajectories clean (|r| up to 0.94) but slope sign
+  animal-specific → magnitude null. Resolved by reading structure instead of magnitude.
+
+**Data facts (Tom cohort):**
+- 16 animals, **1 session each**, ~100–320 cued trials. Learners (have LP): 28,34,36,41,52,61,63,
+  66,68,73,75,77. Non-learners (no LP): 70,71,98,100.
+- Worlds: 1 = darkness/ITI, **3 = cued tunnel (task)**, **4 = uncued corridor** (pre-task, 3–10
+  trials; present in 13/16 — not 28/34/36).
+- Export has MORE than we load: `units/depth`, `units/isi/histogram`, full `waveforms`,
+  cued/uncued firing — **deferred by user decision; FS-vs-regular (`idx_fs`) only for now.**
+- Continuous loading reuses the temporal-arm path (`dataio.area_activity_50ms`, `_load_temporal_streams`).
+- Per-trial performance = `analysis_behaviour/lick_ratio` (1-based trial idx); LP on `entries[id].lp`.
+
+**Key conventions adopted (from the papers):** PCA→fixed ~30 comps then pCCA; ≥50 samples/variable;
+control the third area; residual = subtract condition-triggered mean; **session/animal as unit**;
+subsample to match neuron counts for cross-pair comparisons; surrogate everything; drop saturated
+(CC≥0.99) windows.
+
+**NEXT (when trajectory lands):**
+1. `analyze_trajectory.py` → report levels (IFI direction, n_sig, Gini, rotation) + slopes vs the
+   3 axes, learners vs non-learners. 2. Run `run_transition.py`, report. 3. Commit the full-suite
+   drivers once validated on real data. 4. Consider: subsample-to-match-N control; split-half angle
+   noise floor for rotation; (deferred) load depth/ISI for membership×properties.
+
+---
+
+## LOG ENTRIES (newest first)
+
+### 2026-06-06 — Methods-note audit (vault CCA report); threshold decision; 20→100 re-run launched
+- Read the new vault note `Methods/CCA in Systems Neuroscience — Research Report.md` (full-text audit
+  of our exact lineage: Han&Helmchen = template, Gonzalez/Buzsáki = pCCA antecedent) against our code.
+  **Verdict: pipeline already aligned on ~everything** (PCA→30, n≫p continuous, pCCA third-area control,
+  residual-on-condition-mean, circular-shift null, held-out CV + split-half floor, session-as-unit,
+  IFI/optimal-lag, low-dim 1–3 sig answer). **No reframe warranted** — the note vindicates the path.
+- **One concrete discrepancy found & decided:** our sig threshold is the **95th pct** of the dominant
+  circular-shifted CC (`subspace_window._significance`, `np.quantile(null_top, 1-alpha)`), whereas
+  Han uses **mean+3sd** (≈99.9th pct) — much stricter. Likely why we count ~3 sig dims vs Han's 1–2.
+  **DECISION (user): keep 95th pct, document divergence.** Only moves the already-null
+  n_sig/mi_sig/dims-as-n metrics; Gini headline + all threshold-independent conclusions untouched.
+  Documented in report §2.6.
+- Three other items are caveat/optional only, NO reframe: (2) optional Pearson-correlation control for
+  the Gini↓ headline (Han step 6, not done — cheap robustness add if desired); (3) temporal-autocorr/
+  effective-N caveat — our circular-shift is the *recommended* mitigation, just state it explicitly;
+  (4) weight-interpretation caveat — frame Gini as a distributional claim, don't over-read membership.
+  Kornblith p≥n / CKA degeneracy does NOT bite us (firmly n≫p) — reassurance only.
+- **Re-run COMPLETE (background, parallel, all exit 0):** run_trajectory FS-excl (636 rows, 21:50) +
+  FS-incl (647, 21:53) + run_transition (58 rows, 21:09), all @ SURROGATE_SHUFFLES=100. Regenerated
+  all 22 vault figures (figs_report + figs_units, 21:54). **CONFIRMED: no conclusion changed** —
+  CA1-RSC Gini↓ LMM p=4.25e-05 (identical), CA1-RSC IFI p=0.0078, CA1→DG IFI↑ uncued→cued p=0.016
+  (learners), rotation ≤ split-half floor. n_sig/mi_sig remain null. See the RE-RUN COMPLETE block at top.
+
+### 2026-06-06 — Shuffle count centralised (config.SURROGATE_SHUFFLES=100); epochs re-run; re-run pending
+- All drivers now read `config.SURROGATE_SHUFFLES` (=100) — no more per-driver drift. Epoch analyses
+  re-run @100 (epoch_metrics/epoch_dims/figs regenerated); **Gini result unchanged** (shuffle-independent).
+  dims-as-n V1-RSC "hits" persist even capped to ≤3 dims/animal (animal-level still null).
+- **TRAJECTORY + TRANSITION CSVs still reflect 20 shuffles** → re-run pending (only n_sig/mi_sig/dims-pools
+  affected; Gini/CC/IFI/lag/rotation + the headline are shuffle-independent). See the "RE-RUN PENDING"
+  block at top for commands. Documented as to-be-continued.
+
+### 2026-06-06 — Significance shuffles 20→100; dims-as-n capped to 3/animal; §3.6 clarified
+- Significance of canonical dims = circular-shift surrogate (roll one area, refit pCCA, record
+  DOMINANT shuffled CC), threshold = 95th pct, held-out CC must exceed it. **Bumped N_SHUFFLES 20→100**
+  in run_epochs (re-run) — 20 was too few for a stable 95th pct. Documented in report §2.6.
+- **dims-as-n now capped to top-3 sig dims/animal/epoch** (by held-out CC) in figs_units + analyze_ifi
+  + analyze_dims_as_n, to curb the per-animal imbalance.
+- §3.6 (epoch timing) is Gini = POPULATION metric → animals-as-n only (no per-dim analogue). The
+  per-dim metrics from the same epoch fits (CC, IFI, lag) ARE shown both-units (capped) in §3.2/§3.7
+  (figs_units). Clarified in report.
+
+### 2026-06-06 — Animals-as-n vs dims-as-n comparison figures
+- `figs_units.py`: per per-dim metric (held-out CC / IFI / optimal lag) a 2-row figure — ANIMALS-as-n
+  (top) vs DIMS-as-n (bottom) × 8 pairs across epochs, points + mean±SEM, vs-0 stars, naive→expert p
+  per panel. Embedded in report §3.2 (ifi/lag) + §3.7 (cc). Population metrics (Gini/n_sig/rotation)
+  have no per-dim analogue → animals-as-n only (epochs figure). Visualises the pseudoreplication.
+
+### 2026-06-06 — Learning vs time-on-task: de-sparsification is EXPERIENCE-driven (learning unproven)
+- `analyze_learning_vs_time.py`: (1) learner vs non-learner Gini-vs-trial_frac slopes — comparable
+  (CA1-RSC -0.13 vs -0.10; between-group n.s.); (2) interaction LMM gini~trial_frac*learner+(trial_frac|animal)
+  — trial_frac×learner n.s. for ALL pairs (p=0.26-0.97); (3) post-LP plateau (learners) — Gini slope
+  ~0 post-LP (p>0.8), doesn't keep dropping with time, but pre-LP windows too few (n=2) to clinch.
+- **Verdict: the Gini↓ de-sparsification is robust but most parsimoniously EXPERIENCE/time-on-task;
+  a learning-specific component (LP-locked plateau) is suggestive but NOT statistically established**
+  (non-learners drop comparably; n=4 non-learners underpowers the interaction). Report §3.3/synthesis/
+  headline tempered: "learning de-sparsifies" → "experience de-sparsifies; learning-specificity unproven".
+
+### 2026-06-06 — Optimal-lag battery: confirms directionality not robust
+- Generalised `analyze_ifi.py` to per-dim OPTIMAL LAG (`analyze_ifi.py lag`; +kruskal try/except).
+  Agrees with IFI: animals-as-n null for every pair; dims-as-n flags V1-RSC (naive lag>0 t=0.046,
+  nai-vs-exp rank-sum p=0.007, KW p=0.011). Starkest artifact: V1-RSC nai→exp lag Δ=0 (p=1.0) by
+  animal vs p=0.007 by dims. Both directional readouts converge → directionality not robust;
+  dims-as-n manufactures it. Report §3.2 updated.
+
+### 2026-06-06 — IFI directionality battery (animals & dims as n): directionality NOT robust
+- Added per-dim IFI/optimal-lag to `subspace_window` (+test) and `analyze_ifi.py`: per pair, IFI-vs-0
+  per epoch (t + Wilcoxon), naive-vs-expert (paired t), RM-ANOVA + Friedman + Holm post-hoc —
+  ANIMALS-as-n; and dims-as-n (t/Wilcoxon vs0, rank-sum, Kruskal-Wallis).
+- **Result: animals-as-n IFI is NULL for every pair** (no IFI!=0 per epoch, no naive→exp change,
+  RM-ANOVA n.s.; only fragile n=4 single-test hits RSC-SUB/CA1-SUB). **dims-as-n manufactures
+  "significant" directionality** (CA1-RSC int IFI>0 t=5e-4; V1-RSC naive IFI>0 + naive-vs-exp + KW)
+  that VANISHES at the animal level → pseudoreplication false-positives (great illustration of the
+  dims-as-n hazard). Earlier trajectory IFI trends (CA1→DG/CA1→RSC) downgraded to suggestive.
+- CAVEAT: epoch windows short (~10 trials) + in-sample lag curves → IFI is the noisiest readout;
+  per-dim OPTIMAL LAG is more robust (battery-testable if directionality pursued).
+- **Robust learning signal stands: Gini↓ (participation), early (naive→int), LMM p~1e-5.** Strength
+  flat (even dims-as-n). Rotation = noise. Direction = weak/artifact. Report §3.2 + synthesis +
+  headline updated.
+
+### 2026-06-06 — Dimensions-as-n check (Buzsáki unit): strength-null is genuine
+- Added per-dim export (`subspace_window.sig_mask`, `run_epochs` -> `epoch_dims.csv` 2311 dim-rows /
+  224 sig) + `analyze_dims_as_n.py` (pool sig canonical dims across animals, rank-sum across epochs).
+  **Result: per-dimension CC flat across learning for every pair (all U-p>0.05; V1-RSC borderline
+  ~0.06).** Since dims-as-n inflates N ~5-15x, this confirms the coupling-STRENGTH null is real, not
+  power-limited -> learning signal is participation (Gini) + direction (IFI), not magnitude. Report
+  §3.7 + methods + synthesis updated. Caveat (nested unit) stated; not our inferential test.
+
+### 2026-06-06 — Parametric stats + epoch analysis
+- Added `mixed_effects.lmm_slope` (random-slope LMM population slope; pools all windows; +2 tests)
+  and a parametric section to `analyze_trajectory.py` (per-animal-slope **t-test** + **LMM**
+  beside Wilcoxon). Result: **CA1-RSC Gini↓ is decisive** — Wilcoxon 0.008 / t 0.003 / **LMM
+  4e-5** (n=8, all agree); CA1-DG solid (all ~0.02–0.04); CA1-V1 borderline (~0.05–0.06).
+  CA3-DG/CA1-SUB significant under LMM only → over-confident at n=4 (random slope unidentifiable;
+  t-test disagrees) → suggestive only. **Rule: where t-test and LMM disagree at small n, trust the
+  t-test.**
+- **Epoch analysis DONE** (`results/epoch_metrics.csv`, 148 rows; `analyze_epochs.py`, fig
+  `HCV1_CCA_fsexcl_epochs.png`). **TIMING: de-sparsification is EARLY (naive→intermediate), then
+  plateaus.** CA1-RSC: int−nai Δ=-0.054 (W=0.039/t=0.016/**LMM=7e-5**), exp−nai (W=0.008/t=0.005/
+  **LMM=8.5e-6**), exp−int **n.s.** CA1-DG same pattern (int−nai LMM=1.9e-5; exp−int n.s.). CA1-V1
+  same sign, borderline. n=4 pairs: paired-t hits but LMM unidentifiable → suggestive. Report §3.6
+  + methods §2.10/2.10b updated. FS-incl epoch run launched for completeness.
+
+### 2026-06-06 — Split-half + FS + figures DONE; rotation=noise; FS-robust
+- Both FS runs complete (`trajectory_windows.csv` FS-excl 636 rows w/ sh_x; `_fsincl.csv` 647).
+  Regenerated full figure set both conditions (points+SEM bars, mean±SEM bands+faint lines,
+  all-relationship slope heatmaps, rotation-vs-floor, learners-vs-non) → vault attachments. Updated
+  the vault report (§3.1–3.5, synthesis table, methods, next-steps) + vault `log.md`.
+- **Rotation = NOISE:** cross-window rotation ≤ split-half floor for every pair (all p>0.05, both
+  FS) → no reorientation; retracted "CA3-DG stable backbone" (its low rotation tracks its low floor).
+- **FS-robust:** FS-incl reproduces CA1-RSC Gini↓ (3/3 axes p=0.008/0.039/0.008) + rotation=noise;
+  CA1-DG/V1 Gini slightly attenuated. Surviving signals: Gini↓ + CA1→DG IFI↑; strength flat.
+- NEXT: neuron-count-matched subsampling; learning-vs-time-on-task (more non-learners / pre-post-LP);
+  (deferred) depth/ISI membership×properties.
+
+### 2026-06-06 — Split-half noise floor + FS toggle + figure overhaul (in progress)
+- Added within-window split-half principal-angle floor to `subspace_window` (sh_x/sh_y; +2 tests).
+  **Result: cross-window rotation does NOT exceed the floor for any pair** (Δ(rot−floor) negative or
+  ~0, all p>0.05; CA1-RSC/CA1-CA3 even trend rotation<floor). So the ~80° window-to-window rotation
+  is **estimation noise, not reorientation** — kills any "subspace rotates with learning" reading;
+  real signals remain Gini↓ and IFI. (Well-controlled null.)
+- `run_trajectory --include-fs` (FS-included variant) + FS-excluded re-run with split-half: FS-excl
+  DONE (`trajectory_windows.csv`, now has sh_x; levels/IFI reproduce prior run exactly), FS-incl
+  RUNNING (`trajectory_windows_fsincl.csv`). `figs_report.py` overhauled: per-animal points+SEM bars,
+  mean±SEM bands + faint per-animal lines, ALL-relationship slope heatmaps, rotation-vs-floor,
+  learners-vs-non, FS-excl/incl. `analyze_trajectory.py`: CSV arg + rotation-vs-floor table.
+- TODO when FS-incl lands: regenerate both figure sets, update vault report (rotation=noise; FS
+  comparison; new plot styles), commit results.
+
+### 2026-06-06 — Vault report + figures
+- Wrote the Hippocampus-V1 communication-subspace report in ResearchVault (full LaTeX methods,
+  4 wiki-linked figures via `scripts/figs_report.py`), linked from the project hub, vault `log.md`
+  updated. NEXT (agreed): rotation split-half noise floor; neuron-count matching; learner-vs-non
+  contrast; (deferred) load depth/ISI for membership×properties.
+
+### 2026-06-06 — Full-suite Frame A landed; structural learning effect
+- Ran full-suite trajectory (16 animals, 636 windows) after speed/n_sig fixes. KEY RESULT: learning
+  reshapes subspace STRUCTURE not magnitude — Gini↓ (more units recruited) in CA1-RSC/CA1-DG/CA1-V1
+  (CA1-RSC robust across all 3 axes incl. LP-relative), CA1→DG IFI↑ with learning; CA1→RSC flow
+  significant at baseline. Strength (cc1/mi_sig) does not track learning. Details + caveats above.
+- Launched `run_transition.py` (uncued→cued full suite).
+
+### 2026-06-06 — Full subspace suite + all-animals + transition
+- Built `subspace_window` (n_sig, mi_sig, IFI, optimal lag, Gini, weights/members) — TDD, committed.
+- Rewired `run_trajectory.py` to emit the full suite per window (+ rotation + Jaccard) over ALL 16
+  animals (learner-tagged), 3 learning axes; split expensive fit (rich CSV) from fast analysis
+  (`analyze_trajectory.py`). Rewired `run_transition.py` to full suite + cross-condition rotation.
+- User directives this turn: run on all animals first (then learner/non split); check uncued→cued
+  transition; **don't look at CC1 only — all sig subspaces, IFI + optimal lag, angles, membership**;
+  write this project log + wire CLAUDE.md to it.
+
+### 2026-06-05 — Reframe from two reference papers; continuous regime; Frame A
+- Read Gonzalez/Buzsáki (subspace) + Han/Helmchen (top-down predictions) in full. Diagnosed our
+  overfitting (sample regime) and underpower (N=sessions). Wrote `OPPORTUNITIES.md`.
+- Validated continuous-regime pCCA (`prototype_continuous_pcca.py`). Built Frame A v1
+  (`trajectory.py`, `run_trajectory.py`): clean within-animal trajectories, sign-heterogeneous.
+
+### 2026-06-05 — Honest learning verdict; pseudoreplication caught
+- Built spatial paired test + mixed-effects/per-animal-collapse tests. Found the pooled landmark
+  test pseudoreplicates (n = animals × landmarks); honest tests are ~null. `STATE.md` §3 caveat.
+- Explored the n-ladder (animals → animal×landmark → significant dims): p depends on chosen unit.
+
+### 2026-06-05 — Initial consolidation
+- Reconciled the two arms (spatial 66-config sweep vs landmark 44-config); wrote `STATE.md`,
+  `GOTCHAS.md` (CRLF in CSVs), committed loose landmark outputs, quarantined-by-documentation the 4
+  overfit configs (`landmark50_res_{fix30,var75,var85,var95}`).

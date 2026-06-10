@@ -1,7 +1,33 @@
 # Tom-learning CCA -- development notes
 
 Running log. The *spec* lives in `UNDERSTANDING.md` (decisions + edit log);
-this file is the chronological work log.
+the *current state, canonical configs, and findings* live in `STATE.md`
+(read that first); this file is the chronological work log.
+
+---
+
+## 2026-06-05 -- consolidation pass: STATE.md + verdict
+
+Wrote `STATE.md` reconciling the spatial and landmark arms. Settled the
+learning verdict from the existing `learning_changes_*.csv`: the one robust,
+reproducible effect is **CA3-DG coupling strengthening at the expert stage**
+(committed `landmark50_res_samp15`, pooled scope: expert>naive Δ+0.21 p=0.006
+FDR-pass; expert>intermediate Δ+0.15 p=0.004 FDR-pass; reproducible in 18/40
+non-overfit landmark configs). Nothing survives the per-landmark (48-test)
+FDR family in any config. Excluded the 4 overfit configs
+(`landmark50_res_{fix30,var75,var85,var95}`). Found + fixed a CRLF gotcha in
+the learning-changes CSVs (see `GOTCHAS.md`).
+
+Then closed the spatial-arm gap: built `scripts/learning_changes_spatial.py`
+(TDD) with the testable core in `src/tom_cca/` -- `subspace_stats.epoch_subspace_stats`
+(spatial lag-0 analogue of `cell_subspace_stats`; shared `_aggregate` core) and
+`paired_stats` (Wilcoxon + BH-FDR). Ran on all 66 spatial configs: 1 lone FDR
+survivor across the whole sweep (chance), CA3-DG expert-naive `mi_sig` positive
+in 63/66 configs but underpowered (n=4, signed-rank p-floor 0.125). Spatial arm
+confirmed corroborative-only. 196 tests pass.
+
+Kicked off Arm A (running-state) committed config `temp50_sig_samp15` via
+`run_temporal.py --arm runstate`.
 
 ---
 

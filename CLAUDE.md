@@ -87,6 +87,21 @@ Default policy: **prefer text-based notebooks** (marimo, jupytext, quarto) over 
 
 ## Context and memory management
 
+### Read first, write last — every session (MANDATORY, repo-wide)
+
+This applies to **all** work in this repository, not just `cca/`:
+
+1. **At the START of any session/task, read the relevant project's documents first** — its
+   `PROJECT_LOG.md` / `STATE.md` / `NOTES.md` / `GOTCHAS.md` (and any `OPPORTUNITIES.md`). Resume
+   from what they say; do not re-derive state or re-run completed work.
+2. **At the END of a session — after everything for the task is done — update those documents:**
+   append a dated entry to the project log (newest on top), refresh its "current state" block, and
+   add any new `GOTCHAS`. Never end a session that changed the project without writing the log.
+3. If a project has no such documents yet, create a `PROJECT_LOG.md` (state of play) before
+   finishing. Keep entries terse but self-contained so a cold future session can resume.
+
+(For `cca/` specifically, the canonical files are listed under "Project-specific notes" below.)
+
 - When a task spans many turns, periodically write a handoff summary to a `NOTES.md` or task-specific markdown file so the work survives a context reset.
 - When you solve a non-obvious bug, append a one-line entry to a `GOTCHAS.md` (or this file) so the same bug is not reintroduced later.
 - Use `/clear` and `/compact` between unrelated tasks rather than letting the context drift.
@@ -112,3 +127,19 @@ Before claiming a result:
 ## Project-specific notes
 
 <!-- Append project-specific conventions, dataset quirks, and known gotchas below this line. -->
+
+### Project log — read first, write last (MANDATORY)
+
+Context must survive between sessions. For any work in `cca/`:
+
+1. **At the start of a session/task, READ `cca/PROJECT_LOG.md` first** (its top "CURRENT STATE"
+   block), then `cca/STATE.md`. Together they tell you the branch, what's built, what's running,
+   the current findings, and the next steps — resume from there, do not re-derive.
+2. **After any meaningful work, APPEND a dated entry** to `cca/PROJECT_LOG.md` (newest on top) and
+   update its "CURRENT STATE" block — what changed, what's running, decisions + rationale, next
+   steps. Keep entries terse but self-contained.
+3. Treat `PROJECT_LOG.md` as the source of truth for *state of play*; `STATE.md` for *findings*;
+   `OPPORTUNITIES.md` for *direction*; `GOTCHAS.md` for *bugs*. Keep them consistent.
+
+This is a hard requirement, not a suggestion: never end a turn that changed the project without
+updating `PROJECT_LOG.md`.
