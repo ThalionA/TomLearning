@@ -1,0 +1,129 @@
+readout,pair,metric,n,plateau,d_4,p_4,d_7,p_7,d_10,p_10,d_t1-5,p_t1-5,d_t1-7,p_t1-7,d_t1-10,p_t1-10
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-RSC,CC,12,0,-0.0289,0.1763,-0.0557,0.1294,-0.0343,0.2334,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-RSC,IFI,12,0,0.0301,0.9097,0.1224,0.2334,-0.0057,0.9097,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-RSC,lag,12,0,0.0,0.625,0.0,0.875,0.0,0.75,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-RSC,partGini_x,12,0,0.0,0.8501,0.0098,0.9697,0.0026,0.9697,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-RSC,partGini_y,12,0,0.0022,1.0,0.0037,0.9097,-0.0033,0.8501,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-CA3,CC,9,0,-0.0446,0.4961,-0.0182,0.4961,-0.0366,0.25,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-CA3,IFI,9,0,0.0216,0.9102,0.1371,0.3008,0.0301,0.7344,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-CA3,lag,9,0,0.0,,0.0,,0.0,,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-CA3,partGini_x,9,0,-0.0112,0.2031,0.0036,0.8203,-0.0354,0.1289,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-CA3,partGini_y,9,0,0.0073,1.0,0.02,0.4258,-0.0132,0.4258,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-DG,CC,11,0,-0.0116,0.8984,-0.0308,0.2402,-0.0134,1.0,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-DG,IFI,11,0,-0.0718,0.9658,-0.0359,0.5771,-0.0839,0.8984,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-DG,lag,11,0,0.0,,0.0,,0.0,,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-DG,partGini_x,11,0,0.0035,0.3203,0.0034,0.7002,0.0163,0.1748,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-DG,partGini_y,11,0,0.0116,0.5195,-0.004,0.8311,0.0146,0.5771,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-V1,CC,13,0,0.0348,0.8926,0.0298,0.3054,0.0574,0.0266,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-V1,IFI,13,0,0.3081,0.2439,0.2954,0.4143,0.0193,0.5417,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-V1,lag,13,0,0.0,0.6953,0.0,0.7344,0.0,0.8203,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-V1,partGini_x,13,0,0.0272,0.6848,0.0071,0.5417,0.0451,0.2734,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-V1,partGini_y,13,0,-0.011,0.4973,0.0021,0.4548,0.0018,0.4973,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA3-DG,CC,5,0,-0.0127,0.8125,-0.0306,0.8125,-0.0031,0.8125,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA3-DG,IFI,5,0,0.1382,0.625,0.0095,0.8125,0.0445,0.4375,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA3-DG,lag,5,0,0.0,,0.0,,0.0,,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA3-DG,partGini_x,5,0,0.0098,0.8125,0.0001,1.0,0.0031,0.625,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA3-DG,partGini_y,5,0,0.0052,0.8125,0.0021,1.0,-0.017,0.8125,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-SUB,CC,7,0,-0.042,0.375,0.0407,0.5781,0.0063,0.5781,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-SUB,IFI,7,1,-0.4764,0.0469,-0.3002,0.2188,-0.1055,0.6875,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-SUB,lag,7,0,0.0,0.5,0.0,,0.0,,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-SUB,partGini_x,7,0,-0.0056,0.9375,0.0387,0.8125,0.0307,0.1562,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),CA1-SUB,partGini_y,7,0,0.0265,0.0781,0.0309,0.1094,0.0071,0.2969,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),RSC-SUB,CC,7,0,0.0132,0.9375,0.0374,0.4688,-0.0464,0.8125,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),RSC-SUB,IFI,7,0,0.0265,0.2188,0.0438,0.8125,0.1057,0.0781,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),RSC-SUB,lag,7,0,0.0,,0.0,,0.0,,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),RSC-SUB,partGini_x,7,0,-0.0017,0.9375,0.0049,0.2969,0.0095,0.1562,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),RSC-SUB,partGini_y,7,0,0.0174,0.2188,0.0222,0.5781,0.0041,0.5781,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),V1-RSC,CC,9,0,0.0202,0.3594,0.0653,0.3594,0.0023,0.3594,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),V1-RSC,IFI,9,0,-0.0258,0.8203,0.174,0.1641,0.0681,0.8203,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),V1-RSC,lag,9,0,0.0,,0.0,,0.0,,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),V1-RSC,partGini_x,9,0,0.0001,0.6523,0.0073,0.4258,0.0135,0.5703,,,,,,
+PROJECTED per-trial (trial 1 vs 4/7/10),V1-RSC,partGini_y,9,0,-0.0129,0.3594,0.0074,0.8203,-0.0202,0.0977,,,,,,
+BLOCK refit (early block vs late reference),CA1-RSC,heldoutCC,12,0,,,,,,,-0.0832,0.3013,-0.0311,0.6772,-0.053,0.1763
+BLOCK refit (early block vs late reference),CA1-RSC,nsig,12,0,,,,,,,0.0,0.1484,0.0,0.8457,-0.5,0.2061
+BLOCK refit (early block vs late reference),CA1-RSC,MIsig,12,0,,,,,,,-0.0616,0.2334,-0.0112,0.7334,-0.108,0.064
+BLOCK refit (early block vs late reference),CA1-RSC,IFI,12,0,,,,,,,0.004,0.7334,0.0084,0.7334,0.003,0.6772
+BLOCK refit (early block vs late reference),CA1-RSC,weightGini_x,12,0,,,,,,,0.089,0.0093,0.0875,0.0122,0.0915,0.021
+BLOCK refit (early block vs late reference),CA1-RSC,weightGini_y,12,0,,,,,,,0.036,0.0024,0.0332,0.0186,0.0316,0.0269
+BLOCK refit (early block vs late reference),CA1-RSC,KCCA_cc,12,0,,,,,,,0.0342,0.2334,0.0377,0.4697,0.0461,0.4697
+BLOCK refit (early block vs late reference),CA1-RSC,KCCA_gini_x,12,0,,,,,,,-0.0081,0.8501,0.0405,0.1763,-0.0124,0.8501
+BLOCK refit (early block vs late reference),CA1-CA3,heldoutCC,9,0,,,,,,,-0.0851,0.2031,-0.0979,0.1641,-0.0287,0.1641
+BLOCK refit (early block vs late reference),CA1-CA3,nsig,9,1,,,,,,,-2.0,0.0391,-1.0,0.2188,0.0,0.3125
+BLOCK refit (early block vs late reference),CA1-CA3,MIsig,9,0,,,,,,,-0.0918,0.4258,-0.1023,0.3594,-0.0472,0.4258
+BLOCK refit (early block vs late reference),CA1-CA3,IFI,9,0,,,,,,,-0.0245,0.8203,-0.0171,0.5703,-0.0112,0.7344
+BLOCK refit (early block vs late reference),CA1-CA3,weightGini_x,9,0,,,,,,,0.0624,0.0742,0.0198,0.3594,0.0348,0.3594
+BLOCK refit (early block vs late reference),CA1-CA3,weightGini_y,9,1,,,,,,,0.0684,0.0391,0.0435,0.1289,0.0267,0.1289
+BLOCK refit (early block vs late reference),CA1-CA3,KCCA_cc,9,0,,,,,,,0.0178,0.9102,0.0043,0.5703,-0.0232,0.3008
+BLOCK refit (early block vs late reference),CA1-CA3,KCCA_gini_x,9,0,,,,,,,0.0381,0.2031,0.0179,0.7344,0.0281,0.5703
+BLOCK refit (early block vs late reference),CA1-DG,heldoutCC,11,0,,,,,,,0.0084,0.9658,0.0435,0.5771,0.0579,0.3652
+BLOCK refit (early block vs late reference),CA1-DG,nsig,11,0,,,,,,,-1.0,0.9102,0.0,0.6406,0.0,0.4375
+BLOCK refit (early block vs late reference),CA1-DG,MIsig,11,0,,,,,,,0.0127,0.8984,0.0487,0.6377,0.0625,0.083
+BLOCK refit (early block vs late reference),CA1-DG,IFI,11,0,,,,,,,-0.0149,0.0322,-0.0136,0.123,-0.0221,0.042
+BLOCK refit (early block vs late reference),CA1-DG,weightGini_x,11,1,,,,,,,0.0846,0.0244,0.0991,0.0322,0.0997,0.0537
+BLOCK refit (early block vs late reference),CA1-DG,weightGini_y,11,0,,,,,,,0.0335,0.0537,0.0383,0.0674,0.0306,0.083
+BLOCK refit (early block vs late reference),CA1-DG,KCCA_cc,11,0,,,,,,,0.0407,0.4648,0.0128,0.8984,0.0437,0.3652
+BLOCK refit (early block vs late reference),CA1-DG,KCCA_gini_x,11,0,,,,,,,0.0186,0.1475,-0.0106,0.5195,-0.0122,0.5195
+BLOCK refit (early block vs late reference),CA1-V1,heldoutCC,13,0,,,,,,,-0.0438,0.3396,-0.1009,0.4143,-0.0602,0.1099
+BLOCK refit (early block vs late reference),CA1-V1,nsig,13,0,,,,,,,0.0,0.3008,0.0,0.5469,0.0,0.3125
+BLOCK refit (early block vs late reference),CA1-V1,MIsig,13,0,,,,,,,-0.0232,0.6953,0.0,0.8457,-0.035,0.1309
+BLOCK refit (early block vs late reference),CA1-V1,IFI,13,0,,,,,,,-0.0097,0.8394,-0.0063,0.8394,-0.0096,0.6772
+BLOCK refit (early block vs late reference),CA1-V1,weightGini_x,13,1,,,,,,,0.0367,0.0479,0.0192,0.0479,0.0325,0.0681
+BLOCK refit (early block vs late reference),CA1-V1,weightGini_y,13,0,,,,,,,0.022,0.1099,0.0047,0.2439,0.0009,0.4973
+BLOCK refit (early block vs late reference),CA1-V1,KCCA_cc,13,0,,,,,,,-0.0044,1.0,-0.0048,0.6848,-0.0166,0.7869
+BLOCK refit (early block vs late reference),CA1-V1,KCCA_gini_x,13,0,,,,,,,0.0139,0.021,0.0646,0.1099,0.0381,0.0479
+BLOCK refit (early block vs late reference),CA3-DG,heldoutCC,5,0,,,,,,,-0.0485,0.3125,-0.0286,0.3125,-0.0176,0.4375
+BLOCK refit (early block vs late reference),CA3-DG,nsig,5,0,,,,,,,-1.0,0.125,0.0,,0.0,
+BLOCK refit (early block vs late reference),CA3-DG,MIsig,5,0,,,,,,,-0.0229,0.4375,-0.0456,0.8125,0.0589,0.625
+BLOCK refit (early block vs late reference),CA3-DG,IFI,5,0,,,,,,,-0.0067,0.625,-0.026,0.1875,-0.0244,0.3125
+BLOCK refit (early block vs late reference),CA3-DG,weightGini_x,5,0,,,,,,,0.0336,0.4375,0.0403,0.4375,0.0043,0.3125
+BLOCK refit (early block vs late reference),CA3-DG,weightGini_y,5,0,,,,,,,0.0161,0.625,0.0037,1.0,0.008,0.4375
+BLOCK refit (early block vs late reference),CA3-DG,KCCA_cc,5,0,,,,,,,-0.0182,0.3125,-0.0904,0.1875,-0.0421,0.125
+BLOCK refit (early block vs late reference),CA3-DG,KCCA_gini_x,5,0,,,,,,,0.0355,0.4375,-0.0489,1.0,-0.0017,1.0
+BLOCK refit (early block vs late reference),CA1-SUB,heldoutCC,7,0,,,,,,,-0.0171,0.6875,0.0263,0.9375,0.1061,0.4688
+BLOCK refit (early block vs late reference),CA1-SUB,nsig,7,0,,,,,,,-1.0,0.3125,0.0,0.8438,1.0,0.8125
+BLOCK refit (early block vs late reference),CA1-SUB,MIsig,7,0,,,,,,,0.042,0.8438,0.0378,0.375,0.0202,0.9375
+BLOCK refit (early block vs late reference),CA1-SUB,IFI,7,0,,,,,,,-0.011,0.6875,0.0027,1.0,-0.0004,0.8125
+BLOCK refit (early block vs late reference),CA1-SUB,weightGini_x,7,1,,,,,,,0.1477,0.0312,0.1232,0.0469,0.1184,0.0781
+BLOCK refit (early block vs late reference),CA1-SUB,weightGini_y,7,0,,,,,,,0.0356,0.1562,0.0173,0.0781,-0.0021,0.5781
+BLOCK refit (early block vs late reference),CA1-SUB,KCCA_cc,7,0,,,,,,,0.0114,0.9375,0.0285,0.375,-0.0284,0.2969
+BLOCK refit (early block vs late reference),CA1-SUB,KCCA_gini_x,7,0,,,,,,,0.0828,0.0781,0.0357,0.1562,0.0552,0.0469
+BLOCK refit (early block vs late reference),RSC-SUB,heldoutCC,7,0,,,,,,,0.0246,0.4688,0.0184,0.5781,0.0256,0.4688
+BLOCK refit (early block vs late reference),RSC-SUB,nsig,7,0,,,,,,,0.0,0.4375,1.0,0.9375,1.0,0.8125
+BLOCK refit (early block vs late reference),RSC-SUB,MIsig,7,0,,,,,,,0.0,0.625,0.0116,0.8125,0.0108,0.8125
+BLOCK refit (early block vs late reference),RSC-SUB,IFI,7,0,,,,,,,-0.0109,0.6875,0.006,0.4688,0.0248,0.2188
+BLOCK refit (early block vs late reference),RSC-SUB,weightGini_x,7,0,,,,,,,0.0555,0.0156,0.0568,0.0781,0.059,0.0469
+BLOCK refit (early block vs late reference),RSC-SUB,weightGini_y,7,0,,,,,,,0.0314,0.1094,0.0285,0.2188,0.0104,0.2969
+BLOCK refit (early block vs late reference),RSC-SUB,KCCA_cc,7,0,,,,,,,0.108,0.0312,0.1084,0.0469,0.1553,0.0469
+BLOCK refit (early block vs late reference),RSC-SUB,KCCA_gini_x,7,0,,,,,,,0.0123,0.2188,0.0111,0.6875,0.0021,1.0
+BLOCK refit (early block vs late reference),V1-RSC,heldoutCC,9,0,,,,,,,0.0189,0.4258,-0.0024,0.9102,-0.0283,0.7344
+BLOCK refit (early block vs late reference),V1-RSC,nsig,9,1,,,,,,,-2.0,0.0312,-1.0,0.3125,-1.0,0.6406
+BLOCK refit (early block vs late reference),V1-RSC,MIsig,9,0,,,,,,,-0.2357,0.0547,-0.0733,0.0977,-0.026,0.3008
+BLOCK refit (early block vs late reference),V1-RSC,IFI,9,0,,,,,,,0.0167,0.5703,0.0059,0.8203,0.0053,0.8203
+BLOCK refit (early block vs late reference),V1-RSC,weightGini_x,9,0,,,,,,,0.0173,0.3008,0.021,0.25,0.0104,0.4258
+BLOCK refit (early block vs late reference),V1-RSC,weightGini_y,9,1,,,,,,,0.0483,0.0039,0.0555,0.0547,0.059,0.0547
+BLOCK refit (early block vs late reference),V1-RSC,KCCA_cc,9,0,,,,,,,0.0199,0.6523,0.0205,0.3594,0.0226,0.8203
+BLOCK refit (early block vs late reference),V1-RSC,KCCA_gini_x,9,0,,,,,,,0.0084,1.0,0.0218,0.2031,0.0356,0.5703
+BLOCK angle,CA1-RSC,angle_minus_floor_t1-5,12,0,,,,,,,-1.73,0.4697,,,,
+BLOCK angle,CA1-RSC,angle_minus_floor_t1-7,12,0,,,,,,,,,6.06,0.021,,
+BLOCK angle,CA1-RSC,angle_minus_floor_t1-10,12,0,,,,,,,,,,,5.02,0.0093
+BLOCK angle,CA1-CA3,angle_minus_floor_t1-5,9,0,,,,,,,11.19,0.2031,,,,
+BLOCK angle,CA1-CA3,angle_minus_floor_t1-7,9,0,,,,,,,,,31.18,0.0977,,
+BLOCK angle,CA1-CA3,angle_minus_floor_t1-10,9,0,,,,,,,,,,,27.73,0.0391
+BLOCK angle,CA1-DG,angle_minus_floor_t1-5,11,0,,,,,,,3.29,0.083,,,,
+BLOCK angle,CA1-DG,angle_minus_floor_t1-7,11,0,,,,,,,,,10.49,0.0537,,
+BLOCK angle,CA1-DG,angle_minus_floor_t1-10,11,0,,,,,,,,,,,1.11,0.5771
+BLOCK angle,CA1-V1,angle_minus_floor_t1-5,13,0,,,,,,,-1.88,0.4973,,,,
+BLOCK angle,CA1-V1,angle_minus_floor_t1-7,13,0,,,,,,,,,4.29,0.4143,,
+BLOCK angle,CA1-V1,angle_minus_floor_t1-10,13,0,,,,,,,,,,,2.98,0.1677
+BLOCK angle,CA3-DG,angle_minus_floor_t1-5,5,0,,,,,,,17.68,0.0625,,,,
+BLOCK angle,CA3-DG,angle_minus_floor_t1-7,5,0,,,,,,,,,22.6,0.0625,,
+BLOCK angle,CA3-DG,angle_minus_floor_t1-10,5,0,,,,,,,,,,,26.38,0.125
+BLOCK angle,CA1-SUB,angle_minus_floor_t1-5,7,0,,,,,,,3.95,0.1094,,,,
+BLOCK angle,CA1-SUB,angle_minus_floor_t1-7,7,0,,,,,,,,,4.83,0.1094,,
+BLOCK angle,CA1-SUB,angle_minus_floor_t1-10,7,0,,,,,,,,,,,6.33,0.6875
+BLOCK angle,RSC-SUB,angle_minus_floor_t1-5,7,0,,,,,,,6.68,0.2969,,,,
+BLOCK angle,RSC-SUB,angle_minus_floor_t1-7,7,0,,,,,,,,,-1.46,0.5781,,
+BLOCK angle,RSC-SUB,angle_minus_floor_t1-10,7,0,,,,,,,,,,,13.35,0.1094
+BLOCK angle,V1-RSC,angle_minus_floor_t1-5,9,0,,,,,,,1.16,0.4961,,,,
+BLOCK angle,V1-RSC,angle_minus_floor_t1-7,9,0,,,,,,,,,7.66,0.0977,,
+BLOCK angle,V1-RSC,angle_minus_floor_t1-10,9,0,,,,,,,,,,,11.37,0.0273

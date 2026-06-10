@@ -18,3 +18,14 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
 - **Judge landmark-config overfitting by `frac_cc_ge_099_*`, not `max_cc`.** A single
   saturated canonical dim pushes `max_cc` to 0.999 in otherwise-healthy configs. See
   `STATE.md` §4 and `src/tom_cca/prune_table.py`.
+
+- **A single trial cannot re-fit pCCA/KCCA.** One trial ≈ 580 running 50 ms bins; a
+  30-component fit needs ~50×30 ≈ 1500 samples. For per-trial resolution, PROJECT the
+  trial onto a subspace fit on many other trials (`early_trials.reference_fit`), don't
+  re-fit; fit-only metrics (weight-Gini, angles, #sig, KCCA) need ≥5-trial blocks. See
+  `early_trials.py` and report §2.10c.
+
+- **Don't nest `nohup … &` inside a `run_in_background` Bash call.** It double-backgrounds:
+  the harness marks the *wrapper* complete (after the 2 s echo/sleep) while the real Python
+  run keeps going untracked, so you never get a true completion signal. Launch the bare
+  `python …` command with `run_in_background` (no `&`/nohup), or poll with `pgrep`.

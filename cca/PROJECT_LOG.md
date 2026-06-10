@@ -78,8 +78,11 @@ mean+3sd ≈99.9th pct); divergence documented in report §2.6. Nothing committe
 
 ## CURRENT STATE (2026-06-06)
 
-**Branch:** `cca-consolidation` (NOT merged to main; nothing pushed). ~10 commits this arc.
-**Tests:** 222 passing (`cd cca && PYTHONPATH=src python -m pytest -q`).
+**Branch:** `main` — the `cca-consolidation` arc was merged (commit `5f75022`) and pushed; working
+tree clean, up to date with `origin/main`. All linear + nonlinear CCA work is committed. (Updated
+2026-06-10; the prose below this line dates to 2026-06-06 — see the ✓ DONE blocks above and the newest
+LOG ENTRY for what followed.)
+**Tests:** 254 passing (`cd cca && PYTHONPATH=src python -m pytest -q`).
 
 **Where the project is, in one paragraph.** The original epoch/landmark sweep was statistically
 dead-on-arrival for the *learning* question: ~2,000 samples/fit with `k≈n/15` overfit (held-out
@@ -178,6 +181,76 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 ---
 
 ## LOG ENTRIES (newest first)
+
+### 2026-06-10 — Very-early-trial (pre-10) analysis — new module + driver + report §3.8
+- **Question (user):** do any metrics (CC/KCCA/IFI/Gini/angles) change in the *first ~10 trials* then
+  plateau? Tested trial 1 vs 4/7/10. **Key constraint:** a single trial ≈ 580 running bins → too few
+  to re-fit a 30-comp pCCA (~1500 needed). So a **hybrid** (user-approved): (A) **projected** per-trial
+  readout — fit subspace once on later trials, project trials 1/4/7/10 leak-free (CC, IFI, participation-
+  Gini); (B) **block** refit on cumulative first-5/7/10 vs late for the fit-only metrics (held-out CC,
+  n_sig, MI, weight-Gini, angle-vs-late, KCCA).
+- **New code (TDD):** `src/tom_cca/early_trials.py` (`reference_fit`, `trial_cc/ifi/participation_gini`,
+  `early_trial_metrics`) + `tests/test_early_trials.py` (5 ground-truth tests: held-out coupling
+  detection, sparse>dense participation Gini, known lead/lag sign, leak-free fit). Driver
+  `scripts/run_early_trials.py` (projected + block + KCCA, `--no-kcca`/`--include-fs`); analysis
+  `scripts/analyze_early_trials.py` (1-vs-4/7/10 & block-vs-late Wilcoxon + plateau flag + angle-vs-
+  split-half-floor); figures `scripts/figs_early_trials.py`. **259 tests pass.**
+- **FINDINGS (fsexcl, 16 animals):**
+  1. **No early strength jump** — per-trial CC & block held-out CC flat for every pair.
+  2. **De-sparsification is SLOW / post-trial-10** — block weight-Gini significantly *higher* (sparser)
+     in first-5/7/10 than late for CA1-DG/CA1-V1/RSC-SUB/V1-RSC(Y)/CA1-SUB, but the margin is ~constant
+     across the early blocks (doesn't shrink) → within the first 10 trials it stays uniformly sparse;
+     broadening happens after ~trial 10. Refines §3.6 ("naive→intermediate" spans past trial 10).
+  3. **One fast (trial 1→4 then plateau) effect, cortical: CA1-RSC** — projected IFI Δ+0.254 p=0.034,
+     participation-Gini(Y) Δ+0.013 p=0.027, both plateau by trial 7.
+  4. **V1-RSC early subspace reorientation** — early block rotated from late ABOVE the split-half floor
+     (angle−floor +7.7/+19.3/+14.6° at t1-5/7/10, all p≤0.012); every other pair at floor (cf §3.4).
+- **Report:** added **§3.8** (3 figs: proj_cc1, block_gini_x, proj_ifi), methods **§2.10c**, a §4
+  synthesis row, §6 [DONE] bullet, §7 provenance. Bumped report `last_enriched`. Vault `log.md` entry.
+- **FS-incl DONE (16 animals):** all `early_trials_*_fsincl.csv` written, figs regenerated, §3.8
+  FS-robustness paragraph + verdict + synthesis row added. **FS picture:** de-sparsification (block
+  weight-Gini sparser early than late: CA1-RSC/DG/V1/SUB, RSC-SUB, V1-RSC) and flat strength are
+  **FS-ROBUST**; the two FAST cortical effects are **NOT** FS-robust — CA1-RSC trial-1→4 IFI vanishes
+  (p=0.91 vs 0.034), V1-RSC reorientation attenuates (only t1-10 survives FS-in). §3.8 now states the
+  fast effects are FS-excluded-only/fragile. **GOTCHA:** don't wrap `python … &`/nohup inside a
+  `run_in_background` Bash call — it double-backgrounds and the harness "completes" on the wrapper, not
+  the real run (poll instead). Repo uncommitted (on `main`, per new no-branch policy in CLAUDE.md).
+
+### 2026-06-10 — KCCA figures overhauled (per-animal dots + stats) + Obsidian rendering fix
+- **`scripts/figs_kcca.py` rewritten** so all four KCCA figures overlay **per-animal dots** on the
+  mean±SEM bars and carry a **significance annotation**, matching the linear `figs_report.py` house
+  style (ported `_bar_points_sem`; added grouped `_grouped_bars_points`):
+  - **vs_linear** — grouped KCCA-vs-linear bars + dots + paired-Wilcoxon superiority star (CA1-V1 *).
+  - **levels** — CC₁ / IFI / Gini with dots; IFI carries a sign-test-vs-0 star (null at animal level).
+  - **epochs** — naive/int/expert grouped bars + dots + **expert−naive Wilcoxon** star (CA1-V1 Gini *,
+    W=0.027, matches §5.2); **stacked 3×1 vertically** so it stays legible at Obsidian note width.
+  - **transition** — Δ(cued−uncued) bars + dots + signed-rank-vs-0 star (CA1-V1 ΔCC *, V1-RSC ΔGini *).
+  - Regenerated all 8 PNGs (fsexcl+fsincl) into the vault attachments; stars cross-checked vs
+    `analyze_kcca.py` p-values.
+- **Obsidian rendering fix:** §5.2 was a bulleted list interrupted by `![[…]]` embeds (plus two
+  stacked embeds with no blank line) → garbled breaks. Converted §5.2 to plain paragraphs (bold
+  lead-ins, §3 style) with every embed blank-line-isolated; separated the §3.3 control embed from the
+  following text. Verified all 6 edited embeds are blank-line isolated.
+- 254 tests green (no `src/` change); ruff not installed in this env (script follows existing style).
+
+### 2026-06-10 — Vault report fixes (KCCA figures embedded; Pearson control written up)
+- **Vault report only — no code/results/figures changed.** Fixed two gaps in `ResearchVault/Projects/
+  Hippocampus-V1/Hippocampus-V1 Communication-Subspace Learning Report.md`:
+  1. **§5 KCCA figures were bare `[[…]]` wikilinks** (buried in parentheticals) → they rendered as text
+     chips, not images. Converted all five to own-line `![[…]]` embeds (vs_linear, fsexcl/fsincl
+     levels, epochs, transition).
+  2. **Pearson (CCA-free) control was missing from §3.3** despite being built/committed/figured.
+     Added `HCV1_CCA_fsexcl_gini_control.png` + a paragraph: the CCA-independent coupling-Gini
+     de-sparsifies in the same (−) direction (CA1-RSC trial_frac med −0.053 vs weight-Gini −0.13) but
+     attenuated/borderline (W 0.11, t 0.13, LMM β=−0.056 p=0.056) → headline is NOT a pure CCA-weight
+     artifact. Numbers from `analyze_trajectory.py` (`gini_pearson_x`).
+- Bumped report `last_enriched` → 2026-06-10; added a vault `log.md` audit entry.
+- Repo unchanged: working tree clean, 254 tests green.
+- **Still open (flagged, not actioned — user's call):** `git rm` the stray tracked
+  `test_delete_check.txt` (0-byte, repo root); tick the now-answered "Kernel CCA? what kernel? what
+  scale?" item in the vault `Hippocampus-V1-Tasks.md` (answered by §5: RBF, median-heuristic
+  bandwidth, ridge=10); the §6 deferred items (neuron-count matching, depth/ISI membership,
+  learning-vs-time with more non-learners).
 
 ### 2026-06-06 — Methods-note audit (vault CCA report); threshold decision; 20→100 re-run launched
 - Read the new vault note `Methods/CCA in Systems Neuroscience — Research Report.md` (full-text audit
