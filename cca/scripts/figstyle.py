@@ -22,26 +22,41 @@ STAR_COLOR = "#c0392b"
 
 
 def apply():
-    """Install the shared rcParams (call once before building figures)."""
+    """Install the shared rcParams (call once before building figures). Generous
+    spacing + fonts so panels breathe even when Obsidian scales them to note width."""
     plt.rcParams.update({
         "figure.constrained_layout.use": True,      # auto-spacing, no label collisions
-        "figure.constrained_layout.h_pad": 0.06,
-        "figure.constrained_layout.w_pad": 0.06,
-        "figure.constrained_layout.hspace": 0.05,
-        "figure.constrained_layout.wspace": 0.05,
+        "figure.constrained_layout.h_pad": 0.14,    # real whitespace between panels
+        "figure.constrained_layout.w_pad": 0.14,
+        "figure.constrained_layout.hspace": 0.12,
+        "figure.constrained_layout.wspace": 0.10,
         "axes.spines.top": False,                   # de-clutter
         "axes.spines.right": False,
         "axes.grid": False,
-        "axes.titlesize": 10,
-        "axes.labelsize": 10,
-        "axes.titlepad": 4,
-        "xtick.labelsize": 8,
-        "ytick.labelsize": 8,
-        "legend.fontsize": 8,
+        "axes.titlesize": 13,
+        "axes.labelsize": 12,
+        "axes.titlepad": 8,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "legend.fontsize": 10,
         "legend.frameon": False,
-        "font.size": 10,
+        "font.size": 12,
+        "lines.linewidth": 1.8,
+        "axes.linewidth": 0.9,
         "savefig.facecolor": "white",
     })
+
+
+def grid(n, ncols=2, panel=(5.4, 3.5)):
+    """Spacious per-pair panel grid: few columns + generous panel size so each
+    panel has real room (default ~5.4×3.5 in). Returns ``(fig, axes_flat)``. For
+    8 pairs this is a tall 4×2 — breathing room over compactness, by design."""
+    import numpy as np
+    nrows = int(np.ceil(n / max(1, ncols)))
+    fig, axes = plt.subplots(nrows, ncols,
+                             figsize=(panel[0] * ncols, panel[1] * nrows),
+                             squeeze=False)
+    return fig, axes.ravel()
 
 
 def save(fig, stem, max_px: int = MAX_PX):

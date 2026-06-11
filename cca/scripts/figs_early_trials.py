@@ -56,36 +56,38 @@ def _star(base_map, other_map):
 
 def _pair_grid(df, metric, mlab, level_col, levels, base, xlabels, tag, fname,
                numeric_x=True):
-    fig, axes = plt.subplots(2, 4, figsize=(15, 7.5), sharex=True)
+    fig, axflat = figstyle.grid(len(PAIRS), ncols=2)     # spacious 4×2 — panels breathe
     xs = (np.array(levels, float) if numeric_x else np.arange(len(levels)))
-    base_idx = levels.index(base)
-    for ax, pair in zip(axes.ravel(), PAIRS):
+    xlab = {"ordinal": "trial", "block": "block"}.get(level_col, level_col)
+    for i, (ax, pair) in enumerate(zip(axflat, PAIRS)):
         maps = {lv: _series(df, pair, metric, level_col, lv) for lv in levels}
         if all(len(m) == 0 for m in maps.values()):
             ax.set_visible(False); continue
         animals = sorted(set().union(*[set(m) for m in maps.values()]))
         for an in animals:                                   # faint per-animal lines
             ys = [maps[lv].get(an, np.nan) for lv in levels]
-            ax.plot(xs, ys, color="#bdc3c7", lw=0.6, alpha=0.6, zorder=1)
+            ax.plot(xs, ys, color="#d3dade", lw=0.9, alpha=0.55, zorder=1)
         means = [_sem(list(maps[lv].values()))[0] for lv in levels]
         sems = [_sem(list(maps[lv].values()))[1] for lv in levels]
-        ax.errorbar(xs, means, yerr=sems, color="#c0392b", lw=2, marker="o",
-                    capsize=3, zorder=3, label="mean ± SEM")
+        ax.errorbar(xs, means, yerr=sems, color="#c0392b", lw=2.8, marker="o",
+                    ms=7, capsize=4, zorder=3)
         base_map = maps[base]
-        for i, lv in enumerate(levels):                      # stars vs base
+        for j, lv in enumerate(levels):                      # stars vs base
             if lv == base:
                 continue
             p = _star(base_map, maps[lv])
             if np.isfinite(p) and p < 0.05:
-                top = (means[i] or 0) + (sems[i] or 0)
-                figstyle.star(ax, xs[i], top, always=True)
-        ax.set_title(pair, fontsize=10)
-        ax.set_xticks(xs); ax.set_xticklabels(xlabels, fontsize=8)
-    for ax in axes[:, 0]:
-        ax.set_ylabel(mlab)
-    fig.suptitle(f"{mlab} over very early trials — {tag} "
-                 f"(faint = animals, red = mean ± SEM; * = paired Wilcoxon vs {base})",
-                 fontsize=12)
+                figstyle.star(ax, xs[j], (means[j] or 0) + (sems[j] or 0), always=True)
+        ax.set_title(pair)
+        ax.set_xticks(xs); ax.set_xticklabels(xlabels)
+        ax.margins(x=0.08, y=0.18)                           # let the data breathe off the axes
+        if i % 2 == 0:
+            ax.set_ylabel(mlab)
+        if i >= len(PAIRS) - 2:
+            ax.set_xlabel(xlab)
+    fig.suptitle(f"{mlab} over very early trials — {tag}\n"
+                 f"faint = animals  ·  red = mean ± SEM  ·  ✶ = paired t/Wilcoxon vs {base}",
+                 fontsize=13)
     figstyle.save(fig, ATT / fname)
 
 
