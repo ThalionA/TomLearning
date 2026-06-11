@@ -55,6 +55,11 @@ def parse_args():
                         "V1/RSC/CA1/CA3 per Tom convention); writes a _fsincl CSV")
     p.add_argument("--out", default="trajectory_windows",
                    help="output CSV stem (the _fsincl suffix is still appended)")
+    p.add_argument("--k", type=int, default=K,
+                   help="PCA components per area (default 30); pass a large value "
+                        "(e.g. 200) for NO PCA reduction — CCA on all neurons (#3b)")
+    p.add_argument("--no-partial", action="store_true",
+                   help="vanilla CCA — do NOT partial out the third area Z (#2)")
     return p.parse_args()
 
 
@@ -136,7 +141,8 @@ def main():
                 continue
             X, Y = present[ax], present[ay]
             others = [present[z] for z in present if z not in (ax, ay)]
-            Z = np.concatenate(others, axis=1) if others else None
+            Z = None if args.no_partial else (
+                np.concatenate(others, axis=1) if others else None)
             pwx = pwy = pmx = pmy = None
             for w in windows:
                 idx_all = np.where(np.isin(trial_ids, w))[0]
@@ -156,7 +162,7 @@ def main():
                 # Z is partialled out INSIDE window_subspace — full-window for the
                 # in-sample readouts, per-fold (train-only) for the held-out CC.
                 ws = subspace_window.window_subspace(
-                    Xi, Yi, groups, Z=Zi, k=K, max_lag=MAX_LAG,
+                    Xi, Yi, groups, Z=Zi, k=args.k, max_lag=MAX_LAG,
                     n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
                 cc1 = float(ws.cc[0]) if ws.cc.size else float("nan")
                 if not np.isfinite(cc1) or cc1 >= SAT:
