@@ -11,6 +11,49 @@ narrative + state of play.**
 
 ---
 
+## CURRENT STATE (2026-06-12, early hours) — post-review; trajectory dims-as-n re-run IN FLIGHT
+
+**Where things are.** The 18-comment report review (06-10/06-11) is largely landed in the vault
+report (`Projects/Hippocampus-V1/…Learning Report.md`). Git policy changed to **commit straight to
+`main`, no branches** (CLAUDE.md updated). Recent commits carry: W=15 trajectory re-run at **both
+bins (25 & 50 ms)**; **parametric stats** (paired-t + random-slope LMM alongside Wilcoxon, §2.10);
+the **held-out segment-aware IFI lag-window sweep** → upgrades CA1→RSC directionality to a clean
+**p=4×10⁻⁴** (§3.2); **CC1-only rotation** → no-reorientation holds at the dominant dim (§3.4, with
+a synthetic regression test proving the orthogonal top-3 split-half floor is the 1-D-subspace
+signature, not a bug); **KCCA upgrade** (30 shuffles, ±8 lags) → still *largely linear* (§5);
+**transition dims-as-n** (§3.5, `transition_dims.csv`, numbers re-verified this session); the
+**early-trials battery** (§3.8); and a **graphical abstract** (`attachments/HCV1_graphical_abstract.svg/png`).
+
+**RUNNING (do not disturb).** One sequential driver (wrapper **PID 44335** → `results/traj_dims.log`)
+re-runs the W=15 trajectory **per-dimension** for the dims-as-n view of §3.2/§3.3, 4 stages in order:
+`trajectory_w15_bin25` (FS-excl) → `…bin25 --include-fs` → `…bin50` → `…bin50 --include-fs`. Each
+writes BOTH the window CSV `trajectory_w15_bin{25,50}{,_fsincl}.csv` **and** the per-dim
+`…_dims.csv` (one row per canonical dim). ~5 min/animal, ~5–6 h total. Completion watcher **bxdq9o98x**
+armed (prints final per-stage animal counts on driver exit).
+
+**⚠ GOTCHA caught this session.** The running driver opens the window CSVs in `w` mode → while a
+stage runs, `trajectory_w15_bin25.csv` is **truncated** to the animals done so far. The 23:56 fsexcl
+trajectory figures had been built from ~2 animals. Fixed by regenerating from the **full HEAD copy**
+(`git show HEAD:…trajectory_w15_bin25.csv`) via a protected stem. **Rule: only regenerate trajectory
+figures when the window CSV shows 16 animals.** (Added to GOTCHAS.)
+
+**STAGED & validated (committed cff6a3e).** `scripts/analyze_trajectory_dims.py` (shared
+`compute_table()` → animals-as-n signed-rank | dims-as-n cluster-robust LMM | dims-as-n naive OLS,
+per pair × {ifi,cc} × {trial_frac,lp_rel,performance}) and `scripts/figs_trajectory_dims.py` (three-unit
+forest plot, filled = p<0.05). Partial-data preview already shows the intended read: CA1–V1 IFI rises
+over trial_frac in **5/5** animals (signed-rank floored at p=0.062) but the LMM resolves it
+(p=0.0039) and OLS over-inflates — yet it is **null vs lp_rel** (p=0.98) → time-on-task, not
+learning-locked.
+
+**NEXT when the run lands (per user: "finish all the analyses").**
+1. Confirm all 4 window CSVs + 4 `_dims.csv` have 16 animals.
+2. Regenerate window figures from the FINAL data: `figs_report.py trajectory_w15_bin25` (+ bin50 as robustness), `figs_units.py`, `analyze_epochs.py`.
+3. Run `analyze_trajectory_dims.py` + `figs_trajectory_dims.py` for all 4 stems; write the §3.2/§3.3 both-units paragraph + embed the forest figure(s).
+4. Update report re-run-status box, PROJECT_LOG, STATE.md; commit (scripts/CSVs to `main`).
+**Deferred (low priority / CPU-contended):** figure numbers + panel letters (#9); vanilla-CCA (#2,
+`--no-partial`) and no-PCA (#3b, `--k`) robustness runs (driver flags ready — start only after the
+trajectory queue frees up).
+
 ## ✓ DONE (2026-06-07) — NONLINEAR (kernel) CCA full suite + report §5
 
 Complete **kernel-CCA analogue of the whole pipeline** built, run (all 16 animals, FS inc/exc,

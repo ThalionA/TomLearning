@@ -38,3 +38,11 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   (`test_subspace_window.py::test_split_half_floor_tracks_true_dimensionality`). **Use the
   CC1-only floor (`split_half_x_cc1`) to judge dominant-direction stability**, never the
   top-3 max angle when n_sig is low. (report §3.4)
+
+- **Running `run_trajectory` truncates its window CSV mid-run (`w` mode).** The driver opens
+  `trajectory_w15_bin{25,50}{,_fsincl}.csv` in `"w"` and re-writes after each animal, so while a stage
+  is in flight the file holds only the animals done so far. Regenerating trajectory figures against it
+  mid-run silently builds them from 1–2 animals (caught 2026-06-12: the 23:56 fsexcl figures). **Only
+  run `figs_report.py <traj-stem>` when the window CSV shows 16 animals**; to plot full data while a
+  re-run is in flight, restore from git (`git show HEAD:cca/results/<stem>.csv > <stem>_safe.csv`) and
+  point figs at the protected stem. The per-dim `_dims.csv` truncates the same way.
