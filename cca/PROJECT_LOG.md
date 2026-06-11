@@ -199,8 +199,19 @@ fixed; report edits in the vault, code-comment fixes here):**
   (`trajectory_w15_bin{25,50}{_fsincl}.csv`, `kcca_up_bin{25,50}{_fsincl}.csv`); log `results/review_batch.log`.
   New `lagged.heldout_lag_curve_flat` (held-out, segment-aware lag curve — fixes #12 in-sample-lag + #6
   concatenation) + `ifi_by_window` give the "which integration window is cleanest" sweep (+4 tests; 264 pass).
-  **TODO when batch lands:** build the IFI-window driver/figure; re-analyse trajectory(w15)+KCCA at both bins;
-  pooled-16 secondary; remaining Batch-1 conceptual (MI eqn, hierarchy quant, why-tests); Batch-4 figures.
+- **PROGRESS (later 2026-06-11, no-compute items done while batch runs):**
+  - **Conceptual report write-ups DONE** (vault §2.5 PCA-in-CV leak-free, §2.6 MI=−½Σlog(1−ρ²) derivation,
+    §2.7 concatenation soundness + segment-aware fix, §2.10 test-choice justification + n=6 floor, §3.1
+    coupling-hierarchy quantification: intra>cortico within-animal Δ+0.178, 9/10, t p=0.004).
+  - **IFI-window suite BUILT + smoke-validated** (`run_ifi_windows.py`/`analyze_ifi_windows.py`/
+    `figs_ifi_windows.py`): per (animal,pair) session held-out segment-aware lag curve → `ifi_by_window`
+    → per-pair "cleanest window" = max across-animal |mean/SEM|. Smoke (animal 28): CA1-DG peak +1 bin.
+    **Run full at both bins AFTER the batch frees cores** (it refits CCA per lag×fold on the whole session).
+  - **W15 headline check (bin25 FS-excl done):** CA1-RSC Gini slope −0.121 (p=0.008) vs W30 −0.132 (p=0.008)
+    — de-sparsification **robust to window size**; W15 gives ~25 windows/animal vs 8.
+  - **STILL TODO when batch lands:** run IFI-window full; re-analyse trajectory(W15)+KCCA both bins + refresh
+    figs; pooled-16 secondary; Batch-4 figure overhaul (numbering/panels, extra axes, heatmaps mean/parametric,
+    dims-as-n §3.6/3.7); vanilla-CCA (#2), no-PCA (#3b), CC1-only rotation (#14).
 - **V1-RSC is NOT pseudoreplication (user right).** IFI naive→expert +0.030→+0.013 (animals, n=6) vs
   +0.027→+0.014 (dims) — SAME shape/magnitude, 5/6 animals down; signed-rank p=0.16 is the n=6 FLOOR
   (0.031), not a null; the report's "Δ=0 p=1.0" was a median-of-integer-lag artefact (mean lag falls
