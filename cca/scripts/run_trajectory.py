@@ -106,13 +106,21 @@ def main():
           f"K={K} pCCA lag+-{MAX_LAG} shuffles={N_SHUFFLES}\n")
 
     out = config.RESULTS_DIR / f"{args.out}{suffix}.csv"
+    dim_out = config.RESULTS_DIR / f"{args.out}_dims{suffix}.csv"
+    DIM_COLS = ["animal", "learner", "pair", "center_trial", "trial_frac",
+                "performance", "lp_rel", "dim", "cc", "ifi", "lag", "sig"]
 
     def _write(rows):
         with open(out, "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=FIELDS, lineterminator="\n")
             w.writeheader(); w.writerows(rows)
 
-    rows = []
+    def _write_dims(dim_rows):                            # dims-as-n (one row per canonical dim)
+        with open(dim_out, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=DIM_COLS, lineterminator="\n")
+            w.writeheader(); w.writerows(dim_rows)
+
+    rows, dim_rows = [], []
     for a in animals:
         try:
             streams = dataio._load_temporal_streams(a, cfg)
@@ -197,12 +205,24 @@ def main():
                 n_rows_animal += 1
                 pwx, pwy = ws.weights_x, ws.weights_y
                 pmx, pmy = ws.member_x, ws.member_y
-        _write(rows)                                  # incremental: survive a kill
+                tf = round((center - t0) / span, 4)
+                lpr = round(center - lp, 1) if np.isfinite(lp) else ""
+                pf = round(float(np.nanmean(perf[(w - 1).astype(int)])), 4) if perf.size else ""
+                for d in range(int(ws.cc.size)):          # dims-as-n per window
+                    dim_rows.append({
+                        "animal": a.animal_id, "learner": int(is_learner),
+                        "pair": f"{ax}-{ay}", "center_trial": round(center, 1),
+                        "trial_frac": tf, "performance": pf, "lp_rel": lpr, "dim": d,
+                        "cc": round(float(ws.cc[d]), 4),
+                        "ifi": round(float(ws.ifi_per_dim[d]), 4) if d < ws.ifi_per_dim.size else "",
+                        "lag": int(ws.lag_per_dim[d]) if d < ws.lag_per_dim.size else "",
+                        "sig": int(ws.sig_mask[d]) if d < ws.sig_mask.size else 0})
+        _write(rows); _write_dims(dim_rows)           # incremental: survive a kill
         print(f"  animal {a.animal_id} ({'L' if is_learner else 'n'}): "
               f"{n_rows_animal} window-rows ({len(rows)} total)", flush=True)
 
-    _write(rows)
-    print(f"\nwrote {out} ({len(rows)} rows). "
+    _write(rows); _write_dims(dim_rows)
+    print(f"\nwrote {out} ({len(rows)} rows) + {dim_out.name} ({len(dim_rows)} dim-rows). "
           "Analyse with scripts/analyze_trajectory.py", flush=True)
 
 

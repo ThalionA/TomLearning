@@ -32,37 +32,35 @@ def _num(s):
 
 
 def _fig(df, bin_ms, tag):
-    fig, axes = plt.subplots(2, 4, figsize=(15, 7.5), sharex=True)
+    fig, axflat = figstyle.grid(len(PAIRS), ncols=2)      # spacious 4×2
     ws = np.array(sorted(df["window_bins"].unique()))
     xs = ws * bin_ms
-    for ax, pair in zip(axes.ravel(), PAIRS):
+    for i, (ax, pair) in enumerate(zip(axflat, PAIRS)):
         g = df[df["pair"] == pair]
         if g.empty:
             ax.set_visible(False); continue
-        per_an = {}
         for an, ga in g.groupby("animal"):
-            per_an[an] = {int(r): v for r, v in zip(ga["window_bins"], _num(ga["ifi"]))}
-        for an, m in per_an.items():
-            ax.plot(xs, [m.get(int(w), np.nan) for w in ws], color="#bdc3c7",
-                    lw=0.6, alpha=0.6, zorder=1)
+            m = {int(r): v for r, v in zip(ga["window_bins"], _num(ga["ifi"]))}
+            ax.plot(xs, [m.get(int(w), np.nan) for w in ws], color="#d3dade",
+                    lw=0.9, alpha=0.55, zorder=1)
         means = np.array([_num(g[g["window_bins"] == w]["ifi"]).mean() for w in ws])
         sems = np.array([_num(g[g["window_bins"] == w]["ifi"]).std(ddof=1)
                          / np.sqrt(max(1, _num(g[g["window_bins"] == w]["ifi"]).notna().sum()))
                          for w in ws])
-        ax.errorbar(xs, means, yerr=sems, color="#c0392b", lw=2, marker="o",
-                    capsize=3, zorder=3)
+        ax.errorbar(xs, means, yerr=sems, color="#c0392b", lw=2.8, marker="o",
+                    ms=6, capsize=4, zorder=3)
         tstat = np.abs(means / np.where(sems > 0, sems, np.nan))
         if np.any(np.isfinite(tstat)):
             wbest = xs[int(np.nanargmax(tstat))]
-            ax.axvline(wbest, color="#2980b9", ls="--", lw=1.2,
-                       label=f"cleanest = {int(wbest)} ms")
-            ax.legend(fontsize=8, loc="best")
-        ax.axhline(0, color="k", lw=0.5)
-        ax.set_title(pair, fontsize=10)
-    for ax in axes[1, :]:
-        ax.set_xlabel("integration window |lag| (ms)")
-    for ax in axes[:, 0]:
-        ax.set_ylabel("IFI (>0: first area leads)")
+            ax.axvline(wbest, color="#2980b9", ls="--", lw=1.6,
+                       label=f"cleanest ≈ {int(wbest)} ms")
+            ax.legend(loc="best")
+        ax.axhline(0, color="k", lw=0.6)
+        ax.set_title(pair); ax.margins(y=0.18)
+        if i % 2 == 0:
+            ax.set_ylabel("IFI  (>0: first area leads)")
+        if i >= len(PAIRS) - 2:
+            ax.set_xlabel("integration window  |lag| (ms)")
     fig.suptitle(f"Directionality vs lag-integration window — {tag} "
                  "(held-out, segment-aware lag curve; faint = animals, red = mean ± SEM; "
                  "dashed = cleanest, max |mean/SEM|)", fontsize=12)
