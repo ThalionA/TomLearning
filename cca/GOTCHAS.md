@@ -29,3 +29,12 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   the harness marks the *wrapper* complete (after the 2 s echo/sleep) while the real Python
   run keeps going untracked, so you never get a true completion signal. Launch the bare
   `python …` command with `run_in_background` (no `&`/nohup), or poll with `pgrep`.
+
+- **The ~80° top-3 split-half "noise floor" is NOT a bug — it means the subspace is ~1-D.**
+  `subspace_window.split_half_x` is the *max* principal angle over the top-3 canonical dims.
+  When only CC1 carries a stable direction (dims 2–3 have cc≈0, i.e. no real structure), the
+  max angle is dominated by the random noise dims → near-orthogonal. Verified: 3 genuinely
+  shared dims → top-3 floor ~9°; 1 shared dim → CC1 floor ~7° but top-3 floor ~85°
+  (`test_subspace_window.py::test_split_half_floor_tracks_true_dimensionality`). **Use the
+  CC1-only floor (`split_half_x_cc1`) to judge dominant-direction stability**, never the
+  top-3 max angle when n_sig is low. (report §3.4)

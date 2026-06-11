@@ -140,3 +140,31 @@ def test_pearson_control_gini_present_and_tracks_concentration():
     assert 0.0 <= rc.gini_pearson_x <= 1.0
     assert 0.0 <= rd.gini_pearson_x <= 1.0
     assert rc.gini_pearson_x > rd.gini_pearson_x            # 1-unit > many-unit
+
+
+def test_split_half_floor_tracks_true_dimensionality():
+    """The split-half rotation floor must reflect the RECOVERABLE dimensionality,
+    not be a fixed ~orthogonal value (a bug check: a near-orthogonal floor between
+    two halves of one window is suspicious). With three genuinely shared dims the
+    top-3 floor is small; with one shared dim only the CC1 floor is small while the
+    top-3 max-angle is near-orthogonal (dims 2-3 are noise). This is why §3.4 reads
+    rotation on CC1, not the top-3 subspace."""
+    rng = np.random.default_rng(3)
+    n_tr, n_bin, nx, ny = 14, 300, 12, 12
+    g = np.repeat(np.arange(n_tr), n_bin)
+    N = n_tr * n_bin
+
+    def fit(n_shared, noise):
+        S = rng.standard_normal((N, n_shared))
+        Wx = rng.standard_normal((n_shared, nx)); Wy = rng.standard_normal((n_shared, ny))
+        X = S @ Wx + noise * rng.standard_normal((N, nx))
+        Y = S @ Wy + noise * rng.standard_normal((N, ny))
+        return sw.window_subspace(X, Y, g, k=10, n_shuffles=5)
+
+    three = fit(3, 0.4)                 # three genuinely shared dimensions
+    assert three.split_half_x < 30.0    # top-3 subspace recovered in both halves -> SMALL
+    assert three.split_half_x_cc1 < 30.0
+
+    one = fit(1, 0.5)                    # only one shared dimension
+    assert one.split_half_x_cc1 < 30.0  # CC1 direction is stable
+    assert one.split_half_x > 60.0      # but top-3 max-angle ~orthogonal (dims 2-3 = noise)
