@@ -28,7 +28,8 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, paired_stats  # noqa: E402
+from scipy import stats as scipy_stats  # noqa: E402
+from tom_cca import config, mixed_effects, paired_stats  # noqa: E402
 
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
          "RSC-SUB", "V1-RSC"]
@@ -51,20 +52,41 @@ def _per_animal_at(df, pair, metric, level_col, level):
 
 
 def _paired(a_map, b_map):
-    """Paired Wilcoxon on the per-animal (b-a) deltas over shared animals."""
+    """Per-animal (b-a) deltas over shared animals: returns
+    ``(median, t_p, wilcoxon_p, n)``. The paired **t-test** is the primary (more
+    powerful for the small-n, roughly-normal deltas here; no discrete floor), with
+    the Wilcoxon kept as the assumption-light cross-check (Methods §2.10)."""
     common = sorted(set(a_map) & set(b_map))
     d = [b_map[an] - a_map[an] for an in common]
     if len(d) < 3:
-        return np.nan, np.nan, len(d)
-    _, med, _, p = paired_stats.wilcoxon_signed(d)
-    return med, p, len(d)
+        return np.nan, np.nan, np.nan, len(d)
+    _, med, _, wp = paired_stats.wilcoxon_signed(d)
+    tp = float(scipy_stats.ttest_1samp(d, 0).pvalue)
+    return med, tp, wp, len(d)
 
 
-def _contrasts(df, level_col, base, others, metrics, label):
-    print("=" * 92)
-    print(f"{label} — paired Wilcoxon vs {level_col}={base} "
-          "(Δ = later − base; * p<0.05; PLATEAU = early sig & last n.s.)")
-    print("=" * 92)
+def _lmm_trend(df, pair, metric, level_col):
+    """Random-slope LMM of ``metric`` on the (numeric) trial ordinal — the most
+    powerful test of an early trend, pooling every per-trial-per-animal point
+    instead of collapsing each animal to one delta. Returns ``(slope, p, n)``."""
+    g = df[df["pair"] == pair]
+    recs = [{"animal_id": int(r["animal"]), "ord": float(r[level_col]),
+             "value": float(v)} for r, v in zip(g.to_dict("records"), _num(g[metric]))
+            if np.isfinite(v)]
+    if len({r["ord"] for r in recs}) < 3:
+        return np.nan, np.nan, 0
+    res = mixed_effects.lmm_slope(recs, value="value", axis="ord")
+    return res.get("estimate", np.nan), res.get("p", np.nan), res.get("n_animals", 0)
+
+
+def _contrasts(df, level_col, base, others, metrics, label, lmm_axis=False):
+    print("=" * 98)
+    print(f"{label} — vs {level_col}={base} (Δ=later−base; t = paired-t p [primary], "
+          "W = Wilcoxon p; * if t<0.05; PLATEAU = early sig & last n.s.)")
+    if lmm_axis:
+        print("  [LMM] = random-slope LMM trend over the numeric level (most powerful; "
+              "pools all per-trial points)")
+    print("=" * 98)
     rows = []
     for pair in PAIRS:
         if df[df["pair"] == pair].empty:
@@ -73,21 +95,31 @@ def _contrasts(df, level_col, base, others, metrics, label):
             base_map = _per_animal_at(df, pair, metric, level_col, base)
             cells, res = [], {}
             for lv in others:
-                m, p, n = _paired(base_map, _per_animal_at(df, pair, metric, level_col, lv))
-                res[lv] = (m, p, n)
-                star = "*" if (np.isfinite(p) and p < 0.05) else " "
-                cells.append(f"{lv}:Δ{m:+.3f} p={p:.2g}{star}" if np.isfinite(m) else f"{lv}: -")
+                m, tp, wp, n = _paired(base_map, _per_animal_at(df, pair, metric, level_col, lv))
+                res[lv] = (m, tp, wp, n)
+                star = "*" if (np.isfinite(tp) and tp < 0.05) else " "
+                cells.append(f"{lv}:Δ{m:+.3f} t={tp:.2g} W={wp:.2g}{star}"
+                             if np.isfinite(m) else f"{lv}: -")
             early_sig = any(np.isfinite(res[lv][1]) and res[lv][1] < 0.05 for lv in others[:-1])
             last = res[others[-1]]
             last_ns = np.isfinite(last[1]) and last[1] >= 0.05
             plateau = early_sig and last_ns
-            n = max((res[lv][2] for lv in others), default=0)
+            n = max((res[lv][3] for lv in others), default=0)
+            lmm_str, lmm_p = "", np.nan
+            if lmm_axis:
+                sl, lmm_p, _ = _lmm_trend(df, pair, metric, level_col)
+                if np.isfinite(lmm_p):
+                    lmm_str = (f"  [LMM {sl:+.4f} p={lmm_p:.2g}"
+                               f"{'*' if lmm_p < 0.05 else ''}]")
             tag = "  <-- EARLY→PLATEAU" if plateau else ""
-            print(f"  {pair:8s} {mlab:13s} n={n:<2d} | " + " | ".join(cells) + tag)
-            row = {"readout": label, "pair": pair, "metric": mlab, "n": n, "plateau": int(plateau)}
+            print(f"  {pair:8s} {mlab:13s} n={n:<2d} | " + " | ".join(cells) + lmm_str + tag)
+            row = {"readout": label, "pair": pair, "metric": mlab, "n": n,
+                   "plateau": int(plateau),
+                   "lmm_p": round(lmm_p, 4) if np.isfinite(lmm_p) else ""}
             for lv in others:
-                row[f"d_{lv}"], row[f"p_{lv}"] = round(res[lv][0], 4) if np.isfinite(res[lv][0]) else "", \
-                    round(res[lv][1], 4) if np.isfinite(res[lv][1]) else ""
+                row[f"d_{lv}"] = round(res[lv][0], 4) if np.isfinite(res[lv][0]) else ""
+                row[f"pt_{lv}"] = round(res[lv][1], 4) if np.isfinite(res[lv][1]) else ""
+                row[f"pw_{lv}"] = round(res[lv][2], 4) if np.isfinite(res[lv][2]) else ""
             rows.append(row)
     return rows
 
@@ -136,7 +168,7 @@ def main():
 
     rows = []
     rows += _contrasts(proj, "ordinal", 1, [4, 7, 10], PROJ_METRICS,
-                       "PROJECTED per-trial (trial 1 vs 4/7/10)")
+                       "PROJECTED per-trial (trial 1 vs 4/7/10)", lmm_axis=True)
     print()
     rows += _contrasts(block, "block", "late", ["t1-5", "t1-7", "t1-10"], BLOCK_METRICS,
                        "BLOCK refit (early block vs late reference)")
