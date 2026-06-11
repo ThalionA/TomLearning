@@ -25,6 +25,9 @@ from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import config, mixed_effects, paired_stats  # noqa: E402
+import figstyle  # noqa: E402
+
+figstyle.apply()
 
 ATT = Path("/Users/theoamvr/Documents/ResearchVault/attachments")
 EPOCHS = ["naive", "intermediate", "expert"]
@@ -112,10 +115,8 @@ def fig_epochs(df, tag):
                 ax.set_title(pair, fontsize=8)
     fig.suptitle(f"Subspace metrics across learning epochs — {tag} "
                  "(red = mean ± SEM, faint = animals)", fontsize=12)
-    fig.tight_layout()
     ATT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(ATT / f"HCV1_CCA_{tag}_epochs.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_epochs.png")
 
 
 def main():

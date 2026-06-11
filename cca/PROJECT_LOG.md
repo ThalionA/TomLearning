@@ -217,6 +217,12 @@ fixed; report edits in the vault, code-comment fixes here):**
     re-run** for cc1 at 25 ms (or use bin50; rotation-vs-floor is bin-robust).
   - **Pooled-16 (#16) DONE** (added to report §3.3): pooling all 16 sharpens the de-sparsification (CA1-RSC
     p=0.008→0.001, CA1-V1 0.049→0.021, V1-RSC emerges) — confirms experience-driven.
+  - **Figure clarity overhaul DONE (code, evergreen):** new `scripts/figstyle.py` — `apply()` sets a clean
+    house style (constrained layout → no label collisions; de-spined, no gridlines → declutter) and `save()`
+    writes the **`.svg`+`.png` pair with PNG capped ≤1600 px** (the repo standard — **0 SVGs existed before;
+    now 55**, all PNGs ≤1600 px) + a prominent offset/bold/red `star()`. Applied across
+    figs_report/kcca/units/early_trials/ifi_windows + analyze_epochs; regenerated from committed data.
+    Re-applies automatically when the figures regenerate from the batch.
   - **STILL TODO when batch lands:** run IFI-window full (both bins); re-analyse trajectory(W15)+KCCA both bins
     + refresh figs (incl. the new CC1-rotation §3.4); bin25 cc1-rotation re-run; Batch-4 figure overhaul
     (numbering/panels, extra axes, heatmaps mean/parametric, dims-as-n §3.6/3.7); vanilla-CCA (#2), no-PCA (#3b).

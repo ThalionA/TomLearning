@@ -27,6 +27,9 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import config, mixed_effects, paired_stats  # noqa: E402
+import figstyle  # noqa: E402
+
+figstyle.apply()
 
 ATT = Path("/Users/theoamvr/Documents/ResearchVault/attachments")
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
@@ -76,7 +79,7 @@ def _bar_points_sem(ax, pairs, series, ylabel, title, star_p=None,
                    zorder=2, alpha=0.8)
         if star_p is not None and np.isfinite(star_p.get(p, np.nan)) and star_p[p] < 0.05:
             top = max((means[i] or 0) + (sems[i] or 0), max(v) if v else 0)
-            ax.text(i, top, "*", ha="center", va="bottom", fontsize=13)
+            figstyle.star(ax, i, top, always=True)
     if hline0:
         ax.axhline(0, color="k", lw=0.5)
     ax.set_xticks(xs); ax.set_xticklabels(pairs, rotation=45, ha="right", fontsize=8)
@@ -110,7 +113,7 @@ def _grouped_bars_points(ax, pairs, groups, ylabel, title, contrast_star=None,
         for i, p in enumerate(pairs):
             pv = contrast_star.get(p, np.nan)
             if np.isfinite(pv) and pv < 0.05 and np.isfinite(tops[i]):
-                ax.text(i, tops[i], "*", ha="center", va="bottom", fontsize=12)
+                figstyle.star(ax, i, tops[i], always=True)
     if hline0:
         ax.axhline(0, color="k", lw=0.5)
     ax.set_xticks(xs); ax.set_xticklabels(pairs, rotation=45, ha="right", fontsize=7)
@@ -133,8 +136,7 @@ def fig_kcca_vs_linear(df, tag):
         f"Nonlinear vs linear coupling — {tag}\n(bars = mean±SEM over animals; "
         "dots = animals; * = paired Wilcoxon KCCA−linear p<0.05)",
         contrast_star=star, hline0=True)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_KCCA_{tag}_vs_linear.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_KCCA_{tag}_vs_linear.png")
 
 
 def fig_kcca_levels(df, tag):
@@ -142,7 +144,7 @@ def fig_kcca_levels(df, tag):
     panels = [("cc_kcca", "held-out KCCA CC$_1$", False),
               ("ifi", "IFI (>0: X leads Y)", True),
               ("gini_x", "Gini (structure coeff, X)", False)]
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.2))
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.4))
     for ax, (col, lab, do_star) in zip(axes, panels):
         series = {p: _per_animal(sess, p, col) for p in PAIRS}
         star = {p: _star_vs0(series[p]) for p in PAIRS} if do_star else None
@@ -151,8 +153,7 @@ def fig_kcca_levels(df, tag):
                         star_p=star, hline0=(col == "ifi"))
     fig.suptitle(f"Kernel-CCA levels by pair — {tag} (session; dots = animals, "
                  "bar = mean ± SEM over animals)", fontsize=11)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_KCCA_{tag}_levels.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_KCCA_{tag}_levels.png")
 
 
 def fig_kcca_epochs(df, tag):
@@ -182,8 +183,7 @@ def fig_kcca_epochs(df, tag):
                              contrast_star=star, hline0=(col == "ifi"))
     fig.suptitle(f"Kernel-CCA across learning epochs — {tag} (learners; dots = animals, "
                  "bar = mean ± SEM over animals)", fontsize=11)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_KCCA_{tag}_epochs.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_KCCA_{tag}_epochs.png")
 
 
 def fig_kcca_transition(tag, suf):
@@ -193,7 +193,7 @@ def fig_kcca_transition(tag, suf):
     t = pd.read_csv(path)
     learn = t[t["learner"] == 1]
     panels = [("d_cc_kcca", "Δ KCCA CC$_1$"), ("d_ifi", "Δ IFI"), ("d_gini_x", "Δ Gini")]
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.2))
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.4))
     for ax, (col, lab) in zip(axes, panels):
         series, star = {}, {}                           # one delta per animal per pair
         for p in PAIRS:
@@ -204,8 +204,7 @@ def fig_kcca_transition(tag, suf):
                         star_p=star, color="#16a085", hline0=True)
     fig.suptitle(f"Kernel-CCA uncued→cued — {tag} (learners; dots = animals, "
                  "bar = mean ± SEM over animals)", fontsize=11)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_KCCA_{tag}_transition.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_KCCA_{tag}_transition.png")
 
 
 def main():

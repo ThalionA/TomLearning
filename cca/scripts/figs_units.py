@@ -30,6 +30,9 @@ from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import config  # noqa: E402
+import figstyle  # noqa: E402
+
+figstyle.apply()
 
 ATT = Path("/Users/theoamvr/Documents/ResearchVault/attachments")
 EPOCHS = ["naive", "intermediate", "expert"]
@@ -75,7 +78,7 @@ def _panel(ax, by_ep, hline0):
         if v.size >= 3:
             p0 = float(stats.ttest_1samp(v, 0.0).pvalue)
             if p0 < 0.05:
-                ax.text(i, np.max(v), "*", ha="center", va="bottom", fontsize=11)
+                figstyle.star(ax, i, np.max(v), always=True)
     ax.errorbar(xs, means, yerr=sems, color="#c0392b", lw=1.8, capsize=3, zorder=3)
     if hline0:
         ax.axhline(0, color="k", lw=0.5)
@@ -84,7 +87,7 @@ def _panel(ax, by_ep, hline0):
 
 def fig_metric(em, ed, label, acol, dcol, ylab):
     hline0 = (label != "cc")
-    fig, axes = plt.subplots(2, len(PAIRS), figsize=(2.1 * len(PAIRS), 6),
+    fig, axes = plt.subplots(2, len(PAIRS), figsize=(1.8 * len(PAIRS), 6),
                              squeeze=False)
     for j, pair in enumerate(PAIRS):
         # ANIMALS-as-n (top)
@@ -119,10 +122,8 @@ def fig_metric(em, ed, label, acol, dcol, ylab):
     fig.suptitle(f"{ylab}: animals-as-n (top) vs significant-dims-as-n "
                  f"(bottom, ≤{CAP_DIMS} dims/animal) across epochs — points=units, "
                  "red=mean±SEM, *=vs0 p<0.05; title=naive→expert p", fontsize=11)
-    fig.tight_layout()
     ATT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(ATT / f"HCV1_CCA_fsexcl_units_{label}.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_CCA_fsexcl_units_{label}.png")
 
 
 def main():

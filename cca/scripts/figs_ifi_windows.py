@@ -18,6 +18,9 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import config  # noqa: E402
+import figstyle  # noqa: E402
+
+figstyle.apply()
 
 ATT = Path("/Users/theoamvr/Documents/ResearchVault/attachments")
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
@@ -29,7 +32,7 @@ def _num(s):
 
 
 def _fig(df, bin_ms, tag):
-    fig, axes = plt.subplots(2, 4, figsize=(18, 8), sharex=True)
+    fig, axes = plt.subplots(2, 4, figsize=(15, 7.5), sharex=True)
     ws = np.array(sorted(df["window_bins"].unique()))
     xs = ws * bin_ms
     for ax, pair in zip(axes.ravel(), PAIRS):
@@ -63,9 +66,7 @@ def _fig(df, bin_ms, tag):
     fig.suptitle(f"Directionality vs lag-integration window — {tag} "
                  "(held-out, segment-aware lag curve; faint = animals, red = mean ± SEM; "
                  "dashed = cleanest, max |mean/SEM|)", fontsize=12)
-    fig.tight_layout()
-    fig.savefig(ATT / f"HCV1_ifi_windows_{tag}.png", dpi=140)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_ifi_windows_{tag}.png")
 
 
 def main():

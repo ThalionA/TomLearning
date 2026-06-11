@@ -23,6 +23,9 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import config, paired_stats  # noqa: E402
+import figstyle  # noqa: E402
+
+figstyle.apply()
 
 ATT = Path("/Users/theoamvr/Documents/ResearchVault/attachments")
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
@@ -53,7 +56,7 @@ def _star(base_map, other_map):
 
 def _pair_grid(df, metric, mlab, level_col, levels, base, xlabels, tag, fname,
                numeric_x=True):
-    fig, axes = plt.subplots(2, 4, figsize=(18, 8), sharex=True)
+    fig, axes = plt.subplots(2, 4, figsize=(15, 7.5), sharex=True)
     xs = (np.array(levels, float) if numeric_x else np.arange(len(levels)))
     base_idx = levels.index(base)
     for ax, pair in zip(axes.ravel(), PAIRS):
@@ -75,7 +78,7 @@ def _pair_grid(df, metric, mlab, level_col, levels, base, xlabels, tag, fname,
             p = _star(base_map, maps[lv])
             if np.isfinite(p) and p < 0.05:
                 top = (means[i] or 0) + (sems[i] or 0)
-                ax.text(xs[i], top, "*", ha="center", va="bottom", fontsize=14)
+                figstyle.star(ax, xs[i], top, always=True)
         ax.set_title(pair, fontsize=10)
         ax.set_xticks(xs); ax.set_xticklabels(xlabels, fontsize=8)
     for ax in axes[:, 0]:
@@ -83,7 +86,7 @@ def _pair_grid(df, metric, mlab, level_col, levels, base, xlabels, tag, fname,
     fig.suptitle(f"{mlab} over very early trials — {tag} "
                  f"(faint = animals, red = mean ± SEM; * = paired Wilcoxon vs {base})",
                  fontsize=12)
-    fig.tight_layout(); fig.savefig(ATT / fname, dpi=140); plt.close(fig)
+    figstyle.save(fig, ATT / fname)
 
 
 def main():

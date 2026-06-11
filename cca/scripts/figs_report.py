@@ -28,6 +28,9 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import config, paired_stats, trajectory  # noqa: E402
+import figstyle  # noqa: E402
+
+figstyle.apply()
 
 ATT = Path("/Users/theoamvr/Documents/ResearchVault/attachments")
 RES = config.RESULTS_DIR
@@ -78,7 +81,7 @@ def _bar_points_sem(ax, pairs, series, ylabel, title, star_p=None):
                    zorder=2, alpha=0.8)
         if star_p is not None and p in star_p and np.isfinite(star_p[p]) and star_p[p] < 0.05:
             top = (means[i] or 0) + (sems[i] or 0)
-            ax.text(i, top, "*", ha="center", va="bottom", fontsize=13)
+            figstyle.star(ax, i, top, always=True)
     ax.axhline(0, color="k", lw=0.5)
     ax.set_xticks(xs); ax.set_xticklabels(pairs, rotation=45, ha="right", fontsize=8)
     ax.set_ylabel(ylabel); ax.set_title(title, fontsize=10)
@@ -125,13 +128,12 @@ def fig_levels(df, tag):
     metrics = [("cc1", "held-out CC$_1$"), ("n_sig", "# sig dims"),
                ("mi_sig", "MI$_{sig}$ (nats)"), ("ifi", "IFI"),
                ("gini_x", "Gini (area X)")]
-    fig, axes = plt.subplots(1, len(metrics), figsize=(4 * len(metrics), 3.8))
+    fig, axes = plt.subplots(1, len(metrics), figsize=(3 * len(metrics), 3.8))
     for ax, (m, lab) in zip(axes, metrics):
         series = {p: per_animal_level(learn, p, m) for p in PAIRS}
         _bar_points_sem(ax, PAIRS, series, lab, lab)
     fig.suptitle(f"Subspace levels by pair — {tag} (points = animals, bar = mean ± SEM, learners)")
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_levels.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_levels.png")
 
 
 def fig_slopes_heatmap(df, tag):
@@ -159,14 +161,13 @@ def fig_slopes_heatmap(df, tag):
         fig.colorbar(im, ax=ax, label="median per-animal slope (col-normalised)")
         ax.set_title(f"All relationships — d(metric)/d({axis}) — {tag}, learners\n"
                      "* = signed-rank p<0.05 (uncorrected)", fontsize=9)
-        fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_slopes_{axis}.png", dpi=150)
-        plt.close(fig)
+        figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_slopes_{axis}.png")
 
 
 def _grid_traj(df, metric, axis, tag, fname, ylabel, suptitle, hline0=False):
     """2x4 grid: one subplot per area pair, mean±SEM band + faint per-animal."""
     learn = df[df["learner"] == 1]
-    fig, axes = plt.subplots(2, 4, figsize=(18, 8))
+    fig, axes = plt.subplots(2, 4, figsize=(15, 7.5))
     for ax, p in zip(axes.ravel(), PAIRS):
         _band(ax, learn, p, metric, axis)
         if hline0:
@@ -176,8 +177,7 @@ def _grid_traj(df, metric, axis, tag, fname, ylabel, suptitle, hline0=False):
         ax.set_title(f"{p}: slope={med:+.3f} p={pv:.3g} n={n}{star}", fontsize=9)
         ax.set_xlabel(f"{axis}"); ax.set_ylabel(ylabel)
     fig.suptitle(suptitle, fontsize=12)
-    fig.tight_layout(); fig.savefig(ATT / fname, dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / fname)
 
 
 def fig_gini_traj(df, tag):
@@ -211,8 +211,7 @@ def fig_transition():
                         f"{lab}: uncued→cued", star_p=star)
     fig.suptitle("Uncued→cued transition — ALL pairs (points = animals, bar = mean ± SEM, "
                  "* = signed-rank p<0.05)", fontsize=12)
-    fig.tight_layout(); fig.savefig(ATT / "HCV1_CCA_transition.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / "HCV1_CCA_transition.png")
 
 
 def fig_direction(df, tag):
@@ -226,8 +225,7 @@ def fig_direction(df, tag):
     fig, ax = plt.subplots(figsize=(7, 4))
     _bar_points_sem(ax, PAIRS, series, "mean IFI (>0: first area leads)",
                     f"Directionality by pair — {tag} (* = p<0.05 vs 0)", star_p=star)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_direction.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_direction.png")
 
 
 def fig_rotation_floor(df, tag):
@@ -245,8 +243,7 @@ def fig_rotation_floor(df, tag):
     ax.set_title(f"Rotation vs noise floor — {tag} (rotation>floor ⇒ genuine reorientation)",
                  fontsize=10)
     ax.legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_rotation_floor.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_rotation_floor.png")
 
 
 def fig_gini_control(df, tag, axis="trial_frac"):
@@ -282,8 +279,7 @@ def fig_gini_control(df, tag, axis="trial_frac"):
                  f"{tag}, learners\n(both negative ⇒ not a CCA-weight artefact; shares the "
                  "residualisation, so not orthogonal to it; * = signed-rank p<0.05)", fontsize=8)
     ax.legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_gini_control.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_gini_control.png")
 
 
 def fig_learner_vs_non(df, tag, metric="gini_x", axis="trial_frac"):
@@ -301,8 +297,7 @@ def fig_learner_vs_non(df, tag, metric="gini_x", axis="trial_frac"):
     ax.set_ylabel(f"median slope d({metric})/d({axis})")
     ax.set_title(f"Learners vs non-learners — {metric} slope — {tag}", fontsize=10)
     ax.legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(ATT / f"HCV1_CCA_{tag}_learnervsnon_{metric}.png", dpi=150)
-    plt.close(fig)
+    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_learnervsnon_{metric}.png")
 
 
 def make_all(csv, tag):
