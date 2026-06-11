@@ -74,7 +74,7 @@ def main():
     thr = cfg.velocity_thresh_cm_s
     rng = np.random.default_rng(0)
 
-    rows = []
+    rows, dim_rows = [], []          # dim_rows = dims-as-n (one row per canonical dim)
     print(f"Uncued->cued transition (full suite) | K={K} pCCA, sample-matched\n")
     for a in animals:
         try:
@@ -131,6 +131,23 @@ def main():
                 row[f"cue_{mt}"] = round(float(c), 4)
                 row[f"d_{mt}"] = round(float(c) - float(u), 4)
             rows.append(row)
+            # dims-as-n: one row per canonical dimension (the Gonzalez/Buzsáki unit)
+            for d in range(int(min(wu.cc.size, wc.cc.size))):
+                def _pd(w, attr):                         # per-dim value, NaN-safe
+                    v = np.atleast_1d(getattr(w, attr))
+                    return float(v[d]) if d < v.size else float("nan")
+                dim_rows.append({
+                    "animal": a.animal_id, "learner": int(is_learner),
+                    "pair": f"{ax}-{ay}", "dim": d,
+                    "unc_cc": round(float(wu.cc[d]), 4), "cue_cc": round(float(wc.cc[d]), 4),
+                    "d_cc": round(float(wc.cc[d] - wu.cc[d]), 4),
+                    "unc_ifi": round(_pd(wu, "ifi_per_dim"), 4),
+                    "cue_ifi": round(_pd(wc, "ifi_per_dim"), 4),
+                    "d_ifi": round(_pd(wc, "ifi_per_dim") - _pd(wu, "ifi_per_dim"), 4),
+                    "unc_lag": int(_pd(wu, "lag_per_dim")) if np.isfinite(_pd(wu, "lag_per_dim")) else "",
+                    "cue_lag": int(_pd(wc, "lag_per_dim")) if np.isfinite(_pd(wc, "lag_per_dim")) else "",
+                    "unc_sig": int(wu.sig_mask[d]) if d < wu.sig_mask.size else 0,
+                    "cue_sig": int(wc.sig_mask[d]) if d < wc.sig_mask.size else 0})
         print(f"  animal {a.animal_id} ({'L' if is_learner else 'n'}): "
               f"uncued_run={int(unc.sum())} bins, "
               f"{len([r for r in rows if r['animal']==a.animal_id])} pairs")
@@ -143,6 +160,30 @@ def main():
         w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n")
         w.writeheader(); w.writerows(rows)
     print(f"\nwrote {rdir/'transition_uncued_cued.csv'} ({len(rows)} rows)\n")
+
+    dcols = ["animal", "learner", "pair", "dim", "unc_cc", "cue_cc", "d_cc",
+             "unc_ifi", "cue_ifi", "d_ifi", "unc_lag", "cue_lag", "unc_sig", "cue_sig"]
+    with open(rdir / "transition_dims.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=dcols, lineterminator="\n")
+        w.writeheader(); w.writerows(dim_rows)
+    print(f"wrote {rdir/'transition_dims.csv'} ({len(dim_rows)} dim-rows)\n")
+
+    def dims_table(subset, title):
+        """dims-as-n: pool SIGNIFICANT canonical dims across animals; signed-rank on
+        the paired (cued−uncued) per-dim delta. Pseudoreplicated (dims nested in
+        animals) — a power check vs the animal-level table, not the inferential test."""
+        print(f"[dims-as-n: {title}]  (sig dims pooled; signed-rank d=cued−uncued vs 0)")
+        for pair in [f"{x}-{y}" for x, y in PAIRS]:
+            sub = [r for r in subset if r["pair"] == pair and (r["unc_sig"] or r["cue_sig"])]
+            if len(sub) < 3:
+                continue
+            line = f"  {pair:9s} n_dims={len(sub):<3d}"
+            for mt in ["cc", "ifi"]:
+                d = [r[f"d_{mt}"] for r in sub if np.isfinite(r[f"d_{mt}"])]
+                _, med, _, p = paired_stats.wilcoxon_signed(d)
+                s = "*" if (np.isfinite(p) and p < 0.05) else " "
+                line += f" | d_{mt}={med:>+6.3f} p={p:.2g}{s}"
+            print(line)
 
     def tables(subset, title):
         print(f"[{title}]")
@@ -161,9 +202,13 @@ def main():
             print(line)
 
     print("Transition: delta = cued - uncued (sign test); rot = uncued->cued subspace angle")
+    print("\n=== ANIMALS-as-n (the inferential unit) ===")
     tables(rows, "all")
     tables([r for r in rows if r["learner"]], "learners")
     tables([r for r in rows if not r["learner"]], "non-learners")
+    print("\n=== DIMS-as-n (n = significant canonical dimensions; power check) ===")
+    dims_table([r for r in dim_rows if r["learner"]], "learners")
+    dims_table(dim_rows, "all (learners + non)")
 
 
 if __name__ == "__main__":
