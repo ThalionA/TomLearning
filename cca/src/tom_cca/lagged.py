@@ -140,3 +140,66 @@ def lag_curve(
         ifi_windows=ifi_windows,
         peak_lag_per_dim=peak,
     )
+
+
+def _segment_lagged_pairs(Sx, Sy, groups, lag):
+    """Segment-aware lag of FLAT continuous scores: within each trial only, pair
+    ``Sx`` at bin ``b`` with ``Sy`` at bin ``b+lag`` (positive lag => X leads Y).
+
+    Crucially the pairing never crosses a trial boundary — the ``|lag|`` bins that
+    would pair the end of one trial with the start of the next are dropped — so the
+    lag curve is not contaminated by the running-bin concatenation (report §2.7
+    caveat). Returns ``(Xp, Yp, group_ids)`` or ``None`` if no trial is long enough.
+    """
+    Xs, Ys, gs = [], [], []
+    for g in np.unique(groups):
+        idx = np.where(groups == g)[0]
+        xt, yt = Sx[idx], Sy[idx]
+        n = xt.shape[0]
+        if n <= abs(lag) + 2:
+            continue
+        if lag >= 0:
+            xp, yp = xt[: n - lag], yt[lag:]
+        else:
+            xp, yp = xt[-lag:], yt[: n + lag]
+        Xs.append(xp); Ys.append(yp); gs.append(np.full(xp.shape[0], g))
+    if not Xs:
+        return None
+    return np.vstack(Xs), np.vstack(Ys), np.concatenate(gs)
+
+
+def heldout_lag_curve_flat(Sx, Sy, groups, max_lag, n_folds=5, seed=0):
+    """Held-out dominant-dim canonical correlation vs integer bin lag, for the
+    flat continuous-regime PCA scores — the honest directionality curve.
+
+    At each lag the (segment-aware) lagged pairs are split into whole-trial folds;
+    CCA is fit on the training trials and the dominant canonical correlation is read
+    on the held-out trials (averaged over folds). This replaces the in-sample lag
+    curve used by ``subspace_window`` (which biases every lag's CC upward).
+
+    ``Sx``/``Sy`` are ``(n_samples, k)`` PCA scores; ``groups`` the per-bin trial id.
+    Returns ``(lags, cc_test)`` — feed to :func:`ifi_by_window` for the window sweep.
+    """
+    lags = np.arange(-max_lag, max_lag + 1)
+    uniq = np.unique(groups)
+    rng = np.random.default_rng(seed)
+    folds = [f for f in np.array_split(rng.permutation(uniq), n_folds) if f.size]
+    cc = np.full(lags.size, np.nan)
+    for i, lag in enumerate(lags):
+        pair = _segment_lagged_pairs(Sx, Sy, groups, int(lag))
+        if pair is None:
+            continue
+        Xp, Yp, gp = pair
+        rs = []
+        for te in folds:
+            tem = np.isin(gp, te)
+            trm = ~tem
+            if trm.sum() < max(5, Xp.shape[1] + 1) or tem.sum() < 3:
+                continue
+            model = core.cca_fit(Xp[trm], Yp[trm])
+            r = core.cca_score(Xp[tem], Yp[tem], model)
+            if r.size:
+                rs.append(float(r[0]))
+        if rs:
+            cc[i] = float(np.nanmean(rs))
+    return lags, cc

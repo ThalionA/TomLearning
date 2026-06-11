@@ -31,8 +31,8 @@ from tom_cca import config, dataio, kcca_window  # noqa: E402
 K = 20
 REG = 10.0                    # fixed ridge (prototype sweet spot; fair vs linear)
 CAP = 900                     # sub-sample cap per cell (KCCA is O(n^3))
-MAX_LAG = 4
-N_SHUFFLES = 10
+MAX_LAG = 8                   # upgraded 4->8 (review 2026-06-11): wider lag window
+N_SHUFFLES = 30              # upgraded 10->30 (review 2026-06-11): stabler surrogate
 N_FOLDS = 5
 D = 3
 EPOCHS = ["naive", "intermediate", "expert"]

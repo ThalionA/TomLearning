@@ -53,6 +53,8 @@ def parse_args():
     p.add_argument("--include-fs", action="store_true",
                    help="keep fast-spiking units (default: FS-excluded in "
                         "V1/RSC/CA1/CA3 per Tom convention); writes a _fsincl CSV")
+    p.add_argument("--out", default="trajectory_windows",
+                   help="output CSV stem (the _fsincl suffix is still appended)")
     return p.parse_args()
 
 
@@ -97,7 +99,7 @@ def main():
           f"| bin={args.bin_ms}ms window={args.window} step={args.step} "
           f"K={K} pCCA lag+-{MAX_LAG} shuffles={N_SHUFFLES}\n")
 
-    out = config.RESULTS_DIR / f"trajectory_windows{suffix}.csv"
+    out = config.RESULTS_DIR / f"{args.out}{suffix}.csv"
 
     def _write(rows):
         with open(out, "w", newline="") as f:

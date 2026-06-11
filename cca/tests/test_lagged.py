@@ -116,3 +116,54 @@ def test_lag_curve_returns_all_dimensions():
     # back-compatible dominant-dimension accessors
     assert result.cc1.shape == (n_lags,)
     assert result.cc1[0] == result.cc_per_dim[0, 0]
+
+
+# ---------------------------------------------------------------------------
+# heldout_lag_curve_flat (continuous-regime, segment-aware, held-out) + window IFI
+# ---------------------------------------------------------------------------
+def _flat_lead_data(rng, n_trials=12, n_bins=120, k=3, lead=3):
+    """Flat continuous scores where X leads Y by `lead` bins WITHIN each trial."""
+    groups = np.repeat(np.arange(n_trials), n_bins)
+    Sx = np.zeros((n_trials * n_bins, k))
+    Sy = np.zeros((n_trials * n_bins, k))
+    for t in range(n_trials):
+        sl = slice(t * n_bins, (t + 1) * n_bins)
+        s = rng.standard_normal(n_bins + lead)
+        x = s[lead:]                      # X carries the signal at time b
+        y = s[:n_bins]                    # Y carries it `lead` bins LATER (b+lead)
+        Sx[sl, 0] = x + 0.2 * rng.standard_normal(n_bins)
+        Sy[sl, 0] = y + 0.2 * rng.standard_normal(n_bins)
+        Sx[sl, 1:] = 0.3 * rng.standard_normal((n_bins, k - 1))
+        Sy[sl, 1:] = 0.3 * rng.standard_normal((n_bins, k - 1))
+    return Sx, Sy, groups
+
+
+def test_heldout_lag_curve_recovers_known_lead():
+    rng = np.random.default_rng(0)
+    Sx, Sy, groups = _flat_lead_data(rng, lead=3)
+    lags, cc = lagged.heldout_lag_curve_flat(Sx, Sy, groups, max_lag=8, n_folds=4)
+    peak = int(lags[np.nanargmax(cc)])
+    assert peak == 3                                    # held-out curve peaks at the true lead
+    assert lagged.information_flow_index(lags, cc) > 0  # IFI positive => X leads Y
+
+
+def test_ifi_window_sweep_recovers_direction():
+    rng = np.random.default_rng(1)
+    Sx, Sy, groups = _flat_lead_data(rng, lead=2)
+    lags, cc = lagged.heldout_lag_curve_flat(Sx, Sy, groups, max_lag=10, n_folds=4)
+    win = lagged.ifi_by_window(lags, cc)                # IFI for |lag|<=w, w=1..10
+    assert win.shape[0] == 10
+    # every window WIDE ENOUGH to contain the +2 peak reports X-leads (IFI>0); the
+    # w=1 window (only +/-1, peak excluded) is legitimately the noisiest — that IS
+    # the "too-tight window is unclean" effect the sweep exists to reveal.
+    assert np.all(win[1:] > 0)
+    assert np.nanmax(win) > 0.5                          # a clean directionality is recovered
+
+
+def test_segment_aware_no_cross_trial_pairing():
+    # within-trial signal but trials are independent; a lag beyond a trial cannot
+    # borrow signal across the boundary -> curve must not peak at a spurious far lag
+    rng = np.random.default_rng(2)
+    Sx, Sy, groups = _flat_lead_data(rng, n_bins=40, lead=2)
+    lags, cc = lagged.heldout_lag_curve_flat(Sx, Sy, groups, max_lag=6, n_folds=4)
+    assert int(lags[np.nanargmax(cc)]) == 2
