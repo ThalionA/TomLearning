@@ -82,7 +82,8 @@ def _rotation(prev_w, cur_w, d_use=ROT_DIMS) -> float:
 FIELDS = ["animal", "learner", "pair", "center_trial", "trial_frac",
           "performance", "lp_rel", "n_bins", "cc1", "n_sig", "mi_sig", "ifi",
           "optimal_lag", "gini_x", "gini_y", "gini_pearson_x", "gini_pearson_y",
-          "rot_x", "rot_y", "jac_x", "jac_y", "sh_x", "sh_y"]
+          "rot_x", "rot_y", "rot_x_cc1", "rot_y_cc1",
+          "jac_x", "jac_y", "sh_x", "sh_y", "sh_x_cc1", "sh_y_cc1"]
 
 
 def main():
@@ -176,12 +177,16 @@ def main():
                     "gini_pearson_y": round(ws.gini_pearson_y, 4),
                     "rot_x": round(_rotation(pwx, ws.weights_x), 2),
                     "rot_y": round(_rotation(pwy, ws.weights_y), 2),
+                    "rot_x_cc1": round(_rotation(pwx, ws.weights_x, d_use=1), 2),
+                    "rot_y_cc1": round(_rotation(pwy, ws.weights_y, d_use=1), 2),
                     "jac_x": round(membership.jaccard(pmx, ws.member_x), 4)
                     if pmx is not None else "",
                     "jac_y": round(membership.jaccard(pmy, ws.member_y), 4)
                     if pmy is not None else "",
                     "sh_x": round(ws.split_half_x, 2) if np.isfinite(ws.split_half_x) else "",
                     "sh_y": round(ws.split_half_y, 2) if np.isfinite(ws.split_half_y) else "",
+                    "sh_x_cc1": round(ws.split_half_x_cc1, 2) if np.isfinite(ws.split_half_x_cc1) else "",
+                    "sh_y_cc1": round(ws.split_half_y_cc1, 2) if np.isfinite(ws.split_half_y_cc1) else "",
                 })
                 n_rows_animal += 1
                 pwx, pwy = ws.weights_x, ws.weights_y

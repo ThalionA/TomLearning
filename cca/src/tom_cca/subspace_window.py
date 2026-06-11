@@ -46,8 +46,10 @@ class WindowSubspace:
     weights_y: np.ndarray     # (n_units_y, d)
     member_x: np.ndarray      # (n_units_x,) bool
     member_y: np.ndarray      # (n_units_y,) bool
-    split_half_x: float       # within-window split-half angle (deg) — rotation noise floor
+    split_half_x: float       # within-window split-half angle (deg) — rotation noise floor (top-3)
     split_half_y: float
+    split_half_x_cc1: float   # CC1-only (dominant-dim) split-half floor — for CC1-only rotation
+    split_half_y_cc1: float
     sig_mask: np.ndarray      # (d,) bool — which canonical dims are significant
 
 
@@ -173,10 +175,15 @@ def _half_weights(X, Y, mask, k, d_use):
 def _split_half_angles(X, Y, groups, k, d_use, seed):
     """Rotation NOISE FLOOR: max principal angle between subspaces fit on two
     random halves of the window's trials. A genuine cross-window rotation only
-    means reorientation if it exceeds this within-window floor."""
+    means reorientation if it exceeds this within-window floor.
+
+    Returns four floors from the SAME pair of half-fits (no extra fitting): the
+    top-``d_use`` subspace floor (x, y) and the dominant-dimension-only / CC1 floor
+    (x, y). The CC1 floor lets a CC1-only rotation be judged against its own noise."""
+    nan4 = (float("nan"),) * 4
     uniq = np.unique(groups)
     if uniq.size < 4:
-        return float("nan"), float("nan")
+        return nan4
     rng = np.random.default_rng(seed + 11)
     perm = rng.permutation(uniq)
     h1 = perm[: uniq.size // 2]
@@ -184,8 +191,9 @@ def _split_half_angles(X, Y, groups, k, d_use, seed):
     wx1, wy1 = _half_weights(X, Y, m1, k, d_use)
     wx2, wy2 = _half_weights(X, Y, ~m1, k, d_use)
     if wx1 is None or wx2 is None:
-        return float("nan"), float("nan")
-    return _max_angle(wx1, wx2, d_use), _max_angle(wy1, wy2, d_use)
+        return nan4
+    return (_max_angle(wx1, wx2, d_use), _max_angle(wy1, wy2, d_use),
+            _max_angle(wx1, wx2, 1), _max_angle(wy1, wy2, 1))
 
 
 def window_subspace(X, Y, groups, Z=None, k: int = 30, max_lag: int = 10,
@@ -240,7 +248,7 @@ def window_subspace(X, Y, groups, Z=None, k: int = 30, max_lag: int = 10,
     # as the explanation for the weight-Gini de-sparsification. (It shares the
     # caller's residualisation/run-bin masking, so it is not orthogonal to those.)
     cpx, cpy = membership.pearson_coupling_scores(Xr, Yr)
-    sh_x, sh_y = _split_half_angles(Xr, Yr, groups, k, d_use=3, seed=seed)
+    sh_x, sh_y, sh_x_cc1, sh_y_cc1 = _split_half_angles(Xr, Yr, groups, k, d_use=3, seed=seed)
     return WindowSubspace(
         cc=cc, n_sig=n_sig, mi_sig=mi_sig, ifi=ifi, optimal_lag=optimal_lag,
         ifi_per_dim=ifi_per_dim, lag_per_dim=lag_per_dim,
@@ -250,5 +258,6 @@ def window_subspace(X, Y, groups, Z=None, k: int = 30, max_lag: int = 10,
         member_x=membership.member_mask(contrib_x, member_q),
         member_y=membership.member_mask(contrib_y, member_q),
         split_half_x=sh_x, split_half_y=sh_y,
+        split_half_x_cc1=sh_x_cc1, split_half_y_cc1=sh_y_cc1,
         sig_mask=np.asarray(sig, dtype=bool),
     )
