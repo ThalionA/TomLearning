@@ -198,7 +198,7 @@ fixed; report edits in the vault, code-comment fixes here):**
   **upgraded (30 shuffles, ±8 lags)**, each at 25 & 50 ms × FS-excl/incl, to distinct files
   (`trajectory_w15_bin{25,50}{_fsincl}.csv`, `kcca_up_bin{25,50}{_fsincl}.csv`); log `results/review_batch.log`.
   New `lagged.heldout_lag_curve_flat` (held-out, segment-aware lag curve — fixes #12 in-sample-lag + #6
-  concatenation) + `ifi_by_window` give the "which integration window is cleanest" sweep (+4 tests; 264 pass).
+  concatenation) + `ifi_by_window` give the "which integration window is cleanest" sweep (+3 tests; 262 pass).
 - **PROGRESS (later 2026-06-11, no-compute items done while batch runs):**
   - **Conceptual report write-ups DONE** (vault §2.5 PCA-in-CV leak-free, §2.6 MI=−½Σlog(1−ρ²) derivation,
     §2.7 concatenation soundness + segment-aware fix, §2.10 test-choice justification + n=6 floor, §3.1
@@ -209,9 +209,17 @@ fixed; report edits in the vault, code-comment fixes here):**
     **Run full at both bins AFTER the batch frees cores** (it refits CCA per lag×fold on the whole session).
   - **W15 headline check (bin25 FS-excl done):** CA1-RSC Gini slope −0.121 (p=0.008) vs W30 −0.132 (p=0.008)
     — de-sparsification **robust to window size**; W15 gives ~25 windows/animal vs 8.
-  - **STILL TODO when batch lands:** run IFI-window full; re-analyse trajectory(W15)+KCCA both bins + refresh
-    figs; pooled-16 secondary; Batch-4 figure overhaul (numbering/panels, extra axes, heatmaps mean/parametric,
-    dims-as-n §3.6/3.7); vanilla-CCA (#2), no-PCA (#3b), CC1-only rotation (#14).
+  - **CC1-only rotation (#14) DONE in code** — `subspace_window` returns the CC1 split-half floor (reuses the
+    same half-fits, no extra cost); `run_trajectory` writes `rot_x_cc1`/`sh_x_cc1`; `analyze_trajectory` prints
+    both top-3 and CC1 rotation-vs-floor. **Motivation confirmed:** top-3 floor ~85° (noisy → the §3.4 "rotation
+    = noise" result) but CC1 floor ~6° — a CC1-only rotation is far more sensitive, may revise §3.4. The
+    in-progress **bin50** trajectory runs pick up the cc1 columns; **bin25 (done/running) lacks them → needs a
+    re-run** for cc1 at 25 ms (or use bin50; rotation-vs-floor is bin-robust).
+  - **Pooled-16 (#16) DONE** (added to report §3.3): pooling all 16 sharpens the de-sparsification (CA1-RSC
+    p=0.008→0.001, CA1-V1 0.049→0.021, V1-RSC emerges) — confirms experience-driven.
+  - **STILL TODO when batch lands:** run IFI-window full (both bins); re-analyse trajectory(W15)+KCCA both bins
+    + refresh figs (incl. the new CC1-rotation §3.4); bin25 cc1-rotation re-run; Batch-4 figure overhaul
+    (numbering/panels, extra axes, heatmaps mean/parametric, dims-as-n §3.6/3.7); vanilla-CCA (#2), no-PCA (#3b).
 - **V1-RSC is NOT pseudoreplication (user right).** IFI naive→expert +0.030→+0.013 (animals, n=6) vs
   +0.027→+0.014 (dims) — SAME shape/magnitude, 5/6 animals down; signed-rank p=0.16 is the n=6 FLOOR
   (0.031), not a null; the report's "Δ=0 p=1.0" was a median-of-integer-lag artefact (mean lag falls

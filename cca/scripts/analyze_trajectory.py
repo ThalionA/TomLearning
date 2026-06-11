@@ -81,26 +81,34 @@ def main():
     print(f"{path.name}: {len(df)} window-rows, "
           f"{df['animal'].nunique()} animals ({learn['animal'].nunique()} learners)\n")
 
-    # Rotation vs the split-half noise floor (only if the column is present).
-    if "sh_x" in df.columns:
+    # Rotation vs the split-half noise floor (per-animal median; sign test rot-floor>0).
+    # Run for the top-3 subspace AND, when the columns are present (post-#14 runs),
+    # the CC1-only dominant dim — whose floor is far tighter, so a CC1-only rotation
+    # is a more sensitive reorientation test than the top-3 angle (§3.4).
+    def _rot_floor(rot_col, sh_col, label):
+        if rot_col not in df.columns or sh_col not in df.columns:
+            return
         print("=" * 70)
-        print("ROTATION vs NOISE FLOOR (per-animal median; sign test rot - floor > 0)")
+        print(f"ROTATION vs NOISE FLOOR — {label} (per-animal median; sign test rot - floor > 0)")
         print("=" * 70)
         for pair in PAIR_ORDER:
             g = learn[learn["pair"] == pair]
             diffs = []
             for _, sub in g.groupby("animal"):
-                r = _num(sub["rot_x"]).median(); f = _num(sub["sh_x"]).median()
+                r = _num(sub[rot_col]).median(); f = _num(sub[sh_col]).median()
                 if np.isfinite(r) and np.isfinite(f):
                     diffs.append(r - f)
             if len(diffs) < 3:
                 continue
             _, med, _, p = paired_stats.wilcoxon_signed(diffs)
             star = "  *" if (np.isfinite(p) and p < 0.05) else ""
-            mr = _num(g["rot_x"]).median(); mf = _num(g["sh_x"]).median()
+            mr = _num(g[rot_col]).median(); mf = _num(g[sh_col]).median()
             print(f"    {pair:9s} n={len(diffs):<2d} rot={mr:>5.1f}° floor={mf:>5.1f}° "
                   f"Δ(med)={med:>+6.1f}° p={p:.3g}{star}")
         print()
+
+    _rot_floor("rot_x", "sh_x", "top-3 subspace")
+    _rot_floor("rot_x_cc1", "sh_x_cc1", "CC1 only (dominant dim)")
 
     print("=" * 70)
     print("LEVELS (mean over learner windows; IFI/lag one-sample sign test vs 0)")
