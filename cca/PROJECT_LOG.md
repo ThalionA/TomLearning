@@ -182,6 +182,24 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-12 (cont.) — Batch DONE: IFI-window result, KCCA upgrade resolved, dims-as-n (transition), spacious figures
+- **Batch finished** (all 8: trajectory W15 ×4 + KCCA upgrade ×4). Cores free.
+- **IFI-window sweep (held-out, segment-aware) — CA1→RSC clean directionality:** IFI +0.079 at ±50 ms,
+  t=5.0 **p=4e-4** (animals-as-n; Bonferroni/12 windows; a-priori CA1-leads-RSC). Upgrades §3.2 from "weak"
+  to a clean cortico-hippocampal flow. CA1-SUB ±25 ms (SUB→CA1, p=0.009), RSC-SUB ±125 ms. **Tight windows
+  win** (median ~±75 ms). Report §3.2 + header + status box; spacious figure.
+- **KCCA upgrade (30 shuffles, ±8 lags) — largely-linear HOLDS:** +0.016/66% (bin25, identical to old);
+  +0.001/51% (bin50). `kcca_metrics.csv` refreshed to the upgraded run; §5 ⚠ resolved.
+- **Transition dims-as-n DONE (cued/uncued):** `run_transition` exports `transition_dims.csv` + both-units
+  tables. §3.5: animal-level effects (CA1-V1 ΔCC 7/7, CA1-DG ΔIFI) are **dominant-dim**; dims-as-n adds
+  **inflation** (CA1-CA3/DG/SUB ΔCC sig only pooled, animal-level null/opposite). Honest power-check framing.
+- **Trajectory per-dim export added** (`run_trajectory` → `trajectory_w15_*_dims.csv`); **W15 re-run RUNNING
+  overnight** (bin25 both FS first, then bin50) for trajectory dims-as-n + backfills bin25 CC1-rotation.
+  **When it lands:** regenerate figs from the new bin25 (cc1+dims), add the trajectory both-units view to §3.2/§3.3.
+- **Figures now breathe (#figs):** `figstyle.grid()` 4×2 spacious + bigger fonts/padding; applied to
+  early_trials, ifi_windows, `_grid_traj` (gini/ifi_traj). Regenerated spacious. **Pending:** user confirm on
+  the look (sent an example); figs_units + the 1×5 levels still to convert.
+
 ### 2026-06-12 — Meeting prep: W15 trajectory re-analysis (both bins) + CC1-rotation + parametric stats
 - **Batch:** trajectory W15 DONE for bin25 (both FS) + bin50 FS-excl; bin50 FS-incl still running; **KCCA
   upgrade NOT yet started** (4 runs pending, ~hrs each).

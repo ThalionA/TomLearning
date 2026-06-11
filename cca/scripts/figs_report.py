@@ -165,18 +165,22 @@ def fig_slopes_heatmap(df, tag):
 
 
 def _grid_traj(df, metric, axis, tag, fname, ylabel, suptitle, hline0=False):
-    """2x4 grid: one subplot per area pair, mean±SEM band + faint per-animal."""
+    """Spacious 4×2 grid: one panel per area pair, mean±SEM band + faint per-animal."""
     learn = df[df["learner"] == 1]
-    fig, axes = plt.subplots(2, 4, figsize=(15, 7.5))
-    for ax, p in zip(axes.ravel(), PAIRS):
+    fig, axflat = figstyle.grid(len(PAIRS), ncols=2)
+    for i, (ax, p) in enumerate(zip(axflat, PAIRS)):
         _band(ax, learn, p, metric, axis)
         if hline0:
-            ax.axhline(0, color="k", lw=0.5)
+            ax.axhline(0, color="k", lw=0.6)
         med, pv, n = _slope_quant(learn, metric, axis, p)
-        star = " *" if (np.isfinite(pv) and pv < 0.05) else ""
-        ax.set_title(f"{p}: slope={med:+.3f} p={pv:.3g} n={n}{star}", fontsize=9)
-        ax.set_xlabel(f"{axis}"); ax.set_ylabel(ylabel)
-    fig.suptitle(suptitle, fontsize=12)
+        star = " ✶" if (np.isfinite(pv) and pv < 0.05) else ""
+        ax.set_title(f"{p}   slope={med:+.3f}  p={pv:.3g}  n={n}{star}")
+        ax.margins(y=0.15)
+        if i % 2 == 0:
+            ax.set_ylabel(ylabel)
+        if i >= len(PAIRS) - 2:
+            ax.set_xlabel(axis)
+    fig.suptitle(suptitle, fontsize=13)
     figstyle.save(fig, ATT / fname)
 
 
