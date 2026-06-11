@@ -316,14 +316,17 @@ def make_all(csv, tag):
 
 def main():
     ATT.mkdir(parents=True, exist_ok=True)
-    for csv, tag in [(RES / "trajectory_windows.csv", "fsexcl"),
-                     (RES / "trajectory_windows_fsincl.csv", "fsincl")]:
+    # optional positional arg: trajectory CSV stem (default = committed; pass e.g.
+    # "trajectory_w15_bin25" for the window=15 re-run)
+    stem = sys.argv[1] if len(sys.argv) > 1 else "trajectory_windows"
+    for suffix, tag in [("", "fsexcl"), ("_fsincl", "fsincl")]:
+        csv = RES / f"{stem}{suffix}.csv"
         if csv.is_file():
             make_all(csv, tag)
         else:
             print(f"  (missing {csv.name} — skip {tag})")
     fig_transition()                       # all pairs; transition CSV is FS-excluded
-    print("figures ->", ATT)
+    print(f"figures ({stem}) ->", ATT)
 
 
 if __name__ == "__main__":

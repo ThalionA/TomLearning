@@ -182,6 +182,26 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-12 — Meeting prep: W15 trajectory re-analysis (both bins) + CC1-rotation + parametric stats
+- **Batch:** trajectory W15 DONE for bin25 (both FS) + bin50 FS-excl; bin50 FS-incl still running; **KCCA
+  upgrade NOT yet started** (4 runs pending, ~hrs each).
+- **De-sparsification ROBUST + SHARPER at W15/both bins:** CA1-RSC trial_frac **LMM 3.3e-7 (bin25)** /
+  2.4e-5 (bin50) — stronger than W30's 4e-5; CA1-DG holds (LMM 0.005/0.013); **CA1-V1 weakens to
+  borderline** (W=0.084) → dropped from the firm headline, kept suggestive. Two-bin agreement kills a
+  bin-width artefact. Report §3.3 + §2.10 updated.
+- **CC1-only rotation (#14) sharpens §3.4:** CC1 split-half floor **16–62°** (vs top-3 ~80°); cross-window
+  CC1 rotation AT/BELOW floor for every pair — **sig BELOW** for CA1-RSC (34 vs 61°, p=0.008), CA1-DG
+  (24/43, 0.008), CA1-V1 (40/62, 0.006), V1-RSC (0.031); CA3-DG at floor (11/16). → no reorientation
+  confirmed at the *dominant* dim, not just a top-3 noise artefact. From bin50 (carries the cc1 cols).
+- **Parametric stats (#7) DONE for early-trials:** `analyze_early_trials` now reports paired-t (primary)
+  + Wilcoxon + LMM-trend. Honest: CA1-RSC IFI trial-4 t=0.054 (vs W=0.034, fragile); LMM trends null.
+- **Figures:** regenerated trajectory figs from W15 bin25 (`figs_report.py <stem>` arg); all carry the
+  figstyle (svg+png ≤1600px, despined, prominent red stars).
+- **Report:** added a prominent **re-run status box** (final vs pending) up top for the meeting.
+- **PENDING (placeholders):** KCCA upgrade (§5 figs still old 10-shuf/±4), IFI-window sweep (§2.7/§3.2),
+  bin25 cc1-rotation re-run, bin50-FS-incl trajectory (running). **Do NOT commit `trajectory_w15_bin50_fsincl.csv`
+  yet — still being written.**
+
 ### 2026-06-11 — Review response (18 comments) — Batch 1 correctness fixes
 User reviewed the report + analysis (18 comments). Decisions: learners stay PRIMARY, pooled-all-16
 added as a secondary power check (not a rewrite); trajectory window 30→**15 (step 5)**; KCCA upgrade
