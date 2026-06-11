@@ -148,7 +148,7 @@ def main():
         raise SystemExit("usage: analyze_ifi.py [ifi|lag]")
     ANIMAL_COL = "ifi" if metric == "ifi" else "optimal_lag"
     DIM_COL = "ifi" if metric == "ifi" else "lag"
-    unit = ">0 = first area leads" if metric == "ifi" else "bins; >0 = first area leads (×50 ms)"
+    unit = ">0 = first area leads" if metric == "ifi" else "bins; >0 = first area leads (×25 ms)"
     em = pd.read_csv(config.RESULTS_DIR / "epoch_metrics.csv")
     ed = pd.read_csv(config.RESULTS_DIR / "epoch_dims.csv")
     print(f"DIRECTIONALITY battery — metric = {metric.upper()} ({unit}) | "

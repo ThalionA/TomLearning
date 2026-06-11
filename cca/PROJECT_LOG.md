@@ -187,10 +187,20 @@ User reviewed the report + analysis (18 comments). Decisions: learners stay PRIM
 added as a secondary power check (not a rewrite); trajectory window 30→**15 (step 5)**; KCCA upgrade
 to **30 shuffles, ±8 lags** (moderate). Ran the `stats-rigor` checklist. **Batch 1 done (verified +
 fixed; report edits in the vault, code-comment fixes here):**
-- **Bin width is 50 ms, not 25 ms** — `config.DEFAULT.temporal_bin_ms=50`, binning is cfg-driven, no run
-  overrode it → every committed result is 50 ms. The report said 25 ms / ±250 ms (wrong). Fixed report
-  §2.1 (Δ=50 ms), §2.7 (±500 ms), §3.2 (×50 ms) + comments in `run_trajectory.py`, `analyze_ifi.py`.
-  **25 ms was aspirational (doubles lag resolution) but never applied** — offered as a Batch-3 re-run option.
+- **Bin width = 25 ms for the MAIN pipeline (trajectory/epochs/transition/KCCA), 50 ms only for
+  early-trials §3.8.** SUBTLE: `config.DEFAULT.temporal_bin_ms=50`, BUT `run_trajectory.py`/`run_kcca.py`
+  set their own `--bin-ms` DEFAULT=25 → committed §2-5 results are 25 ms; only `run_early_trials.py`
+  (inherits config.DEFAULT) ran at 50 ms. ⚠️ My first read this session wrongly concluded "50 ms
+  everywhere" and the report was briefly edited to 50 ms — **REVERTED to 25 ms** with a standardisation
+  note (§2.1). **Now re-running EVERYTHING at BOTH 25 & 50 ms** (`run_review_batch.sh`) to make them
+  consistent and get the 25 ms lag-resolution benefit the directionality readouts want.
+- **BATCH LAUNCHED (detached, ~hrs):** `run_review_batch.sh` → trajectory **window=15 step=5** + KCCA
+  **upgraded (30 shuffles, ±8 lags)**, each at 25 & 50 ms × FS-excl/incl, to distinct files
+  (`trajectory_w15_bin{25,50}{_fsincl}.csv`, `kcca_up_bin{25,50}{_fsincl}.csv`); log `results/review_batch.log`.
+  New `lagged.heldout_lag_curve_flat` (held-out, segment-aware lag curve — fixes #12 in-sample-lag + #6
+  concatenation) + `ifi_by_window` give the "which integration window is cleanest" sweep (+4 tests; 264 pass).
+  **TODO when batch lands:** build the IFI-window driver/figure; re-analyse trajectory(w15)+KCCA at both bins;
+  pooled-16 secondary; remaining Batch-1 conceptual (MI eqn, hierarchy quant, why-tests); Batch-4 figures.
 - **V1-RSC is NOT pseudoreplication (user right).** IFI naive→expert +0.030→+0.013 (animals, n=6) vs
   +0.027→+0.014 (dims) — SAME shape/magnitude, 5/6 animals down; signed-rank p=0.16 is the n=6 FLOOR
   (0.031), not a null; the report's "Δ=0 p=1.0" was a median-of-integer-lag artefact (mean lag falls
