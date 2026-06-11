@@ -37,6 +37,15 @@ trajectory figures had been built from ~2 animals. Fixed by regenerating from th
 (`git show HEAD:…trajectory_w15_bin25.csv`) via a protected stem. **Rule: only regenerate trajectory
 figures when the window CSV shows 16 animals.** (Added to GOTCHAS.)
 
+**Report §3.2 finished this session (UNCOMMITTED prose in the vault).** The §3.2 header already
+promised the CA1→RSC held-out flow but the *body* still told the old "in-sample, weak, planned"
+story — now wired in: a headline paragraph (CA1→RSC $+0.079$ at $\pm50$ ms, $t_{11}=5.0$,
+$p=3.9\times10^{-4}$; nested-window Bonferroni $p\approx5\times10^{-3}$; SUB→CA1 & RSC→SUB exploratory),
+the `HCV1_ifi_windows_bin25_fsexcl.png` embed, fixed stale caveats (§2.7 "in progress"→done; §3.2
+"held-out planned"→done), and a §4 synthesis row + headline edit distinguishing *existence* of the
+CA1→RSC flow (robust) from its *change* with learning (weak). Numbers re-verified vs
+`ifi_windows_bin25.csv` this session. **Vault report edits are on disk, not committed — for user review.**
+
 **STAGED & validated (committed cff6a3e).** `scripts/analyze_trajectory_dims.py` (shared
 `compute_table()` → animals-as-n signed-rank | dims-as-n cluster-robust LMM | dims-as-n naive OLS,
 per pair × {ifi,cc} × {trial_frac,lp_rel,performance}) and `scripts/figs_trajectory_dims.py` (three-unit
