@@ -12,8 +12,9 @@ This driver only WRITES the rich per-window table (results/trajectory_windows.cs
 -- the expensive part. Slopes / across-animal sign tests / learner splits are
 computed cheaply and re-runnably by scripts/analyze_trajectory.py from that CSV.
 
-Continuous regime (validated by prototype_continuous_pcca.py): 25 ms, PCA->K,
-whole-trial CV, drop saturated (CC>=0.99) windows. No depth/ISI/waveforms.
+Continuous regime (validated by prototype_continuous_pcca.py): 50 ms bins
+(config.DEFAULT.temporal_bin_ms; --bin-ms to override), PCA->K, whole-trial CV,
+drop saturated (CC>=0.99) windows. No depth/ISI/waveforms.
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ from tom_cca import (config, dataio, membership,  # noqa: E402
 
 K = 30
 N_FOLDS = 5
-MAX_LAG = 10                  # +-10 bins = +-250 ms at 25 ms
+MAX_LAG = 10                  # +-10 bins = +-500 ms at the 50 ms default bin
 N_SHUFFLES = config.SURROGATE_SHUFFLES   # centralised (see config)
 SAT = 0.99
 MAX_SAMPLES = 6000            # cap bins/window: ~50x>K for a stable fit, keeps

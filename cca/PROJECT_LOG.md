@@ -182,6 +182,29 @@ subsample to match neuron counts for cross-pair comparisons; surrogate everythin
 
 ## LOG ENTRIES (newest first)
 
+### 2026-06-11 — Review response (18 comments) — Batch 1 correctness fixes
+User reviewed the report + analysis (18 comments). Decisions: learners stay PRIMARY, pooled-all-16
+added as a secondary power check (not a rewrite); trajectory window 30→**15 (step 5)**; KCCA upgrade
+to **30 shuffles, ±8 lags** (moderate). Ran the `stats-rigor` checklist. **Batch 1 done (verified +
+fixed; report edits in the vault, code-comment fixes here):**
+- **Bin width is 50 ms, not 25 ms** — `config.DEFAULT.temporal_bin_ms=50`, binning is cfg-driven, no run
+  overrode it → every committed result is 50 ms. The report said 25 ms / ±250 ms (wrong). Fixed report
+  §2.1 (Δ=50 ms), §2.7 (±500 ms), §3.2 (×50 ms) + comments in `run_trajectory.py`, `analyze_ifi.py`.
+  **25 ms was aspirational (doubles lag resolution) but never applied** — offered as a Batch-3 re-run option.
+- **V1-RSC is NOT pseudoreplication (user right).** IFI naive→expert +0.030→+0.013 (animals, n=6) vs
+  +0.027→+0.014 (dims) — SAME shape/magnitude, 5/6 animals down; signed-rank p=0.16 is the n=6 FLOOR
+  (0.031), not a null; the report's "Δ=0 p=1.0" was a median-of-integer-lag artefact (mean lag falls
+  +1.36→+0.23). Reframed §3.2 + synthesis row + headline: directionality is **weak & underpowered**,
+  not a manufactured artefact. CA1-RSC intermediate IFI remains a genuine false-positive (animal t=0.44).
+- **Transition has a real effect the report missed (user right).** CA1-V1 ΔCC **7/7 animals +, +0.117,
+  signed-rank p=0.016** (report said strength deltas n.s.); CA1-DG ΔIFI 7/7, t=0.012. Reframed §3.5;
+  noted BH-FDR-marginal across the 8×7 grid → pre-specified-pair effects; LMM planned.
+- **Confirmed PCA is leak-free in CV** (subspace_window fits residualise+PCA+CCA train-only per fold).
+- **REMAINING:** Batch 1 conceptual (MI-eqn derivation, concat soundness, coupling-hierarchy quant,
+  why-signed-rank); Batch 2 pooled-16 secondary; Batch 3 re-runs (window=15, held-out lag, vanilla CCA,
+  no-PCA, CC1-only rotation, optional 25 ms); Batch 4 figures (numbering+panels, extra axes, dims-as-n in
+  §3.6/3.7, heatmaps mean/parametric); Batch 5 KCCA upgrade.
+
 ### 2026-06-10 — Very-early-trial (pre-10) analysis — new module + driver + report §3.8
 - **Question (user):** do any metrics (CC/KCCA/IFI/Gini/angles) change in the *first ~10 trials* then
   plateau? Tested trial 1 vs 4/7/10. **Key constraint:** a single trial ≈ 580 running bins → too few
