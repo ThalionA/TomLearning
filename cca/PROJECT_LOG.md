@@ -11,6 +11,33 @@ narrative + state of play.**
 
 ---
 
+## ✓ DONE (2026-06-12) — pooled (all-animals) replication + clearer stats + deck overhaul
+
+Per user (deck feedback): drop spatial sweeps, KCCA→verdict-only, **replicate every figure
+pooled (all 16 animals, learners + non)**, and make **stats way clearer** (both on-figure AND
+summary tables). Committed **4c1b7ed**.
+- **Pooled variants** for all *poolable* figures via a `pool` flag (`_cohort`/`_ptag` in
+  `figs_report.py`; also `figs_trajectory_dims`, `figs_rotation_cc1`): levels, slopes-heatmap,
+  gini/ifi trajectories, direction, rotation-floor, gini-control, dims-forest, transition.
+  **Epochs/units stay learners-only BY DESIGN** — naive/intermediate/expert are defined relative
+  to the learning point, which non-learners lack (so `run_epochs` is intrinsically learner-only;
+  the `lp_rel` axis likewise). Early-trials were already all-animal. Told the user this.
+- **Clearer stats:** non-occluding 2-line colour-coded panel titles (p with */**/*** tier ·
+  signed slope+arrow · n; green=sig; test named once in the suptitle); asterisk-tier bar tops;
+  adaptive-contrast heatmap cells; rotation-floor gained its missing paired signed-rank.
+  `figs_stats_tables.py` = colour-coded summary-table FIGURES (learning slopes learners-vs-pooled;
+  held-out IFI window sweep) → the "summary slide" view, globbed into a new deck section.
+- **Result that fell out:** pooling **strengthens** the de-sparsification (CA1-RSC ✶✶✶ p<0.001;
+  CA1-V1/CA1-SUB/V1-RSC cross into significance) — direct support for *experience, not
+  learning-specific*. CA1-DG IFI↑ is the one directionality effect robust to pooling.
+- **Deck:** `HCV1_all_figures.pptx` now **97 slides / 86 figs** (sweeps gone, KCCA = 2 vs-linear
+  slides, Statistics-at-a-glance up front, pooled+learners throughout).
+- **GOTCHA:** `figs_report` names figures by FS-tag only, **not by bin** — bin25/bin50 collide and
+  overwrite. So the bar/trajectory figures stay 25 ms (report primary); bin50 robustness rides on
+  the dims-forest + stats tables, which carry the bin in their filename.
+- **Loose end:** bin50 FS-incl stuck at 15/16 (last animal slow/hung); its dims-forest is at 15
+  animals. Not committed (in-flight). The driver (PID 44335) is still alive on that animal.
+
 ## CURRENT STATE (2026-06-12, early hours) — post-review; trajectory dims-as-n re-run IN FLIGHT
 
 **Where things are.** The 18-comment report review (06-10/06-11) is largely landed in the vault
