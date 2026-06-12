@@ -50,11 +50,11 @@ def _world_50ms(animal, cfg, n_bins):
     return c
 
 
-def _fit(X, Y, Z, groups):
+def _fit(X, Y, Z, groups, max_lag=MAX_LAG):
     # Z partialled out inside window_subspace (full-window for in-sample readouts,
     # per-fold train-only for the leak-free held-out CC).
     return subspace_window.window_subspace(
-        X, Y, groups, Z=Z, k=K, max_lag=MAX_LAG, n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
+        X, Y, groups, Z=Z, k=K, max_lag=max_lag, n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
 
 
 def _angle(wa, wb, d_use=ROT_DIMS):
@@ -67,7 +67,18 @@ def _angle(wa, wb, d_use=ROT_DIMS):
 
 
 def main():
-    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=25)
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--bin-ms", type=int, default=25)
+    p.add_argument("--max-lag", type=int, default=MAX_LAG,
+                   help="IFI lag half-width in BINS (±50 ms headline at 10 ms = 5)")
+    p.add_argument("--tag", default="", help="filename tag across bins, e.g. _bin10")
+    p.add_argument("--include-fs", action="store_true")
+    args = p.parse_args()
+    max_lag = args.max_lag
+    suffix = f"{args.tag}{'_fsincl' if args.include_fs else ''}"
+    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
+                              exclude_fast_spiking=not args.include_fs)
     animals = dataio.load_animals(config.DATA_DIR)
     behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
     entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)
@@ -111,9 +122,9 @@ def main():
             others = [present[z] for z in present if z not in (ax, ay)]
             Z = np.concatenate(others, axis=1) if others else None
             wu = _fit(X[unc_sel], Y[unc_sel],
-                      Z[unc_sel] if Z is not None else None, unc_groups)
+                      Z[unc_sel] if Z is not None else None, unc_groups, max_lag)
             wc = _fit(X[cue_early], Y[cue_early],
-                      Z[cue_early] if Z is not None else None, cue_groups)
+                      Z[cue_early] if Z is not None else None, cue_groups, max_lag)
             cc_u = float(wu.cc[0]) if wu.cc.size else np.nan
             cc_c = float(wc.cc[0]) if wc.cc.size else np.nan
             if not (np.isfinite(cc_u) and np.isfinite(cc_c)):
@@ -156,14 +167,14 @@ def main():
     cols = (["animal", "learner", "pair", "n_matched_bins", "angle_x", "angle_y",
              "jac_x", "jac_y"]
             + [f"{p}_{mt}" for mt in DELTAS for p in ("unc", "cue", "d")])
-    with open(rdir / "transition_uncued_cued.csv", "w", newline="") as f:
+    with open(rdir / f"transition_uncued_cued{suffix}.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n")
         w.writeheader(); w.writerows(rows)
     print(f"\nwrote {rdir/'transition_uncued_cued.csv'} ({len(rows)} rows)\n")
 
     dcols = ["animal", "learner", "pair", "dim", "unc_cc", "cue_cc", "d_cc",
              "unc_ifi", "cue_ifi", "d_ifi", "unc_lag", "cue_lag", "unc_sig", "cue_sig"]
-    with open(rdir / "transition_dims.csv", "w", newline="") as f:
+    with open(rdir / f"transition_dims{suffix}.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=dcols, lineterminator="\n")
         w.writeheader(); w.writerows(dim_rows)
     print(f"wrote {rdir/'transition_dims.csv'} ({len(dim_rows)} dim-rows)\n")

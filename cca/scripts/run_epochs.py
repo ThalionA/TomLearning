@@ -35,6 +35,10 @@ FIELDS = ["animal", "learner", "pair", "epoch", "n_bins", "cc1", "n_sig",
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--bin-ms", type=int, default=25)
+    p.add_argument("--max-lag", type=int, default=MAX_LAG,
+                   help="IFI lag half-width in BINS (±50 ms headline at 10 ms = 5)")
+    p.add_argument("--tag", default="",
+                   help="filename tag to avoid clobber across bins, e.g. _bin10")
     p.add_argument("--include-fs", action="store_true")
     return p.parse_args()
 
@@ -91,7 +95,7 @@ def main():
                 # Z partialled out inside window_subspace (full-window for in-sample
                 # readouts, per-fold train-only for the leak-free held-out CC).
                 ws = subspace_window.window_subspace(
-                    Xi, Yi, trial_ids[mask], Z=Zi, k=K, max_lag=MAX_LAG,
+                    Xi, Yi, trial_ids[mask], Z=Zi, k=K, max_lag=args.max_lag,
                     n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
                 cc1 = float(ws.cc[0]) if ws.cc.size else float("nan")
                 if not np.isfinite(cc1) or cc1 >= SAT:
@@ -113,11 +117,11 @@ def main():
                         "lag": int(ws.lag_per_dim[d]) if d < ws.lag_per_dim.size else ""})
         print(f"  animal {a.animal_id}: lp={entries[a.animal_id].lp} {n_rows} rows")
 
-    out = config.RESULTS_DIR / f"epoch_metrics{suffix}.csv"
+    out = config.RESULTS_DIR / f"epoch_metrics{args.tag}{suffix}.csv"
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS, lineterminator="\n")
         w.writeheader(); w.writerows(rows)
-    out_d = config.RESULTS_DIR / f"epoch_dims{suffix}.csv"
+    out_d = config.RESULTS_DIR / f"epoch_dims{args.tag}{suffix}.csv"
     with open(out_d, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["animal", "pair", "epoch", "dim",
                                           "peak_cc", "sig", "ifi", "lag"],

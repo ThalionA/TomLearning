@@ -47,6 +47,9 @@ PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--bin-ms", type=int, default=25)
+    p.add_argument("--max-lag", type=int, default=MAX_LAG,
+                   help="IFI lag-integration half-width in BINS (default 10 ≈ ±250 ms "
+                        "at 25 ms). For the ±50 ms headline at 10 ms pass --max-lag 5.")
     p.add_argument("--window", type=int, default=30)
     p.add_argument("--step", type=int, default=15)
     p.add_argument("--min-window", type=int, default=20)
@@ -103,7 +106,8 @@ def main():
     n_learn = sum(1 for a in animals if a.animal_id in entries)
     print(f"Frame A FULL suite | ALL {len(animals)} animals ({n_learn} learners) "
           f"| bin={args.bin_ms}ms window={args.window} step={args.step} "
-          f"K={K} pCCA lag+-{MAX_LAG} shuffles={N_SHUFFLES}\n")
+          f"K={K} pCCA lag+-{args.max_lag} ({args.max_lag*args.bin_ms}ms) "
+          f"shuffles={N_SHUFFLES}\n")
 
     out = config.RESULTS_DIR / f"{args.out}{suffix}.csv"
     dim_out = config.RESULTS_DIR / f"{args.out}_dims{suffix}.csv"
@@ -170,7 +174,7 @@ def main():
                 # Z is partialled out INSIDE window_subspace — full-window for the
                 # in-sample readouts, per-fold (train-only) for the held-out CC.
                 ws = subspace_window.window_subspace(
-                    Xi, Yi, groups, Z=Zi, k=args.k, max_lag=MAX_LAG,
+                    Xi, Yi, groups, Z=Zi, k=args.k, max_lag=args.max_lag,
                     n_shuffles=N_SHUFFLES, n_folds=N_FOLDS)
                 cc1 = float(ws.cc[0]) if ws.cc.size else float("nan")
                 if not np.isfinite(cc1) or cc1 >= SAT:
