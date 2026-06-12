@@ -11,6 +11,40 @@ narrative + state of play.**
 
 ---
 
+## ⏳ RUNNING (2026-06-12) — 10 ms full-suite re-run, both FS (directionality focus)
+
+**Why.** Directionality picture needs finer temporal resolution. Decision (user): re-run the
+**full suite at 10 ms, both FS**; **headline IFI integrates over ±50 ms**, but the IFI window
+sweep keeps **curves out to ±250 ms**.
+
+**Params / mapping (10 ms bins).** Headline IFI = `--max-lag 5` (±50 ms) on
+trajectory/epochs/transition; sweep = `--max-lag 25` (±250 ms curves, headline read at window 5).
+`information_flow_index` integrates CC1 over the full ±max_lag, so max_lag *is* the integration
+window. Feasibility OK: raw data is **1 ms** `binned_spikes` (the `_50ms` names are legacy), ~8 Hz,
+population activity in every 10 ms bin → CCA estimable. **Caveat:** absolute CCs drop at 10 ms
+(sparser) — the strength/Gini de-sparsification headline stays at **25 ms**; 10 ms is a
+finer-timescale robustness + sharper directionality view.
+
+**Driver changes (committed 46cba64).** `--max-lag` added to run_trajectory/run_epochs/run_transition;
+run_transition also gained `--bin-ms`/`--tag`/`--include-fs` (was hardcoded 25 ms). All defaults
+unchanged. **Outputs are bin-tagged** (`trajectory_w15_bin10*`, `epoch_metrics_bin10*`,
+`transition_*_bin10*`, `ifi_windows_bin10*`) so 10 ms coexists with the committed 25 ms results.
+
+**Launched.** Two concurrent FS batches (`/tmp/run10_{fsexcl,fsincl}.sh`, logs
+`results/run10_{fsexcl,fsincl}.log`), each sequential: ifi-sweep → trajectory → epochs → transition.
+Background tasks **buwo9dyeg** (fsexcl), **bwrmjc32s** (fsincl); smoke-watcher **boqqxmvbe**.
+~12 h wall-clock (16 cores, OMP capped 4/proc). They notify on completion.
+
+**NEXT when both complete.** (1) `analyze_ifi_windows` — fix the **headline at ±50 ms (window 5)**,
+plot curves to ±250 ms; (2) re-point figs/analysis at the `*_bin10*` outputs and regenerate figures
++ stats + deck + the directionality inventory (stable vs changing) at 10 ms; (3) compare to 25 ms.
+
+**Directionality inventory at 25 ms (reference for the 10 ms comparison).** *Stable/established
+flows:* CA1→RSC (robust, p<0.001), SUB→CA1 (p=0.009), RSC→SUB (p=0.047). *Changing with learning:*
+CA1–DG IFI↑ (trajectory slope +0.020, pooled-16 **p=0.01** — the clearest), CA1–V1 IFI↑ (FS-fragile),
+V1–RSC IFI↓ (underpowered-but-real, lag falls, 5/6 animals). The graphical abstract was being
+revised to carry this (stable + changing) when the 10 ms decision was made.
+
 ## ✓ DONE (2026-06-12) — pooled (all-animals) replication + clearer stats + deck overhaul
 
 Per user (deck feedback): drop spatial sweeps, KCCA→verdict-only, **replicate every figure
