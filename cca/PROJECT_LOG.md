@@ -54,11 +54,21 @@ over trial_frac in **5/5** animals (signed-rank floored at p=0.062) but the LMM 
 (p=0.0039) and OLS over-inflates — yet it is **null vs lp_rel** (p=0.98) → time-on-task, not
 learning-locked.
 
-**NEXT when the run lands (per user: "finish all the analyses").**
-1. Confirm all 4 window CSVs + 4 `_dims.csv` have 16 animals.
-2. Regenerate window figures from the FINAL data: `figs_report.py trajectory_w15_bin25` (+ bin50 as robustness), `figs_units.py`, `analyze_epochs.py`.
-3. Run `analyze_trajectory_dims.py` + `figs_trajectory_dims.py` for all 4 stems; write the §3.2/§3.3 both-units paragraph + embed the forest figure(s).
-4. Update report re-run-status box, PROJECT_LOG, STATE.md; commit (scripts/CSVs to `main`).
+**✓ PRIMARY DONE (stage 1, bin25 FS-excl, committed 91ad829).** 16 animals. Findings:
+**CA1→V1 IFI rises with experience** is the one directionality slope supported at the honest unit
+(animals $p=0.012$–$0.098$ across all 3 axes, cluster-robust LMM $p=0.021$); **held-out CC slope is
+null at both animals and LMM** for every pair/axis (only naive OLS inflates, to $p\sim10^{-20}$) →
+strength-null survives the powerful dims unit. Written into report **§3.2** (forest figure
+`HCV1_CCA_fsexcl_trajdims_bin25.png` + paragraph) and **§3.7** (CC-null-under-LMM); §4 synthesis
+directionality row + re-run status box updated. fsexcl window figures regenerated from the FINAL
+re-run output. **Bug fixed:** driver writes `..._dims_fsincl.csv` (`_dims` before suffix); analysis
+`load()` was looking for `..._fsincl_dims.csv` → would have missed every robustness stage. Fixed.
+
+**NEXT when bxdq9o98x fires (stages 2–4 done — robustness only).**
+1. `analyze_trajectory_dims.py fsincl` / `bin50` / `bin50 fsincl` + `figs_trajectory_dims.py` same args → confirm the CA1→V1 + strength-null picture holds; add a one-line robustness note to §3.2/§3.7 (don't expect conclusion change).
+2. Regenerate fsincl window figures from final data (`figs_report.py trajectory_w15_bin25` once fsincl CSV shows 16 animals); bin50 figures as robustness if wanted.
+3. Commit the fsincl/bin50 `_dims*.csv`; update this log + STATE.md.
+**Deferred (low priority):** figure numbers + panel letters (#9, do once figure set is final); vanilla-CCA (#2) / no-PCA (#3b) runs.
 **Deferred (low priority / CPU-contended):** figure numbers + panel letters (#9); vanilla-CCA (#2,
 `--no-partial`) and no-PCA (#3b, `--k`) robustness runs (driver flags ready — start only after the
 trajectory queue frees up).
