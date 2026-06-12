@@ -46,3 +46,10 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   run `figs_report.py <traj-stem>` when the window CSV shows 16 animals**; to plot full data while a
   re-run is in flight, restore from git (`git show HEAD:cca/results/<stem>.csv > <stem>_safe.csv`) and
   point figs at the protected stem. The per-dim `_dims.csv` truncates the same way.
+
+- **Too many `run_in_background` tasks → the harness evicts (kills) one.** Launching two batch
+  runs as background tasks *plus* a watcher (3 tracked tasks) got a batch killed ~14 min in
+  (2026-06-12) — looked like a crash but was eviction (RAM was 87 % free, not OOM). For long
+  unattended compute, launch it **fully detached** so it isn't a harness task:
+  `(nohup bash run.sh >/dev/null 2>&1 </dev/null &)` → reparents to launchd (PPID 1, new session),
+  survives. Keep at most ~1 `run_in_background` watcher alongside.

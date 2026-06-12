@@ -30,10 +30,15 @@ run_transition also gained `--bin-ms`/`--tag`/`--include-fs` (was hardcoded 25 m
 unchanged. **Outputs are bin-tagged** (`trajectory_w15_bin10*`, `epoch_metrics_bin10*`,
 `transition_*_bin10*`, `ifi_windows_bin10*`) so 10 ms coexists with the committed 25 ms results.
 
-**Launched.** Two concurrent FS batches (`/tmp/run10_{fsexcl,fsincl}.sh`, logs
+**Launched (DETACHED).** Two concurrent FS batches (`/tmp/run10_{fsexcl,fsincl}.sh`, logs
 `results/run10_{fsexcl,fsincl}.log`), each sequential: ifi-sweep → trajectory → epochs → transition.
-Background tasks **buwo9dyeg** (fsexcl), **bwrmjc32s** (fsincl); smoke-watcher **boqqxmvbe**.
-~12 h wall-clock (16 cores, OMP capped 4/proc). They notify on completion.
+~12 h wall-clock (64 GB RAM ample, 16 cores, OMP capped 4/proc). **Smoke test PASSED** — 10 ms
+gives valid finite CCA/IFI. Completion watcher **b2u68781m**.
+- **GOTCHA (cost an early restart):** the first launch used `run_in_background:true` for both batches
+  **plus** a smoke watcher = 3 harness-tracked tasks; the harness **evicted** a batch (≈2-task limit)
+  ~14 min in (NOT OOM — 64 GB, 87 % free). Fix: launch long compute **fully detached**
+  (`(nohup bash X.sh >/dev/null 2>&1 </dev/null &)` → PPID 1, new session, harness can't evict) and
+  keep ≤1 run_in_background watcher. Current runs are detached; verify with `ps -o ppid` = 1.
 
 **NEXT when both complete.** (1) `analyze_ifi_windows` — fix the **headline at ±50 ms (window 5)**,
 plot curves to ±250 ms; (2) re-point figs/analysis at the `*_bin10*` outputs and regenerate figures
