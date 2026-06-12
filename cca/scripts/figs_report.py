@@ -79,9 +79,13 @@ def _bar_points_sem(ax, pairs, series, ylabel, title, star_p=None):
         jit = (np.random.default_rng(i).random(len(v)) - 0.5) * 0.3
         ax.scatter(np.full(len(v), i) + jit, v, s=12, color="#2c3e50",
                    zorder=2, alpha=0.8)
-        if star_p is not None and p in star_p and np.isfinite(star_p[p]) and star_p[p] < 0.05:
-            top = (means[i] or 0) + (sems[i] or 0)
-            figstyle.star(ax, i, top, always=True)
+        if star_p is not None and p in star_p:
+            tier = _tier(star_p[p])
+            if tier:
+                top = (means[i] or 0) + (sems[i] or 0)
+                ax.annotate(tier, (i, top), textcoords="offset points", xytext=(0, 5),
+                            ha="center", va="bottom", color=SIG, fontweight="bold",
+                            fontsize=14, zorder=20, clip_on=False)
     ax.axhline(0, color="k", lw=0.5)
     ax.set_xticks(xs); ax.set_xticklabels(pairs, rotation=45, ha="right", fontsize=8)
     ax.set_ylabel(ylabel); ax.set_title(title, fontsize=10)
@@ -121,30 +125,83 @@ def _slope_quant(df, metric, axis, pair):
     return med, p, len(sl)
 
 
+# ---- cohort (pooled = all animals, vs learners-only) + clear-stats helpers ----
+
+def _cohort(df, pool):
+    """All animals when pool=True, else learners only."""
+    return df if pool else df[df["learner"] == 1]
+
+
+def _ptag(tag, pool):
+    return f"{tag}_pooled" if pool else tag
+
+
+def _clabel(df, pool):
+    n = df["animal"].nunique() if pool else df[df["learner"] == 1]["animal"].nunique()
+    return f"all {n} animals (learners + non)" if pool else f"{n} learners"
+
+
+SIG = "#1a7f4b"      # significant (green)
+NS = "#9a9990"       # n.s. (grey)
+
+
+def _stars(p):
+    """(asterisk string, colour) for a p-value; '' / grey when n.s. or undefined."""
+    if not np.isfinite(p):
+        return "n/a", NS
+    if p < 0.001:
+        return "*** p<0.001", SIG
+    if p < 0.01:
+        return f"** p={p:.3f}", SIG
+    if p < 0.05:
+        return f"* p={p:.3f}", SIG
+    return f"n.s. p={p:.2f}", NS
+
+
+def _tier(p):
+    """Asterisk-tier only (for bar tops): '' when n.s./undefined."""
+    if not np.isfinite(p) or p >= 0.05:
+        return ""
+    return "***" if p < 0.001 else ("**" if p < 0.01 else "*")
+
+
+def _panel_stat(ax, pair, med, p, n, unit="slope"):
+    """Non-occluding 2-line title: pair, then p (asterisk tier) · signed effect with an
+    up/down arrow · n animals — all tinted green when significant. The test itself is
+    named once in the figure suptitle, not repeated per panel."""
+    star, col = _stars(p)
+    arrow = " ↓" if med < 0 else (" ↑" if med > 0 else "")
+    eff = f"{unit} {med:+.3f}{arrow}" if np.isfinite(med) else f"{unit} n/a"
+    tcol = "#14532d" if col == SIG else "#3a3a36"
+    ax.set_title(f"{pair}\n{star}  ·  {eff}  ·  n={n}",
+                 fontsize=11, fontweight="bold", color=tcol, linespacing=1.5)
+
+
 # --------------------------------------------------------------------------
 
-def fig_levels(df, tag):
-    learn = df[df["learner"] == 1]
+def fig_levels(df, tag, pool=False):
+    data = _cohort(df, pool)
     metrics = [("cc1", "held-out CC$_1$"), ("n_sig", "# sig dims"),
                ("mi_sig", "MI$_{sig}$ (nats)"), ("ifi", "IFI"),
                ("gini_x", "Gini (area X)")]
     fig, axes = plt.subplots(1, len(metrics), figsize=(3 * len(metrics), 3.8))
     for ax, (m, lab) in zip(axes, metrics):
-        series = {p: per_animal_level(learn, p, m) for p in PAIRS}
+        series = {p: per_animal_level(data, p, m) for p in PAIRS}
         _bar_points_sem(ax, PAIRS, series, lab, lab)
-    fig.suptitle(f"Subspace levels by pair — {tag} (points = animals, bar = mean ± SEM, learners)")
-    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_levels.png")
+    fig.suptitle(f"Subspace levels by pair — {tag}, {_clabel(df, pool)} "
+                 "(points = animals, bar = mean ± SEM)")
+    figstyle.save(fig, ATT / f"HCV1_CCA_{_ptag(tag, pool)}_levels.png")
 
 
-def fig_slopes_heatmap(df, tag):
-    learn = df[df["learner"] == 1]
+def fig_slopes_heatmap(df, tag, pool=False):
+    data = _cohort(df, pool)
     metrics = [m for m in SLOPE_METRICS if m in df.columns]
     for axis in AXES:
         M = np.full((len(PAIRS), len(metrics)), np.nan)
         P = np.full_like(M, np.nan)
         for i, p in enumerate(PAIRS):
             for j, m in enumerate(metrics):
-                med, pp, n = _slope_quant(learn, m, axis, p)
+                med, pp, n = _slope_quant(data, m, axis, p)
                 M[i, j] = med; P[i, j] = pp
         # normalise each metric column to its max abs for visual comparability
         norm = M / (np.nanmax(np.abs(M), 0, keepdims=True) + 1e-12)
@@ -155,26 +212,31 @@ def fig_slopes_heatmap(df, tag):
         for i in range(len(PAIRS)):
             for j in range(len(metrics)):
                 if np.isfinite(M[i, j]):
-                    star = "*" if (np.isfinite(P[i, j]) and P[i, j] < 0.05) else ""
-                    ax.text(j, i, f"{M[i, j]:+.3f}{star}", ha="center", va="center",
-                            fontsize=7, color="black")
+                    tier = _tier(P[i, j])
+                    sig = bool(tier)
+                    col = "white" if abs(norm[i, j]) > 0.45 else "black"   # adaptive contrast
+                    ax.text(j, i, f"{M[i, j]:+.3f}\n{tier}" if tier else f"{M[i, j]:+.3f}",
+                            ha="center", va="center", fontsize=7.5, color=col,
+                            fontweight=("bold" if sig else "normal"))
         fig.colorbar(im, ax=ax, label="median per-animal slope (col-normalised)")
-        ax.set_title(f"All relationships — d(metric)/d({axis}) — {tag}, learners\n"
-                     "* = signed-rank p<0.05 (uncorrected)", fontsize=9)
-        figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_slopes_{axis}.png")
+        ax.set_title(f"All relationships — d(metric)/d({axis}) — {tag}, {_clabel(df, pool)}\n"
+                     "signed-rank on per-animal slopes  (* p<.05  ** p<.01  *** p<.001, "
+                     "uncorrected)", fontsize=9)
+        figstyle.save(fig, ATT / f"HCV1_CCA_{_ptag(tag, pool)}_slopes_{axis}.png")
 
 
-def _grid_traj(df, metric, axis, tag, fname, ylabel, suptitle, hline0=False):
-    """Spacious 4×2 grid: one panel per area pair, mean±SEM band + faint per-animal."""
-    learn = df[df["learner"] == 1]
+def _grid_traj(df, metric, axis, fname, ylabel, suptitle, hline0=False, pool=False):
+    """Spacious 4×2 grid: one panel per area pair, mean±SEM band + faint per-animal.
+    pool=True uses all animals (learners + non); else learners only. Per panel a clear
+    stats caption: signed-rank test, p with asterisk tier, signed slope, n animals."""
+    data = _cohort(df, pool)
     fig, axflat = figstyle.grid(len(PAIRS), ncols=2)
     for i, (ax, p) in enumerate(zip(axflat, PAIRS)):
-        _band(ax, learn, p, metric, axis)
+        _band(ax, data, p, metric, axis)
         if hline0:
             ax.axhline(0, color="k", lw=0.6)
-        med, pv, n = _slope_quant(learn, metric, axis, p)
-        star = " ✶" if (np.isfinite(pv) and pv < 0.05) else ""
-        ax.set_title(f"{p}   slope={med:+.3f}  p={pv:.3g}  n={n}{star}")
+        med, pv, n = _slope_quant(data, metric, axis, p)
+        _panel_stat(ax, p, med, pv, n)
         ax.margins(y=0.15)
         if i % 2 == 0:
             ax.set_ylabel(ylabel)
@@ -184,85 +246,100 @@ def _grid_traj(df, metric, axis, tag, fname, ylabel, suptitle, hline0=False):
     figstyle.save(fig, ATT / fname)
 
 
-def fig_gini_traj(df, tag):
-    _grid_traj(df, "gini_x", "trial_frac", tag, f"HCV1_CCA_{tag}_gini_traj.png",
+def fig_gini_traj(df, tag, pool=False):
+    _grid_traj(df, "gini_x", "trial_frac", f"HCV1_CCA_{_ptag(tag, pool)}_gini_traj.png",
                "Gini (area X)",
-               f"Subspace sparsity vs learning — ALL pairs — {tag} "
-               "(red = mean±SEM, faint = animals)")
+               f"Subspace sparsity vs learning — {tag}, {_clabel(df, pool)}\n"
+               "band = mean±SEM, faint = per-animal · per panel: signed-rank on per-animal "
+               "slopes vs 0  (* p<.05  ** p<.01  *** p<.001)", pool=pool)
 
 
-def fig_ifi_traj(df, tag):
-    _grid_traj(df, "ifi", "trial_frac", tag, f"HCV1_CCA_{tag}_ifi_traj.png",
+def fig_ifi_traj(df, tag, pool=False):
+    _grid_traj(df, "ifi", "trial_frac", f"HCV1_CCA_{_ptag(tag, pool)}_ifi_traj.png",
                "IFI (>0: X leads Y)",
-               f"Directionality vs learning — ALL pairs — {tag} "
-               "(red = mean±SEM, faint = animals)", hline0=True)
+               f"Directionality vs learning — {tag}, {_clabel(df, pool)}\n"
+               "band = mean±SEM, faint = per-animal · per panel: signed-rank on per-animal "
+               "slopes vs 0  (* p<.05  ** p<.01  *** p<.001)", hline0=True, pool=pool)
 
 
-def fig_transition():
+def fig_transition(pool=False):
     path = RES / "transition_uncued_cued.csv"
     if not path.is_file():
         return
     t = pd.read_csv(path)
-    learn = t[t["learner"] == 1]
+    data = _cohort(t, pool)
     metrics = [("d_cc1", "Δ CC$_1$"), ("d_n_sig", "Δ n_sig"),
                ("d_mi_sig", "Δ MI$_{sig}$"), ("d_ifi", "Δ IFI")]
     fig, axes = plt.subplots(2, 2, figsize=(13, 8))
     for ax, (m, lab) in zip(axes.ravel(), metrics):
-        ser = {p: _num(learn[learn["pair"] == p][m]).dropna().tolist() for p in PAIRS}
+        ser = {p: _num(data[data["pair"] == p][m]).dropna().tolist() for p in PAIRS}
         star = {p: paired_stats.wilcoxon_signed(ser[p])[3] if len(ser[p]) >= 3 else np.nan
                 for p in PAIRS}
         _bar_points_sem(ax, PAIRS, ser, f"{lab} (cued − uncued)",
                         f"{lab}: uncued→cued", star_p=star)
-    fig.suptitle("Uncued→cued transition — ALL pairs (points = animals, bar = mean ± SEM, "
-                 "* = signed-rank p<0.05)", fontsize=12)
-    figstyle.save(fig, ATT / "HCV1_CCA_transition.png")
+    fig.suptitle(f"Uncued→cued transition — {_clabel(t, pool)}\n(points = animals, bar = mean ± "
+                 "SEM · signed-rank vs 0: * p<.05  ** p<.01  *** p<.001)", fontsize=12)
+    figstyle.save(fig, ATT / f"HCV1_CCA_transition{'_pooled' if pool else ''}.png")
 
 
-def fig_direction(df, tag):
-    learn = df[df["learner"] == 1]
+def fig_direction(df, tag, pool=False):
+    data = _cohort(df, pool)
     series, star = {}, {}
     for p in PAIRS:
-        per_an = [float(_num(s["ifi"]).mean()) for _, s in learn[learn["pair"] == p].groupby("animal")]
+        per_an = [float(_num(s["ifi"]).mean()) for _, s in data[data["pair"] == p].groupby("animal")]
         series[p] = per_an
         star[p] = paired_stats.wilcoxon_signed([v for v in per_an if np.isfinite(v)])[3] \
             if sum(np.isfinite(per_an)) >= 3 else np.nan
     fig, ax = plt.subplots(figsize=(7, 4))
     _bar_points_sem(ax, PAIRS, series, "mean IFI (>0: first area leads)",
-                    f"Directionality by pair — {tag} (* = p<0.05 vs 0)", star_p=star)
-    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_direction.png")
+                    f"Directionality by pair — {tag}, {_clabel(df, pool)}\n"
+                    "signed-rank vs 0: * p<.05  ** p<.01  *** p<.001", star_p=star)
+    figstyle.save(fig, ATT / f"HCV1_CCA_{_ptag(tag, pool)}_direction.png")
 
 
-def fig_rotation_floor(df, tag):
-    learn = df[df["learner"] == 1]
-    fig, ax = plt.subplots(figsize=(8, 4))
+def fig_rotation_floor(df, tag, pool=False):
+    data = _cohort(df, pool)
+    fig, ax = plt.subplots(figsize=(8.5, 4.6))
     xs = np.arange(len(PAIRS)); w = 0.38
-    rot = [_sem(per_animal_level(learn, p, "rot_x")) for p in PAIRS]
-    flo = [_sem(per_animal_level(learn, p, "sh_x")) for p in PAIRS]
+    rot = [_sem(per_animal_level(data, p, "rot_x")) for p in PAIRS]
+    flo = [_sem(per_animal_level(data, p, "sh_x")) for p in PAIRS]
     ax.bar(xs - w / 2, [r[0] for r in rot], w, yerr=[r[1] for r in rot], capsize=3,
            label="cross-window rotation", color="#2980b9", alpha=0.8)
     ax.bar(xs + w / 2, [f[0] for f in flo], w, yerr=[f[1] for f in flo], capsize=3,
            label="split-half noise floor", color="#95a5a6", alpha=0.8)
+    for i, p in enumerate(PAIRS):     # paired rotation-vs-floor signed-rank per pair
+        g = data[data["pair"] == p]
+        diffs = [r - h for r, h in
+                 ((_num(s["rot_x"]).mean(), _num(s["sh_x"]).mean()) for _, s in g.groupby("animal"))
+                 if np.isfinite(r) and np.isfinite(h)]
+        tier = _tier(paired_stats.wilcoxon_signed(diffs)[3]) if len(diffs) >= 3 else ""
+        if tier:
+            top = max(rot[i][0] + rot[i][1], flo[i][0] + flo[i][1])
+            ax.annotate(tier, (i, top), textcoords="offset points", xytext=(0, 5),
+                        ha="center", color=SIG, fontweight="bold", fontsize=13,
+                        zorder=20, clip_on=False)
     ax.set_xticks(xs); ax.set_xticklabels(PAIRS, rotation=45, ha="right", fontsize=8)
     ax.set_ylabel("max principal angle (°)")
-    ax.set_title(f"Rotation vs noise floor — {tag} (rotation>floor ⇒ genuine reorientation)",
-                 fontsize=10)
+    ax.set_title(f"Rotation vs noise floor — {tag}, {_clabel(df, pool)}\nrotation>floor ⇒ "
+                 "reorientation (here rotation ≤ floor) · signed-rank rot vs floor: "
+                 "* p<.05  ** p<.01  *** p<.001", fontsize=9)
     ax.legend(fontsize=8)
-    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_rotation_floor.png")
+    figstyle.save(fig, ATT / f"HCV1_CCA_{_ptag(tag, pool)}_rotation_floor.png")
 
 
-def fig_gini_control(df, tag, axis="trial_frac"):
+def fig_gini_control(df, tag, axis="trial_frac", pool=False):
     """CCA-independent control: per-pair median slope of the canonical-weight Gini
     (gini_x) vs the raw cross-correlation coupling Gini (gini_pearson_x). If the
     de-sparsification is real, both fall together — Pearson is computed with no CCA."""
     if "gini_pearson_x" not in df.columns:
         return
-    learn = df[df["learner"] == 1]
-    fig, ax = plt.subplots(figsize=(8.5, 4))
+    data = _cohort(df, pool)
+    fig, ax = plt.subplots(figsize=(8.5, 4.3))
     xs = np.arange(len(PAIRS)); w = 0.38
     for off, metric, lab, col in [(-w / 2, "gini_x", "Gini (CCA weights)", "#c0392b"),
                                   (+w / 2, "gini_pearson_x",
                                    "Gini (Pearson coupling — CCA-free)", "#8e44ad")]:
-        slopes = per_animal_slopes(learn, metric, axis)     # once per metric
+        slopes = per_animal_slopes(data, metric, axis)     # once per metric
         meds, sems, stars = [], [], []
         for p in PAIRS:
             sl = slopes.get(p, [])
@@ -273,17 +350,19 @@ def fig_gini_control(df, tag, axis="trial_frac"):
             meds.append(med); sems.append(_sem(sl)[1]); stars.append(pv)
         ax.bar(xs + off, meds, w, yerr=sems, capsize=3, label=lab, color=col, alpha=0.85)
         for i, (m, pv) in enumerate(zip(meds, stars)):
-            if np.isfinite(pv) and pv < 0.05 and np.isfinite(m):
-                ax.text(xs[i] + off, m, "*", ha="center",
-                        va="bottom" if m >= 0 else "top", fontsize=11)
+            tier = _tier(pv)
+            if tier and np.isfinite(m):
+                ax.annotate(tier, (xs[i] + off, m), textcoords="offset points",
+                            xytext=(0, 4 if m >= 0 else -12), ha="center", color=SIG,
+                            fontweight="bold", fontsize=12, zorder=20, clip_on=False)
     ax.axhline(0, color="k", lw=0.5)
     ax.set_xticks(xs); ax.set_xticklabels(PAIRS, rotation=45, ha="right", fontsize=8)
     ax.set_ylabel(f"median per-animal slope d(Gini)/d({axis})")
     ax.set_title(f"De-sparsification control — CCA-weight Gini vs CCA-free Pearson Gini — "
-                 f"{tag}, learners\n(both negative ⇒ not a CCA-weight artefact; shares the "
-                 "residualisation, so not orthogonal to it; * = signed-rank p<0.05)", fontsize=8)
+                 f"{tag}, {_clabel(df, pool)}\n(both negative ⇒ not a CCA-weight artefact; shares "
+                 "the residualisation · signed-rank: * p<.05  ** p<.01  *** p<.001)", fontsize=8)
     ax.legend(fontsize=8)
-    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_gini_control.png")
+    figstyle.save(fig, ATT / f"HCV1_CCA_{_ptag(tag, pool)}_gini_control.png")
 
 
 def fig_learner_vs_non(df, tag, metric="gini_x", axis="trial_frac"):
@@ -306,16 +385,17 @@ def fig_learner_vs_non(df, tag, metric="gini_x", axis="trial_frac"):
 
 def make_all(csv, tag):
     df = pd.read_csv(csv)
-    fig_levels(df, tag)
-    fig_slopes_heatmap(df, tag)
-    fig_gini_traj(df, tag)
-    fig_ifi_traj(df, tag)
-    fig_direction(df, tag)
-    if "sh_x" in df.columns:
-        fig_rotation_floor(df, tag)
-    fig_gini_control(df, tag)
-    fig_learner_vs_non(df, tag)
-    print(f"  {tag}: figures written ({len(df)} rows)")
+    for pool in (False, True):             # learners-only AND pooled (all animals)
+        fig_levels(df, tag, pool)
+        fig_slopes_heatmap(df, tag, pool)
+        fig_gini_traj(df, tag, pool)
+        fig_ifi_traj(df, tag, pool)
+        fig_direction(df, tag, pool)
+        if "sh_x" in df.columns:
+            fig_rotation_floor(df, tag, pool)
+        fig_gini_control(df, tag, pool=pool)
+    fig_learner_vs_non(df, tag)            # the learner/non contrast — pooling N/A
+    print(f"  {tag}: figures written ({len(df)} rows, learners + pooled)")
 
 
 def main():
@@ -329,7 +409,8 @@ def main():
             make_all(csv, tag)
         else:
             print(f"  (missing {csv.name} — skip {tag})")
-    fig_transition()                       # all pairs; transition CSV is FS-excluded
+    for pool in (False, True):
+        fig_transition(pool)               # all pairs; transition CSV is FS-excluded
     print(f"figures ({stem}) ->", ATT)
 
 

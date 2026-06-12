@@ -76,19 +76,24 @@ def _panel(ax, learn, rot_col, sh_col, title):
 
 
 def main():
-    stem = sys.argv[1] if len(sys.argv) > 1 else "trajectory_w15_bin50"
+    args = " ".join(sys.argv[1:])
+    stem = next((a for a in sys.argv[1:] if a.startswith("trajectory")), "trajectory_w15_bin50")
+    pool = "pool" in args
     df = pd.read_csv(config.RESULTS_DIR / f"{stem}.csv")
     if "rot_x_cc1" not in df.columns:
         print(f"  {stem}.csv has no CC1-rotation columns (needs a post-#14 run)"); return
-    learn = df[df["learner"] == 1]
+    data = df if pool else df[df["learner"] == 1]
+    n = data["animal"].nunique()
+    cohort = f"all {n} animals (learners + non)" if pool else f"{n} learners"
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 4.6), sharey=True)
-    _panel(a1, learn, "rot_x", "sh_x", "Top-3 subspace (floor ≈ orthogonal — weak test)")
-    _panel(a2, learn, "rot_x_cc1", "sh_x_cc1", "CC1 dominant dim (tight floor — meaningful)")
-    fig.suptitle("Subspace rotation stays at/below the split-half noise floor — no reorientation "
-                 "(bars = mean ± SEM over animals; dots = animals; * = rotation sig. BELOW floor)",
-                 fontsize=11)
-    figstyle.save(fig, ATT / "HCV1_CCA_fsexcl_rotation_cc1")
-    print("wrote HCV1_CCA_fsexcl_rotation_cc1.{png,svg} ->", ATT)
+    _panel(a1, data, "rot_x", "sh_x", "Top-3 subspace (floor ≈ orthogonal — weak test)")
+    _panel(a2, data, "rot_x_cc1", "sh_x_cc1", "CC1 dominant dim (tight floor — meaningful)")
+    fig.suptitle(f"Subspace rotation stays at/below the split-half noise floor — no reorientation — "
+                 f"{cohort}\n(bars = mean ± SEM over animals; dots = animals; "
+                 "* = rotation sig. BELOW floor, signed-rank)", fontsize=11)
+    out = f"HCV1_CCA_fsexcl{'_pooled' if pool else ''}_rotation_cc1"
+    figstyle.save(fig, ATT / out)
+    print(f"wrote {out}.{{png,svg}} ->", ATT)
 
 
 if __name__ == "__main__":

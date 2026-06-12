@@ -72,14 +72,14 @@ def load(arg=""):
     return pd.read_csv(path), path
 
 
-def compute_table(df, min_animals=3, min_dimwin=8):
+def compute_table(df, min_animals=3, min_dimwin=8, pool=False):
     """Per pair × metric (ifi, cc) × axis, the three views as tidy records.
 
     Returns a list of dicts with keys: pair, metric, axis, n_an, n_dimwin,
     anim_slope/anim_p (signed-rank over per-animal slopes), lmm_b/lmm_p
     (cluster-robust random-intercept LMM), ols_b/ols_p (naive pooled OLS).
-    Only learner + SIGNIFICANT dims are used (the dims-as-n convention)."""
-    learn = df[(df["learner"] == 1) & (df["sig"] == 1)].copy()
+    SIGNIFICANT dims only; learners only unless pool=True (then all animals)."""
+    learn = (df[df["sig"] == 1] if pool else df[(df["learner"] == 1) & (df["sig"] == 1)]).copy()
     out = []
     for metric in ["ifi", "cc"]:
         for axis in AXES:

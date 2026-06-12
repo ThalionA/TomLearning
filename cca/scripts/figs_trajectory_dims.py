@@ -74,13 +74,15 @@ def _panel(ax, tab, metric, axis, order, ylabels):
 
 
 def main():
-    arg = sys.argv[1] if len(sys.argv) > 1 else ""
+    arg = " ".join(sys.argv[1:])
     df, path = load(arg)
     if df is None:
         print(f"missing {path.name} — run run_trajectory (per-dim) first"); return
-    n_an = df["animal"].nunique()
-    tab = compute_table(df)
-    tag = "fsincl" if "fsincl" in arg else "fsexcl"
+    pool = "pool" in arg
+    cohort = df if pool else df[df["learner"] == 1]
+    n_an = cohort["animal"].nunique()
+    tab = compute_table(df, pool=pool)
+    tag = ("fsincl" if "fsincl" in arg else "fsexcl") + ("_pooled" if pool else "")
     binms = "50" if "50" in arg else "25"
     order = [p for p in PAIRS if any(r["pair"] == p for r in tab)]  # fixed rows, all panels
 
@@ -98,9 +100,9 @@ def main():
                               markeredgecolor="#444", markersize=9, label="open marker = n.s. (p≥0.05)"))
     fig.legend(handles=handles, loc="outside lower center", ncol=4, fontsize=10.5,
                frameon=False)
+    cohort_lbl = f"all {n_an} animals (learners + non)" if pool else f"{n_an} learners"
     fig.suptitle(f"Directionality (IFI) & strength (CC) vs learning — three units of analysis "
-                 f"\n({binms} ms, {tag}, learners only, n={n_an} animals; "
-                 f"filled = p<0.05)", fontsize=12.5)
+                 f"\n({binms} ms, {tag}, {cohort_lbl}; filled = p<0.05)", fontsize=12.5)
     out = ATT / f"HCV1_CCA_{tag}_trajdims_bin{binms}.png"
     figstyle.save(fig, out)
     print(f"wrote {out.name}  ({len(tab)} pair×metric×axis cells, {n_an} animals)")

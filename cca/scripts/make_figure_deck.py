@@ -32,11 +32,22 @@ INK = RGBColor(0x23, 0x23, 0x1F)
 MUTED = RGBColor(0x7A, 0x79, 0x72)
 ACCENT = RGBColor(0x1F, 0x9E, 0x8F)
 
+# Figures to drop entirely (sweeps removed by request; KCCA kept to the verdict only).
+def SKIP(s):
+    if "sweep" in s:
+        return True
+    if "kcca" in s and "vs_linear" not in s and "early" not in s:
+        return True
+    return False
+
+
 # Ordered sections: (title, subtitle, predicate on lowercase filename stem).
 # First match wins, so put the specific (KCCA, early) before the generic.
 SECTIONS = [
     ("Graphical abstract", "the one-slide story",
      lambda s: "graphical_abstract" in s),
+    ("Statistics at a glance", "summary tables — learners vs pooled, colour-coded",
+     lambda s: "stats_" in s),
     ("Levels — the coupling hierarchy", "held-out CC / n_sig / IFI per area pair",
      lambda s: "_levels" in s and "kcca" not in s),
     ("Strength & sparsity vs learning", "trajectory, animals-as-n (25 ms unless noted)",
@@ -51,12 +62,10 @@ SECTIONS = [
      lambda s: "rotation" in s and "kcca" not in s),
     ("Transition — uncued → cued", "within-session block contrast",
      lambda s: "transition" in s and "kcca" not in s),
-    ("Nonlinear (kernel) CCA", "is the subspace linear? (KCCA vs linear)",
-     lambda s: "kcca" in s and "early" not in s),
+    ("Nonlinear (kernel) CCA — verdict", "largely linear (KCCA ≈ linear); rest dropped for now",
+     lambda s: "kcca" in s and "vs_linear" in s and "early" not in s),
     ("The first ~10 trials", "very-early-trial readouts (block & projected)",
      lambda s: "early" in s),
-    ("Spatial sweeps", "anatomical-distance controls",
-     lambda s: "sweep" in s),
 ]
 
 PRETTY = {
@@ -83,7 +92,7 @@ def prettify(stem: str) -> str:
 
 
 def collect():
-    figs = sorted(ATT.glob("HCV1_*.png")) + sorted(SWEEPS.glob("*.png"))
+    figs = [f for f in sorted(ATT.glob("HCV1_*.png")) if not SKIP(f.stem.lower())]
     assigned, sectioned = set(), [(t, sub, []) for t, sub, _ in SECTIONS]
     for f in figs:
         s = f.stem.lower()
