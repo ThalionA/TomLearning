@@ -1,0 +1,74 @@
+trajectory_w15_bin25_dims.csv: 37610 dim-rows, 16 animals; 3083 significant learner dim-windows
+
+============================================================================================
+[ifi vs trial_frac]  ANIMALS-as-n (signed-rank) | dims-as-n LMM (cluster) | dims-as-n OLS (inflated)
+============================================================================================
+  CA1-RSC  n_an=8  n_dimwin=362  | ANIM med=+0.001 p=0.95  | LMM b=+0.001 p=0.89  | OLS b=+0.010 p=0.038*
+  CA1-CA3  n_an=6  n_dimwin=337  | ANIM med=+0.006 p=1  | LMM b=+0.001 p=0.91  | OLS b=+0.000 p=0.98 
+  CA1-DG   n_an=8  n_dimwin=627  | ANIM med=-0.006 p=0.64  | LMM b=-0.004 p=0.61  | OLS b=-0.006 p=0.26 
+  CA1-V1   n_an=9  n_dimwin=457  | ANIM med=+0.016 p=0.098  | LMM b=+0.011 p=0.021* | OLS b=+0.012 p=0.021*
+  CA3-DG   n_an=4  n_dimwin=390  | ANIM med=+0.036 p=0.25  | LMM b=+0.026 p=0.037* | OLS b=+0.025 p=5.6e-05*
+  CA1-SUB  n_an=4  n_dimwin=354  | ANIM med=-0.001 p=0.88  | LMM b=-0.003 p=0.72  | OLS b=-0.001 p=0.81 
+  RSC-SUB  n_an=4  n_dimwin=235  | ANIM med=-0.012 p=0.62  | LMM b=-0.023 p=0.27  | OLS b=+0.003 p=0.61 
+  V1-RSC   n_an=6  n_dimwin=321  | ANIM med=+0.006 p=1  | LMM b=+0.002 p=0.82  | OLS b=-0.005 p=0.44 
+
+============================================================================================
+[ifi vs lp_rel]  ANIMALS-as-n (signed-rank) | dims-as-n LMM (cluster) | dims-as-n OLS (inflated)
+============================================================================================
+  CA1-RSC  n_an=8  n_dimwin=362  | ANIM med=+0.000 p=1  | LMM b=+0.000 p=1  | OLS b=+0.000 p=0.77 
+  CA1-CA3  n_an=6  n_dimwin=337  | ANIM med=+0.000 p=0.84  | LMM b=-0.000 p=0.98  | OLS b=-0.000 p=1.5e-20*
+  CA1-DG   n_an=8  n_dimwin=627  | ANIM med=-0.000 p=0.64  | LMM b=-0.000 p=0.76  | OLS b=-0.000 p=5.8e-06*
+  CA1-V1   n_an=9  n_dimwin=457  | ANIM med=+0.000 p=0.039* | LMM b=+0.000 p=0.59  | OLS b=+0.000 p=0.038*
+  CA3-DG   n_an=4  n_dimwin=390  | ANIM med=+0.000 p=0.25  | LMM b=+0.000 p=0.039* | OLS b=+0.000 p=1.1e-19*
+  CA1-SUB  n_an=4  n_dimwin=354  | ANIM med=-0.000 p=0.88  | LMM b=-0.000 p=0.92  | OLS b=+0.000 p=0.79 
+  RSC-SUB  n_an=4  n_dimwin=235  | ANIM med=-0.000 p=0.62  | LMM b=-0.000 p=0.19  | OLS b=+0.000 p=0.47 
+  V1-RSC   n_an=6  n_dimwin=321  | ANIM med=+0.000 p=1  | LMM b=+0.000 p=0.85  | OLS b=-0.000 p=0.32 
+
+============================================================================================
+[ifi vs performance]  ANIMALS-as-n (signed-rank) | dims-as-n LMM (cluster) | dims-as-n OLS (inflated)
+============================================================================================
+  CA1-RSC  n_an=8  n_dimwin=362  | ANIM med=+0.010 p=0.25  | LMM b=+0.005 p=0.45  | OLS b=+0.002 p=0.76 
+  CA1-CA3  n_an=6  n_dimwin=337  | ANIM med=+0.009 p=0.56  | LMM b=+0.006 p=0.47  | OLS b=+0.008 p=0.3 
+  CA1-DG   n_an=8  n_dimwin=627  | ANIM med=-0.005 p=0.31  | LMM b=-0.005 p=0.33  | OLS b=+0.005 p=0.32 
+  CA1-V1   n_an=9  n_dimwin=457  | ANIM med=+0.014 p=0.012* | LMM b=+0.013 p=0.074  | OLS b=+0.004 p=0.42 
+  CA3-DG   n_an=4  n_dimwin=390  | ANIM med=+0.013 p=0.62  | LMM b=+0.012 p=0.45  | OLS b=-0.002 p=0.72 
+  CA1-SUB  n_an=4  n_dimwin=354  | ANIM med=-0.000 p=0.88  | LMM b=-0.010 p=0.48  | OLS b=-0.002 p=0.68 
+  RSC-SUB  n_an=4  n_dimwin=235  | ANIM med=+0.001 p=1  | LMM b=-0.025 p=0.45  | OLS b=+0.011 p=0.092 
+  V1-RSC   n_an=6  n_dimwin=321  | ANIM med=-0.004 p=0.44  | LMM b=+0.001 p=0.91  | OLS b=-0.007 p=0.33 
+
+============================================================================================
+[cc vs trial_frac]  ANIMALS-as-n (signed-rank) | dims-as-n LMM (cluster) | dims-as-n OLS (inflated)
+============================================================================================
+  CA1-RSC  n_an=8  n_dimwin=362  | ANIM med=-0.007 p=0.95  | LMM b=-0.004 p=0.89  | OLS b=-0.025 p=0.19 
+  CA1-CA3  n_an=6  n_dimwin=337  | ANIM med=-0.000 p=0.69  | LMM b=-0.019 p=0.74  | OLS b=-0.005 p=0.85 
+  CA1-DG   n_an=8  n_dimwin=627  | ANIM med=-0.001 p=0.95  | LMM b=+0.009 p=0.69  | OLS b=-0.000 p=0.99 
+  CA1-V1   n_an=9  n_dimwin=457  | ANIM med=+0.015 p=0.82  | LMM b=-0.008 p=0.67  | OLS b=-0.005 p=0.71 
+  CA3-DG   n_an=4  n_dimwin=390  | ANIM med=-0.026 p=0.88  | LMM b=-0.003 p=0.92  | OLS b=+0.001 p=0.96 
+  CA1-SUB  n_an=4  n_dimwin=354  | ANIM med=-0.038 p=0.12  | LMM b=-0.030 p=0.091  | OLS b=-0.028 p=0.072 
+  RSC-SUB  n_an=4  n_dimwin=235  | ANIM med=+0.009 p=0.62  | LMM b=-0.003 p=0.94  | OLS b=-0.071 p=0.0074*
+  V1-RSC   n_an=6  n_dimwin=321  | ANIM med=+0.026 p=0.44  | LMM b=+0.024 p=0.23  | OLS b=-0.010 p=0.71 
+
+============================================================================================
+[cc vs lp_rel]  ANIMALS-as-n (signed-rank) | dims-as-n LMM (cluster) | dims-as-n OLS (inflated)
+============================================================================================
+  CA1-RSC  n_an=8  n_dimwin=362  | ANIM med=-0.000 p=0.84  | LMM b=-0.000 p=0.48  | OLS b=-0.000 p=0.00045*
+  CA1-CA3  n_an=6  n_dimwin=337  | ANIM med=+0.000 p=0.84  | LMM b=+0.000 p=0.72  | OLS b=+0.000 p=0.31 
+  CA1-DG   n_an=8  n_dimwin=627  | ANIM med=-0.000 p=1  | LMM b=+0.000 p=0.99  | OLS b=+0.000 p=0.47 
+  CA1-V1   n_an=9  n_dimwin=457  | ANIM med=+0.000 p=0.57  | LMM b=-0.000 p=0.76  | OLS b=-0.000 p=1.6e-06*
+  CA3-DG   n_an=4  n_dimwin=390  | ANIM med=-0.000 p=0.88  | LMM b=-0.000 p=1  | OLS b=-0.000 p=0.015*
+  CA1-SUB  n_an=4  n_dimwin=354  | ANIM med=-0.000 p=0.12  | LMM b=-0.000 p=0.98  | OLS b=-0.000 p=0.011*
+  RSC-SUB  n_an=4  n_dimwin=235  | ANIM med=+0.000 p=0.62  | LMM b=-0.000 p=0.54  | OLS b=-0.001 p=1.7e-06*
+  V1-RSC   n_an=6  n_dimwin=321  | ANIM med=+0.000 p=0.31  | LMM b=+nan p=nan  | OLS b=-0.001 p=2.1e-07*
+
+============================================================================================
+[cc vs performance]  ANIMALS-as-n (signed-rank) | dims-as-n LMM (cluster) | dims-as-n OLS (inflated)
+============================================================================================
+  CA1-RSC  n_an=8  n_dimwin=362  | ANIM med=-0.022 p=0.84  | LMM b=+0.002 p=0.94  | OLS b=+0.030 p=0.13 
+  CA1-CA3  n_an=6  n_dimwin=337  | ANIM med=-0.006 p=0.84  | LMM b=-0.018 p=0.69  | OLS b=-0.010 p=0.7 
+  CA1-DG   n_an=8  n_dimwin=627  | ANIM med=-0.016 p=0.64  | LMM b=+0.005 p=0.82  | OLS b=+0.001 p=0.92 
+  CA1-V1   n_an=9  n_dimwin=457  | ANIM med=+0.029 p=0.43  | LMM b=+0.022 p=0.46  | OLS b=-0.016 p=0.28 
+  CA3-DG   n_an=4  n_dimwin=390  | ANIM med=-0.015 p=0.62  | LMM b=+nan p=nan  | OLS b=-0.006 p=0.77 
+  CA1-SUB  n_an=4  n_dimwin=354  | ANIM med=-0.017 p=0.88  | LMM b=-0.003 p=0.9  | OLS b=+0.009 p=0.57 
+  RSC-SUB  n_an=4  n_dimwin=235  | ANIM med=+0.005 p=0.88  | LMM b=-0.011 p=0.69  | OLS b=-0.034 p=0.22 
+  V1-RSC   n_an=6  n_dimwin=321  | ANIM med=+0.105 p=0.094  | LMM b=+0.068 p=0.056  | OLS b=-0.001 p=0.98 
+

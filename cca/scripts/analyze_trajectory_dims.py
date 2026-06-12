@@ -65,7 +65,8 @@ def load(arg=""):
     """Read the per-dim trajectory CSV named by ``arg`` (``""``=25 ms FS-excl)."""
     binms = "50" if "50" in arg else "25"
     suffix = "_fsincl" if "fsincl" in arg else ""
-    path = config.RESULTS_DIR / f"trajectory_w15_bin{binms}{suffix}_dims.csv"
+    # driver writes "{out}_dims{suffix}.csv" → _dims BEFORE _fsincl (run_trajectory.py)
+    path = config.RESULTS_DIR / f"trajectory_w15_bin{binms}_dims{suffix}.csv"
     if not path.is_file():
         return None, path
     return pd.read_csv(path), path
