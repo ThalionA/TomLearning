@@ -34,6 +34,14 @@ unchanged. **Outputs are bin-tagged** (`trajectory_w15_bin10*`, `epoch_metrics_b
 `results/run10_{fsexcl,fsincl}.log`), each sequential: ifi-sweep → trajectory → epochs → transition.
 ~12 h wall-clock (64 GB RAM ample, 16 cores, OMP capped 4/proc). **Smoke test PASSED** — 10 ms
 gives valid finite CCA/IFI. Completion watcher **b2u68781m**.
+- **SLOW — `run_ifi_windows` & `run_epochs` have NO sample cap** (trajectory/transition cap at
+  MAX_SAMPLES=6000). At 10 ms the sweep refits CCA at 51 lags × 5 folds over the **whole ~800k-bin
+  session** → ~70 min/animal on large sessions; 9 h in, only 11/16 on stage 1. **Decision (user):
+  LET IT RIDE** — no cap, no restart (keep the 9 h, full-session lag curve). Revised ETA ~10–12 h
+  more (done ~midday 06-13). **WATCH:** epochs (stage 3) is also uncapped — it uses max_lag=5 (11
+  lags, lighter) on per-epoch data (smaller than the full session), so likely OK, but if stage 3
+  stalls, surface the cap option again (don't cap unilaterally — user chose no methodology change).
+  Capping for a *future* run would be ~120k whole-trial-preserving bins (ample for a stable curve).
 - **GOTCHA (cost an early restart):** the first launch used `run_in_background:true` for both batches
   **plus** a smoke watcher = 3 harness-tracked tasks; the harness **evicted** a batch (≈2-task limit)
   ~14 min in (NOT OOM — 64 GB, 87 % free). Fix: launch long compute **fully detached**
