@@ -33,7 +33,9 @@ N_FOLDS = 4
 N_SHUFFLES = config.SURROGATE_SHUFFLES   # centralised (see config)
 MAX_LAG = 8
 ROT_DIMS = 3
-MAX_SAMPLES = 6000            # cap matched block size (speed; stays >> 50*K)
+MAX_SAMPLES_MS = 150_000      # cap matched block at 150 s of running, NOT a fixed bin
+                             # count (=6000 @25ms, but only 60s @10ms → too few trials for
+                             # the trial-based cued CV → NaN held-out CC). bins = ms // bin_ms.
 WORLD_UNCUED, WORLD_CUED = 4, 3
 DELTAS = ["cc1", "n_sig", "mi_sig", "ifi", "optimal_lag", "gini_x", "gini_y"]
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
@@ -76,6 +78,7 @@ def main():
     p.add_argument("--include-fs", action="store_true")
     args = p.parse_args()
     max_lag = args.max_lag
+    max_samples = MAX_SAMPLES_MS // args.bin_ms      # 6000 @25ms, 15000 @10ms (≈150 s)
     suffix = f"{args.tag}{'_fsincl' if args.include_fs else ''}"
     cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
                               exclude_fast_spiking=not args.include_fs)
@@ -101,7 +104,7 @@ def main():
             continue
         is_learner = a.animal_id in entries
         cue_idx = np.where(cue)[0]
-        m = int(min(unc.sum(), cue_idx.size, MAX_SAMPLES))
+        m = int(min(unc.sum(), cue_idx.size, max_samples))
         cue_early = np.zeros(n_bins, bool); cue_early[cue_idx[:m]] = True
         unc_idx = np.where(unc)[0]
         if unc_idx.size > m:
@@ -170,14 +173,14 @@ def main():
     with open(rdir / f"transition_uncued_cued{suffix}.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n")
         w.writeheader(); w.writerows(rows)
-    print(f"\nwrote {rdir/'transition_uncued_cued.csv'} ({len(rows)} rows)\n")
+    print(f"\nwrote {rdir/f'transition_uncued_cued{suffix}.csv'} ({len(rows)} rows)\n")
 
     dcols = ["animal", "learner", "pair", "dim", "unc_cc", "cue_cc", "d_cc",
              "unc_ifi", "cue_ifi", "d_ifi", "unc_lag", "cue_lag", "unc_sig", "cue_sig"]
     with open(rdir / f"transition_dims{suffix}.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=dcols, lineterminator="\n")
         w.writeheader(); w.writerows(dim_rows)
-    print(f"wrote {rdir/'transition_dims.csv'} ({len(dim_rows)} dim-rows)\n")
+    print(f"wrote {rdir/f'transition_dims{suffix}.csv'} ({len(dim_rows)} dim-rows)\n")
 
     def dims_table(subset, title):
         """dims-as-n: pool SIGNIFICANT canonical dims across animals; signed-rank on
