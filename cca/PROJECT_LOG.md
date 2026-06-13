@@ -11,7 +11,21 @@ narrative + state of play.**
 
 ---
 
-## ⏳ RUNNING (2026-06-12) — 10 ms full-suite re-run, both FS (directionality focus)
+## ✓ DONE (2026-06-13) — 10 ms full-suite re-run, both FS → report §8 + bin10 figures + deck
+
+**RESULT (committed f4de18c; report §8 has the complete pair-by-pair tables, every metric ×
+comparison × pair × both FS).** The 25 ms dissociation **reproduces** at 10 ms: hierarchy holds
+(CCs lower — sparser bins — but same ordering); **coupling strength flat** (no slope, no
+naive→expert); **no reorientation** (CC1 rotation ≤ floor); **de-sparsification robust, if anything
+stronger** (Gini↓ CA1-RSC p<0.001 + most pairs). **Directionality sharpens** — three FS-robust
+*tight-lag* flows (curves peak ≤±50 ms, Table C): **CA1→RSC** (p=0.001), **V1→RSC** (p=0.01–0.02 —
+only a *tendency* at 25 ms; newly resolved), **SUB→CA1** (p=0.006). Flows **coherent across canonical
+dims** (Table D) except **CA3–DG flips** (dominant CA3→DG, sub-dominant DG→CA3 — bidirectional).
+Directional **change** with learning is **underpowered, not absent**: null by slope AND naive→expert,
+but V1–RSC keeps its naive→expert decrease (Δ=−0.027, n=6, p=0.16) — same direction/size as 25 ms.
+`analyze_bin10_full.py` regenerates the tables; figs are bin-tagged (`*_bin10*`); deck = 147 slides;
+graphical abstract updated (3 solid flow arrows). **25 ms stays the magnitude reference** (10 ms CCs
+lower). Outstanding: transition FS-incl re-ran clean (59 rows) after the time-based cap fix.
 
 **Why.** Directionality picture needs finer temporal resolution. Decision (user): re-run the
 **full suite at 10 ms, both FS**; **headline IFI integrates over ±50 ms**, but the IFI window
