@@ -63,7 +63,7 @@ def _per_animal_slopes(g, metric, axis):
 
 def load(arg=""):
     """Read the per-dim trajectory CSV named by ``arg`` (``""``=25 ms FS-excl)."""
-    binms = "50" if "50" in arg else "25"
+    binms = "10" if "10" in arg else ("50" if "50" in arg else "25")
     suffix = "_fsincl" if "fsincl" in arg else ""
     # driver writes "{out}_dims{suffix}.csv" → _dims BEFORE _fsincl (run_trajectory.py)
     path = config.RESULTS_DIR / f"trajectory_w15_bin{binms}_dims{suffix}.csv"

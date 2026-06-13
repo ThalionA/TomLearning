@@ -91,7 +91,9 @@ def main():
     fig.suptitle(f"Subspace rotation stays at/below the split-half noise floor — no reorientation — "
                  f"{cohort}\n(bars = mean ± SEM over animals; dots = animals; "
                  "* = rotation sig. BELOW floor, signed-rank)", fontsize=11)
-    out = f"HCV1_CCA_fsexcl{'_pooled' if pool else ''}_rotation_cc1"
+    binms = "10" if "bin10" in stem else ("25" if "bin25" in stem else "50")
+    bintag = "" if binms == "50" else f"_bin{binms}"   # bin50 keeps the legacy report name
+    out = f"HCV1_CCA_fsexcl{'_pooled' if pool else ''}{bintag}_rotation_cc1"
     figstyle.save(fig, ATT / out)
     print(f"wrote {out}.{{png,svg}} ->", ATT)
 

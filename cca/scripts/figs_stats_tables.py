@@ -78,7 +78,7 @@ def learning_slopes(stem, tag):
                 s, pv, n = _slope_quant(_cohort(df, pool), metric, "trial_frac", p)
                 cells.append(_cell(s, pv, n))
         rows.append((p, cells))
-    binms = "50" if "50" in stem else "25"
+    binms = "10" if "10" in stem else ("50" if "50" in stem else "25")
     _table_fig(f"Learning-axis slopes vs trial-fraction — {tag} ({binms} ms)",
                heads, rows, f"HCV1_stats_slopes_{tag}_bin{binms}.png",
                "signed-rank on per-animal slopes vs 0 · green = p<0.05 "
@@ -87,7 +87,8 @@ def learning_slopes(stem, tag):
 
 def directionality(stem, tag):
     """Held-out IFI window-sweep summary (cleanest window per pair)."""
-    p = config.RESULTS_DIR / f"ifi_windows_bin25{'_fsincl' if tag == 'fsincl' else ''}.csv"
+    binms = "10" if "10" in stem else ("50" if "50" in stem else "25")
+    p = config.RESULTS_DIR / f"ifi_windows_bin{binms}{'_fsincl' if tag == 'fsincl' else ''}.csv"
     if not p.is_file():
         print(f"  (missing {p.name} — skip directionality table)"); return
     d = pd.read_csv(p)
@@ -112,8 +113,8 @@ def directionality(stem, tag):
         star, _ = _stars(bp)
         rows.append((pair, [(f"±{bw} ms", "#23231f"),
                             (f"{bm:+.3f}", col), (f"{bt:.2f}", col), (star, col)]))
-    _table_fig(f"Directionality — held-out IFI window sweep — {tag} (25 ms)",
-               heads, rows, f"HCV1_stats_directionality_{tag}_bin25.png",
+    _table_fig(f"Directionality — held-out IFI window sweep — {tag} ({binms} ms)",
+               heads, rows, f"HCV1_stats_directionality_{tag}_bin{binms}.png",
                "per pair, the lag-integration window maximising |t| (held-out, segment-aware) · "
                "green = p<0.05 · CA1→RSC is the a-priori, robust flow")
 

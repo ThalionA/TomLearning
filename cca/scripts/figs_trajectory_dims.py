@@ -83,7 +83,7 @@ def main():
     n_an = cohort["animal"].nunique()
     tab = compute_table(df, pool=pool)
     tag = ("fsincl" if "fsincl" in arg else "fsexcl") + ("_pooled" if pool else "")
-    binms = "50" if "50" in arg else "25"
+    binms = "10" if "10" in arg else ("50" if "50" in arg else "25")
     order = [p for p in PAIRS if any(r["pair"] == p for r in tab)]  # fixed rows, all panels
 
     fig, axes = plt.subplots(2, len(AXES), figsize=(4.4 * len(AXES), 8.4))

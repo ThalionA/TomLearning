@@ -70,7 +70,8 @@ def _fig(df, bin_ms, tag):
 def main():
     ATT.mkdir(parents=True, exist_ok=True)
     any_done = False
-    for binms in ("25", "50"):
+    bins = [a for a in sys.argv[1:] if a in ("10", "25", "50")] or ["25", "50"]
+    for binms in bins:
         for suffix, tag in (("", f"bin{binms}_fsexcl"), ("_fsincl", f"bin{binms}_fsincl")):
             path = config.RESULTS_DIR / f"ifi_windows_bin{binms}{suffix}.csv"
             if not path.is_file():

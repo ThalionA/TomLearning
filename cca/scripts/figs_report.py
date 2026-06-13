@@ -132,8 +132,11 @@ def _cohort(df, pool):
     return df if pool else df[df["learner"] == 1]
 
 
+BINTAG = ""   # set in main() from the stem (e.g. "_bin10") so bins don't collide
+
+
 def _ptag(tag, pool):
-    return f"{tag}_pooled" if pool else tag
+    return f"{tag}{'_pooled' if pool else ''}{BINTAG}"
 
 
 def _clabel(df, pool):
@@ -263,8 +266,8 @@ def fig_ifi_traj(df, tag, pool=False):
 
 
 def fig_transition(pool=False):
-    path = RES / "transition_uncued_cued.csv"
-    if not path.is_file():
+    path = RES / f"transition_uncued_cued{BINTAG}.csv"
+    if not path.is_file() or path.stat().st_size < 50:
         return
     t = pd.read_csv(path)
     data = _cohort(t, pool)
@@ -279,7 +282,7 @@ def fig_transition(pool=False):
                         f"{lab}: uncued→cued", star_p=star)
     fig.suptitle(f"Uncued→cued transition — {_clabel(t, pool)}\n(points = animals, bar = mean ± "
                  "SEM · signed-rank vs 0: * p<.05  ** p<.01  *** p<.001)", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_CCA_transition{'_pooled' if pool else ''}.png")
+    figstyle.save(fig, ATT / f"HCV1_CCA_transition{BINTAG}{'_pooled' if pool else ''}.png")
 
 
 def fig_direction(df, tag, pool=False):
@@ -380,7 +383,7 @@ def fig_learner_vs_non(df, tag, metric="gini_x", axis="trial_frac"):
     ax.set_ylabel(f"median slope d({metric})/d({axis})")
     ax.set_title(f"Learners vs non-learners — {metric} slope — {tag}", fontsize=10)
     ax.legend(fontsize=8)
-    figstyle.save(fig, ATT / f"HCV1_CCA_{tag}_learnervsnon_{metric}.png")
+    figstyle.save(fig, ATT / f"HCV1_CCA_{_ptag(tag, False)}_learnervsnon_{metric}.png")
 
 
 def make_all(csv, tag):
@@ -403,6 +406,8 @@ def main():
     # optional positional arg: trajectory CSV stem (default = committed; pass e.g.
     # "trajectory_w15_bin25" for the window=15 re-run)
     stem = sys.argv[1] if len(sys.argv) > 1 else "trajectory_windows"
+    global BINTAG
+    BINTAG = "_bin10" if "bin10" in stem else ("_bin50" if "bin50" in stem else "")
     for suffix, tag in [("", "fsexcl"), ("_fsincl", "fsincl")]:
         csv = RES / f"{stem}{suffix}.csv"
         if csv.is_file():
