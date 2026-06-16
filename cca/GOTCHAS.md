@@ -53,3 +53,10 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   unattended compute, launch it **fully detached** so it isn't a harness task:
   `(nohup bash run.sh >/dev/null 2>&1 </dev/null &)` → reparents to launchd (PPID 1, new session),
   survives. Keep at most ~1 `run_in_background` watcher alongside.
+
+- **`_load_temporal_streams` cache key must include every cfg field that changes the binned
+  output.** It was keyed on `(animal_id, temporal_bin_ms)` only; adding `gaussian_sd_ms` (spike
+  smoothing) without adding it to the key meant a second load with a different σ returned the
+  STALE cached array — a smoothing validation silently showed "no effect" (identical CC) until the
+  key was fixed (2026-06-13). Any new cfg field that alters `spikes_50ms` (smoothing, rebin mode,
+  unit selection) must be added to the cache key in `dataio._load_temporal_streams`.
