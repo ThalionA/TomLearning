@@ -39,6 +39,8 @@ def parse_args():
                    help="IFI lag half-width in BINS (±50 ms headline at 10 ms = 5)")
     p.add_argument("--tag", default="",
                    help="filename tag to avoid clobber across bins, e.g. _bin10")
+    p.add_argument("--smooth-ms", type=float, default=0.0,
+                   help="Gaussian s.d. (ms) for spike-train smoothing (Buzsáki = 2.5)")
     p.add_argument("--include-fs", action="store_true")
     return p.parse_args()
 
@@ -46,7 +48,8 @@ def parse_args():
 def main():
     args = parse_args()
     cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs)
+                              exclude_fast_spiking=not args.include_fs,
+                              gaussian_sd_ms=args.smooth_ms)
     suffix = "_fsincl" if args.include_fs else ""
     animals = dataio.load_animals(config.DATA_DIR)
     behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")

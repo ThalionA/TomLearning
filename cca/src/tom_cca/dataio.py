@@ -458,20 +458,26 @@ def area_tensor(animal: Animal, area: str, cfg) -> tuple[np.ndarray, np.ndarray]
 
 def rebin_spikes(spikes_1ms, bin_ms: int,
                  chunk_out_bins: int = 2000,
-                 max_1ms: int | None = None) -> np.ndarray:
+                 max_1ms: int | None = None,
+                 gaussian_sd_ms: float = 0.0) -> np.ndarray:
     """Sum 1 ms spike counts into ``bin_ms``-wide bins.
 
     ``(n_1ms, n_units) -> (n_bins, n_units)`` float32. An incomplete final
     bin is dropped.
 
+    If ``gaussian_sd_ms > 0`` the 1 ms spike train of each unit is first
+    convolved with a Gaussian of that s.d. (in ms = 1 ms samples), yielding a
+    smoothed spike-density, *then* integrated into the bins — the Gonzalez &
+    Buzsáki 2026 preprocessing ("convolved the spike times of each unit with a
+    Gaussian kernel with a 2.5 ms s.d. ... yielding smoothed spiking activity";
+    z-scoring is applied downstream). ``gaussian_filter1d`` conserves total mass,
+    so smoothed bins remain spike-count-scaled. A ±4σ halo per chunk removes
+    chunk-boundary edge effects (exact to numerical precision for σ≪chunk).
+
     Accepts either a numpy array or an h5py Dataset for ``spikes_1ms`` -- both
     support ``[start:stop]`` slicing and ``.shape``. Rebinning is done in
-    chunks of ``chunk_out_bins`` 50 ms bins so the intermediate float32 array
-    stays bounded (~80 MB at default values for 200 units; well under the
-    sandbox cap). The full 1 ms array is never materialised as float32.
-
-    ``max_1ms`` caps the input length (used when the 1 ms streams have been
-    trimmed for cross-stream alignment).
+    chunks of ``chunk_out_bins`` bins so the intermediate float32 array stays
+    bounded. ``max_1ms`` caps the input length (cross-stream alignment).
     """
     bin_ms = int(bin_ms)
     n_1ms = int(spikes_1ms.shape[0])
@@ -481,15 +487,22 @@ def rebin_spikes(spikes_1ms, bin_ms: int,
     n_bins = n_1ms // bin_ms
     if n_bins == 0:
         return np.zeros((0, n_units), dtype=np.float32)
+    smooth = float(gaussian_sd_ms) > 0
+    if smooth:
+        from scipy.ndimage import gaussian_filter1d
+        halo = int(np.ceil(4 * float(gaussian_sd_ms)))    # 1 ms samples
     out = np.empty((n_bins, n_units), dtype=np.float32)
     for start in range(0, n_bins, int(chunk_out_bins)):
         stop = min(start + int(chunk_out_bins), n_bins)
-        chunk = np.asarray(spikes_1ms[start * bin_ms : stop * bin_ms])
-        out[start:stop] = (
-            chunk.astype(np.float32)
-                 .reshape(stop - start, bin_ms, n_units)
-                 .sum(axis=1)
-        )
+        lo, hi = start * bin_ms, stop * bin_ms
+        if smooth:
+            a, b = max(0, lo - halo), min(n_1ms, hi + halo)
+            sm = gaussian_filter1d(np.asarray(spikes_1ms[a:b]).astype(np.float32),
+                                   sigma=float(gaussian_sd_ms), axis=0, mode="nearest")
+            chunk = sm[lo - a: lo - a + (hi - lo)]
+        else:
+            chunk = np.asarray(spikes_1ms[lo:hi]).astype(np.float32)
+        out[start:stop] = chunk.reshape(stop - start, bin_ms, n_units).sum(axis=1)
     return out
 
 
@@ -543,7 +556,7 @@ def _load_temporal_streams(animal: Animal, cfg) -> _TemporalStreams:
     Cache holds one animal at a time. Re-binning into ``cfg.temporal_bin_ms``
     happens on every reload (cache key includes the bin size).
     """
-    key = (animal.animal_id, int(cfg.temporal_bin_ms))
+    key = (animal.animal_id, int(cfg.temporal_bin_ms), float(getattr(cfg, "gaussian_sd_ms", 0.0)))
     cached = _TEMPORAL_CACHE.get(key)
     if cached is not None:
         return cached
@@ -570,7 +583,8 @@ def _load_temporal_streams(animal: Animal, cfg) -> _TemporalStreams:
         landmark_1ms = landmark_1ms[:n]
         # Chunked read directly from the h5py dataset -- the full 1.6 GB uint8
         # binned_spikes is never materialised in memory.
-        spikes_50ms = rebin_spikes(ds, bin_ms, max_1ms=n)
+        spikes_50ms = rebin_spikes(ds, bin_ms, max_1ms=n,
+                                   gaussian_sd_ms=getattr(cfg, "gaussian_sd_ms", 0.0))
 
     streams = _TemporalStreams(
         spikes_50ms=spikes_50ms,

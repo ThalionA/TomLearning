@@ -50,6 +50,9 @@ def parse_args():
     p.add_argument("--max-lag", type=int, default=MAX_LAG,
                    help="IFI lag-integration half-width in BINS (default 10 ≈ ±250 ms "
                         "at 25 ms). For the ±50 ms headline at 10 ms pass --max-lag 5.")
+    p.add_argument("--smooth-ms", type=float, default=0.0,
+                   help="Gaussian s.d. (ms) to smooth the 1 ms spike train before "
+                        "binning (Gonzalez & Buzsáki 2026 = 2.5). 0 = raw counts.")
     p.add_argument("--window", type=int, default=30)
     p.add_argument("--step", type=int, default=15)
     p.add_argument("--min-window", type=int, default=20)
@@ -97,7 +100,8 @@ FIELDS = ["animal", "learner", "pair", "center_trial", "trial_frac",
 def main():
     args = parse_args()
     cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs)
+                              exclude_fast_spiking=not args.include_fs,
+                              gaussian_sd_ms=args.smooth_ms)
     suffix = "_fsincl" if args.include_fs else ""
     animals = dataio.load_animals(config.DATA_DIR)
     behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")

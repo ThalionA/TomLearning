@@ -75,6 +75,8 @@ def main():
     p.add_argument("--max-lag", type=int, default=MAX_LAG,
                    help="IFI lag half-width in BINS (±50 ms headline at 10 ms = 5)")
     p.add_argument("--tag", default="", help="filename tag across bins, e.g. _bin10")
+    p.add_argument("--smooth-ms", type=float, default=0.0,
+                   help="Gaussian s.d. (ms) for spike-train smoothing (Buzsáki = 2.5)")
     p.add_argument("--include-fs", action="store_true")
     args = p.parse_args()
     max_lag = args.max_lag

@@ -43,6 +43,8 @@ def parse_args():
     p.add_argument("--max-lag", type=int, default=12,
                    help="widest lag (bins) of the sweep; windows run w=1..max-lag")
     p.add_argument("--out", default="", help="output CSV stem override")
+    p.add_argument("--smooth-ms", type=float, default=0.0,
+                   help="Gaussian s.d. (ms) for spike-train smoothing (Buzsáki = 2.5)")
     return p.parse_args()
 
 
@@ -56,7 +58,8 @@ def _pca_scores(M, k):
 def main():
     args = parse_args()
     cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs)
+                              exclude_fast_spiking=not args.include_fs,
+                              gaussian_sd_ms=args.smooth_ms)
     suffix = "_fsincl" if args.include_fs else ""
     stem = args.out or f"ifi_windows_bin{args.bin_ms}{suffix}"
     animals = dataio.load_animals(config.DATA_DIR)

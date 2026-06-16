@@ -184,6 +184,10 @@ class Config:
     bin_mode: str = "spatial"
     # Locked at 50 ms (Tom MATLAB-v6 alignment). Not on the temporal sweep grid.
     temporal_bin_ms: int = 50
+    # Gaussian s.d. (ms) for convolving the 1 ms spike train before binning, to a
+    # smoothed spike-density. 0 = raw summed counts (legacy). Gonzalez & Buzsáki
+    # 2026 use 2.5 ms; set via the drivers' --smooth-ms flag.
+    gaussian_sd_ms: float = 0.0
     # Lag ranges expressed in ms so the physical directionality window stays
     # constant if bin width ever changes.
     lag_ms: int = 500              # Arm A: +-500 ms = +-10 bins at 50 ms
