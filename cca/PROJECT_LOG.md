@@ -11,6 +11,33 @@ narrative + state of play.**
 
 ---
 
+## ⏳ RUNNING (2026-06-13) — Gaussian-smoothed (Buzsáki) 10 ms re-run, both FS
+
+**Why.** Align preprocessing with the cited paper. **Gonzalez & Buzsáki 2026 Methods** ("Preprocessing
+single-unit spiking", read from Zotero `IQYYYVBB`): *convolve each unit's spike train with a Gaussian
+**2.5 ms s.d.** → smoothed spiking activity → z-score (subtract mean rate / divide by s.d.); bins
+tested 0.8/8/40 ms* (our 10 ms ≈ their 8 ms primary). **NB:** the `_gf` data fields are **gap-filled**
+behaviour/spatial, NOT a smoothed temporal stream — there is no pre-smoothed spike stream, so we
+compute it. (The `HC_V1_Code/` MATLAB is NOT Tom's — disregarded.)
+
+**Implemented (committed 69dfe44).** `rebin_spikes(gaussian_sd_ms=)` convolves the 1 ms train per
+unit (`gaussian_filter1d`, ±4σ halo, mass-conserving) before binning; `cfg.gaussian_sd_ms` +
+`--smooth-ms` on all 4 drivers; cache key now includes σ (it omitted it → first validation hit a
+stale cache). σ=0 byte-identical to raw (38 dataio tests pass). **Validation** (animal 28, CA1–V1,
+10 ms): σ=2.5 raises held-out CC₁ **0.121→0.151** (denoises sparse bins) while **n_sig & IFI hold**
+(tight kernel preserves the ±50 ms directionality) — the intended effect.
+
+**Launched (detached, both FS, `--smooth-ms 2.5`).** Batches `/tmp/run10sm_{fsexcl,fsincl}.sh`, logs
+`results/run10sm_{fsexcl,fsincl}.log`; ifi-sweep → trajectory → epochs → transition. **Overwrites the
+`*_bin10*` outputs** — 10 ms now means *Buzsáki-smoothed* (prior raw-count 10 ms is commit f4de18c).
+~12–16 h (sweep is the uncapped slow stage, as before). Expect CCs up (less magnitude-compression),
+directionality + de-sparsification + nulls preserved.
+
+**NEXT when both DONE.** Re-run `analyze_bin10_full.py` (tables) + all bin10 figures + re-splice §8 +
+deck + abstract on the smoothed data; update §8 prose ("10 ms now Buzsáki σ=2.5 ms smoothed; CCs no
+longer magnitude-compressed"). Detached run survives turn boundaries; `run_in_background` watchers do
+not — poll the logs on check-in.
+
 ## ✓ DONE (2026-06-13) — 10 ms full-suite re-run, both FS → report §8 + bin10 figures + deck
 
 **RESULT (committed f4de18c; report §8 has the complete pair-by-pair tables, every metric ×
