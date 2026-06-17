@@ -11,6 +11,27 @@ narrative + state of play.**
 
 ---
 
+## ⏳ IN PROGRESS (2026-06-17) — Tom's meeting plots (smoothed 10 ms, FS-included)
+
+Tom's request (Slack): paired plots on the smoothed data for a meeting next week. **Built & in the
+vault (`figs_paired.py`, committed):** 12 paired-panel figures (per pair, per-animal connected dots,
+mean±SEM, paired t+Wilcoxon) — naïve-vs-trained (learners) for cc1/n_sig/ifi/gini_x/mincc, and
+uncued-vs-cued for the same (learners) + cc1/mincc (all animals). `mincc` = mean held-out CC over the
+**min # of sig dims** shared by the two conditions.
+**Tom's Qs answered:** (1) Gini(area X) = Gini coeff of the dominant-dim canonical weight vector
+(membership.gini, N/(N-1) corr); (2) d(metric)/d(trial_frac) = per-animal least-squares slope vs
+session-fraction; (3) page-15 V1→CA1-when-cued **does NOT hold at ±50 ms smoothed** (CA1-V1 Δ=-0.001
+p=0.96; the V1→CA1 lead was a wide-window 25 ms feature). Cued trends are toward CA1 *leading*.
+**Tom's 3 directives:** (1) **Gini per AREA across all partners** (not per pair) → aggregate each
+area's per-neuron `contrib` across its partner pairs (partner-normalised), then Gini; (2) **save
+weights** → done (contrib export added to run_epochs/run_transition, committed; **re-run IN FLIGHT**
+smoothed FS-incl → `epoch_weights_bin10_fsincl`/`transition_weights_bin10_fsincl`); (3) **5-trial
+bins** [1-5,6-10,…,26-30] for the trial-resolved plots.
+**STILL TO BUILD:** (a) 5-trial-bin trajectory driver (metrics + contrib; learners + non; B/D);
+(b) per-area Gini computation + plots (recompute, supersedes per-pair gini_x in the panels);
+(c) weight CDF (Fig 4b style, mean±SEM) naïve-vs-trained + uncued-vs-cued; (d) FS-incl/learners
+abstract variant (A). (a)/(c) need the contrib re-run (in flight) + a 5-trial-bin run.
+
 ## ⏳ RUNNING (2026-06-13) — Gaussian-smoothed (Buzsáki) 10 ms re-run, both FS
 
 **Why.** Align preprocessing with the cited paper. **Gonzalez & Buzsáki 2026 Methods** ("Preprocessing
