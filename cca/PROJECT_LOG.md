@@ -37,10 +37,15 @@ epoch + **paired** contrasts (2.13), early-trials (2.14), transition (2.15), **u
 (animals-as-n vs dims-as-n) + stats + pooled-vs-learners** (2.16), KCCA pointer (2.17). All stale
 §2.x cross-refs in §3/§4/§5/§8 + status box remapped to the new numbering.
 
-**STILL TO BUILD:** (a) 5-trial-bin trajectory driver (metrics + contrib; learners + non; B/D);
-(b) per-area Gini computation + plots (recompute, supersedes per-pair gini_x in the panels);
-(c) weight CDF (Fig 4b style, mean±SEM) naïve-vs-trained + uncued-vs-cued; (d) FS-incl/learners
-abstract variant (A). (a)/(c) need the contrib re-run (in flight) + a 5-trial-bin run.
+**DONE since:** contrib re-run finished (epoch_weights/transition_weights_bin10_fsincl). Built
+(committed): **per-area Gini across partners** (`figs_area_gini.py`) + **weight CDF (Fig-4b Lorenz)**
+for BOTH naïve-vs-trained and uncued-vs-cued (supersedes per-pair gini panel). **5-trial-bin driver**
+`run_trajectory_bins.py` (metrics + dims + contrib, learners + non, fixed [1-5..26-30] bins) written
++ **launched smoothed FS-incl (detached, ~1-2 h)** → `trajectory_bins_bin10_fsincl{,_dims,_weights}`.
+Methods §2 rewritten thorough (17 subsections; vault, uncommitted).
+**STILL TO BUILD:** (b) B/D metric-vs-trial-bin plots (cc1/n_sig/ifi/per-area-gini/mincc over the 6
+bins, learners vs non) — needs the 5-trial-bin run (in flight); (a) FS-incl/learners summary-schema
+variant. Then assemble Tom's deck/figure set.
 
 ## ⏳ RUNNING (2026-06-13) — Gaussian-smoothed (Buzsáki) 10 ms re-run, both FS
 
