@@ -60,6 +60,7 @@ def main():
 
     rows = []
     dim_rows = []                                     # one row per significant canonical dim
+    wt_rows = []                                       # per-neuron Gini-input contribution
     for a in animals:
         if a.animal_id not in entries:               # epochs require an LP
             continue
@@ -110,6 +111,14 @@ def main():
                     "ifi": round(ws.ifi, 4), "optimal_lag": ws.optimal_lag,
                     "gini_x": round(ws.gini_x, 4), "gini_y": round(ws.gini_y, 4)})
                 n_rows += 1
+                # per-neuron Gini-input contribution (L2 of canonical weight scores
+                # across dims) — for the weight CDF and the per-area (cross-partner) Gini
+                for area, W in ((ax, ws.weights_x), (ay, ws.weights_y)):
+                    contrib = np.linalg.norm(np.atleast_2d(W), axis=1)
+                    for u, c in enumerate(contrib):
+                        wt_rows.append({"animal": a.animal_id, "pair": f"{ax}-{ay}",
+                                        "epoch": epoch, "area": area, "unit": u,
+                                        "contrib": round(float(c), 6)})
                 for d in range(int(ws.cc.size)):      # per-dimension (dims-as-n)
                     dim_rows.append({
                         "animal": a.animal_id, "pair": f"{ax}-{ay}", "epoch": epoch,
@@ -130,8 +139,13 @@ def main():
                                           "peak_cc", "sig", "ifi", "lag"],
                            lineterminator="\n")
         w.writeheader(); w.writerows(dim_rows)
-    print(f"\nwrote {out} ({len(rows)} rows) + {out_d} ({len(dim_rows)} dim-rows). "
-          "Analyse with scripts/analyze_epochs.py / analyze_dims_as_n.py")
+    out_w = config.RESULTS_DIR / f"epoch_weights{args.tag}{suffix}.csv"
+    with open(out_w, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["animal", "pair", "epoch", "area", "unit",
+                                          "contrib"], lineterminator="\n")
+        w.writeheader(); w.writerows(wt_rows)
+    print(f"\nwrote {out} ({len(rows)} rows) + {out_d} ({len(dim_rows)} dim-rows) + "
+          f"{out_w} ({len(wt_rows)} weight-rows). Analyse: analyze_epochs / analyze_dims_as_n")
 
 
 if __name__ == "__main__":

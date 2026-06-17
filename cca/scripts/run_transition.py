@@ -90,7 +90,7 @@ def main():
     thr = cfg.velocity_thresh_cm_s
     rng = np.random.default_rng(0)
 
-    rows, dim_rows = [], []          # dim_rows = dims-as-n (one row per canonical dim)
+    rows, dim_rows, wt_rows = [], [], []   # wt_rows = per-neuron Gini-input contribution
     print(f"Uncued->cued transition (full suite) | K={K} pCCA, sample-matched\n")
     for a in animals:
         try:
@@ -147,6 +147,16 @@ def main():
                 row[f"cue_{mt}"] = round(float(c), 4)
                 row[f"d_{mt}"] = round(float(c) - float(u), 4)
             rows.append(row)
+            # per-neuron Gini-input contribution (L2 of canonical weight scores) for the
+            # weight CDF + per-area (cross-partner) Gini, uncued and cued conditions
+            for cond, W in (("uncued", (wu.weights_x, wu.weights_y)),
+                            ("cued", (wc.weights_x, wc.weights_y))):
+                for area, Wa in ((ax, W[0]), (ay, W[1])):
+                    contrib = np.linalg.norm(np.atleast_2d(Wa), axis=1)
+                    for u_i, c in enumerate(contrib):
+                        wt_rows.append({"animal": a.animal_id, "learner": int(is_learner),
+                                        "pair": f"{ax}-{ay}", "cond": cond, "area": area,
+                                        "unit": u_i, "contrib": round(float(c), 6)})
             # dims-as-n: one row per canonical dimension (the Gonzalez/Buzsáki unit)
             for d in range(int(min(wu.cc.size, wc.cc.size))):
                 def _pd(w, attr):                         # per-dim value, NaN-safe
@@ -183,6 +193,11 @@ def main():
         w = csv.DictWriter(f, fieldnames=dcols, lineterminator="\n")
         w.writeheader(); w.writerows(dim_rows)
     print(f"wrote {rdir/f'transition_dims{suffix}.csv'} ({len(dim_rows)} dim-rows)\n")
+    with open(rdir / f"transition_weights{suffix}.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["animal", "learner", "pair", "cond", "area",
+                                          "unit", "contrib"], lineterminator="\n")
+        w.writeheader(); w.writerows(wt_rows)
+    print(f"wrote {rdir/f'transition_weights{suffix}.csv'} ({len(wt_rows)} weight-rows)\n")
 
     def dims_table(subset, title):
         """dims-as-n: pool SIGNIFICANT canonical dims across animals; signed-rank on
