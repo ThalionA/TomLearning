@@ -27,6 +27,16 @@ area's per-neuron `contrib` across its partner pairs (partner-normalised), then 
 weights** → done (contrib export added to run_epochs/run_transition, committed; **re-run IN FLIGHT**
 smoothed FS-incl → `epoch_weights_bin10_fsincl`/`transition_weights_bin10_fsincl`); (3) **5-trial
 bins** [1-5,6-10,…,26-30] for the trial-resolved plots.
+**Methods §2 rewritten thorough (while runs go; UNCOMMITTED vault prose).** Report §2 expanded
+from 11 → 17 subsections covering the *current* pipeline: Gaussian σ=2.5 ms smoothing + 10 ms
+binning + z-score (§2.2), masks/epochs (2.3), partial CCA (2.4), PCA-k-per-analysis (2.5), CCA (2.6),
+leak-free held-out CV (2.7), n_sig/MI/**mincc** (2.8), IFI + segment-aware held-out lag curve +
+**±50 ms headline / ±250 ms window sweep** + per-dim IFI (2.9), contributions + **Gini per-pair AND
+per-area-across-partners** + weight CDF (2.10), rotation (2.11), trajectory + **5-trial bins** (2.12),
+epoch + **paired** contrasts (2.13), early-trials (2.14), transition (2.15), **units-of-analysis
+(animals-as-n vs dims-as-n) + stats + pooled-vs-learners** (2.16), KCCA pointer (2.17). All stale
+§2.x cross-refs in §3/§4/§5/§8 + status box remapped to the new numbering.
+
 **STILL TO BUILD:** (a) 5-trial-bin trajectory driver (metrics + contrib; learners + non; B/D);
 (b) per-area Gini computation + plots (recompute, supersedes per-pair gini_x in the panels);
 (c) weight CDF (Fig 4b style, mean±SEM) naïve-vs-trained + uncued-vs-cued; (d) FS-incl/learners
