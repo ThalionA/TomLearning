@@ -23,10 +23,16 @@ stats policy rewritten to **paired-t test of record** (Wilcoxon dropped); §5→
 38 embedded figs all resolve. Backup: `…Report.md.prebin10regen.bak`. **t-test switch** applied across
 figs_paired/area_gini/rotation_cc1/early_trials/units/report/trajectory_dims/stats_tables +
 analyze_bin10_full + analyze_trajectory_dims; `paired_stats.paired_t`/`welch_t` added (drop-in).
-**REMAINING:** (1) sentence-level **number reconciliation** of §3.1–3.6 prose + §4 cited p-values
-against the regenerated §3.9 tables (flagged in an editor's note; the qualitative narrative holds —
-this is the synthesis pass, Theo's domain); (2) early-trials (10 ms) + FS-excl per-area-Gini figures
-once the batch finishes; (3) commit + deck regen. Report prose UNCOMMITTED (vault).
+**✓ COMMITTED `6f8aca2`** (paired-t switch + R2 lag curves + B/D + bin10/both-FS pipeline + GOTCHA;
+21 code/doc files, no data). **Deck regenerated** (`make_smoothed_deck.py` → 113 slides, 102 figs).
+**FS-excl per-area-Gini done** (weights re-run after the early-trials batch *stalled* at step 3/6 for
+3 h with no worker — killed it; relaunched only the fast FS-excl epoch+transition weights).
+**Tom deliverable package** at `cca/share_tom_2026-06/` (41 svg + 28 csv + README data-dictionary +
+METHODS.md/.docx [pandoc, 59 native eqns] + STATS.md) — UNCOMMITTED (deliverable, has data).
+**REMAINING:** (1) sentence-level **number reconciliation** of §3.1–3.6 prose + §4 cited p-values vs
+the regenerated §3.9 tables (flagged in an editor's note; qualitative narrative holds — synthesis
+pass, Theo's domain); (2) **FS-incl early-trials (10 ms)** deliberately skipped (pathologically slow
+block-refit, low value — 25 ms early-trials is in the appendix). Report prose UNCOMMITTED (vault).
 
 
 **Decision (Theo):** regenerate the ENTIRE report on smoothed-10 ms, *consistently and only*; move the
