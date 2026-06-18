@@ -31,7 +31,7 @@ figstyle.apply()
 ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
 
 UNITS = [  # (key prefix, label, marker, colour, y-offset)
-    ("anim", "animals-as-n (signed-rank)", "o", "#23231f", +0.24),
+    ("anim", "animals-as-n (paired t)", "o", "#23231f", +0.24),
     ("lmm", "dims-as-n LMM (cluster-robust)", "s", "#1f78b4", 0.0),
     ("ols", "dims-as-n OLS (inflated)", "^", "#c0392b", -0.24),
 ]

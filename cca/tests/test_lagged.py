@@ -167,3 +167,31 @@ def test_segment_aware_no_cross_trial_pairing():
     Sx, Sy, groups = _flat_lead_data(rng, n_bins=40, lead=2)
     lags, cc = lagged.heldout_lag_curve_flat(Sx, Sy, groups, max_lag=6, n_folds=4)
     assert int(lags[np.nanargmax(cc)]) == 2
+
+
+# ---------------------------------------------------------------------------
+# heldout_lag_curve_flat_perdim — per-dimension held-out lag curves (R2 figure)
+# ---------------------------------------------------------------------------
+def test_heldout_lag_curve_perdim_shape_and_cc1_equivalence():
+    # the per-dim curve's dominant column must be IDENTICAL to the CC1-only helper
+    # (same folds/seed) — the CC1 function is just the d=0 slice of the per-dim one.
+    rng = np.random.default_rng(3)
+    Sx, Sy, groups = _flat_lead_data(rng, lead=3, k=4)
+    lags_p, cc_p = lagged.heldout_lag_curve_flat_perdim(
+        Sx, Sy, groups, max_lag=8, n_dims=4, n_folds=4)
+    assert cc_p.shape == (lags_p.size, 4)
+    lags1, cc1 = lagged.heldout_lag_curve_flat(Sx, Sy, groups, max_lag=8, n_folds=4)
+    assert np.array_equal(lags_p, lags1)
+    assert np.allclose(cc_p[:, 0], cc1, equal_nan=True)
+
+
+def test_heldout_lag_curve_perdim_signal_dim_leads_noise_dims():
+    # canonical dim 0 = the planted shared signal (X leads by 3): peaks at +3, strong.
+    # higher canonical dims are noise-only -> far weaker held-out CC.
+    rng = np.random.default_rng(4)
+    Sx, Sy, groups = _flat_lead_data(rng, lead=3, k=4)
+    lags, cc = lagged.heldout_lag_curve_flat_perdim(
+        Sx, Sy, groups, max_lag=8, n_dims=4, n_folds=4)
+    assert int(lags[np.nanargmax(cc[:, 0])]) == 3
+    assert np.nanmax(cc[:, 0]) > 0.7
+    assert np.nanmax(cc[:, 1]) < np.nanmax(cc[:, 0])

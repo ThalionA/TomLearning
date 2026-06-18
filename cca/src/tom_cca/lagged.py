@@ -168,23 +168,25 @@ def _segment_lagged_pairs(Sx, Sy, groups, lag):
     return np.vstack(Xs), np.vstack(Ys), np.concatenate(gs)
 
 
-def heldout_lag_curve_flat(Sx, Sy, groups, max_lag, n_folds=5, seed=0):
-    """Held-out dominant-dim canonical correlation vs integer bin lag, for the
-    flat continuous-regime PCA scores — the honest directionality curve.
+def heldout_lag_curve_flat_perdim(Sx, Sy, groups, max_lag, n_dims=1, n_folds=5, seed=0):
+    """Held-out PER-DIMENSION canonical correlation vs integer bin lag, for the flat
+    continuous-regime PCA scores — the honest directionality curve for each of the
+    leading ``n_dims`` canonical dimensions.
 
     At each lag the (segment-aware) lagged pairs are split into whole-trial folds;
-    CCA is fit on the training trials and the dominant canonical correlation is read
-    on the held-out trials (averaged over folds). This replaces the in-sample lag
-    curve used by ``subspace_window`` (which biases every lag's CC upward).
+    CCA is fit on the training trials and the per-dim canonical correlations are read
+    on the held-out trials (averaged over folds). This is the leak-aware analogue of
+    ``subspace_window._lag_curve_perdim`` (which is in-sample and biases every lag up).
 
     ``Sx``/``Sy`` are ``(n_samples, k)`` PCA scores; ``groups`` the per-bin trial id.
-    Returns ``(lags, cc_test)`` — feed to :func:`ifi_by_window` for the window sweep.
+    Returns ``(lags, cc)`` with ``cc`` shape ``(n_lags, n_dims)`` (NaN where a lag
+    has too few segment-aware pairs for any fold).
     """
     lags = np.arange(-max_lag, max_lag + 1)
     uniq = np.unique(groups)
     rng = np.random.default_rng(seed)
     folds = [f for f in np.array_split(rng.permutation(uniq), n_folds) if f.size]
-    cc = np.full(lags.size, np.nan)
+    cc = np.full((lags.size, n_dims), np.nan)
     for i, lag in enumerate(lags):
         pair = _segment_lagged_pairs(Sx, Sy, groups, int(lag))
         if pair is None:
@@ -199,7 +201,18 @@ def heldout_lag_curve_flat(Sx, Sy, groups, max_lag, n_folds=5, seed=0):
             model = core.cca_fit(Xp[trm], Yp[trm])
             r = core.cca_score(Xp[tem], Yp[tem], model)
             if r.size:
-                rs.append(float(r[0]))
+                rs.append(np.asarray(r, dtype=float))
         if rs:
-            cc[i] = float(np.nanmean(rs))
+            m = min(n_dims, min(r.size for r in rs))
+            cc[i, :m] = np.nanmean([r[:m] for r in rs], axis=0)
     return lags, cc
+
+
+def heldout_lag_curve_flat(Sx, Sy, groups, max_lag, n_folds=5, seed=0):
+    """Held-out dominant-dim (CC1) canonical correlation vs lag — the d=0 slice of
+    :func:`heldout_lag_curve_flat_perdim`. ``Sx``/``Sy`` are ``(n_samples, k)`` PCA
+    scores; returns ``(lags, cc_test)`` — feed to :func:`ifi_by_window` for the sweep.
+    """
+    lags, cc = heldout_lag_curve_flat_perdim(
+        Sx, Sy, groups, max_lag, n_dims=1, n_folds=n_folds, seed=seed)
+    return lags, cc[:, 0]

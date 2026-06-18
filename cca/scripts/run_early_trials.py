@@ -32,7 +32,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from tom_cca import (config, dataio, early_trials, kcca_window,  # noqa: E402
-                     subspace_window, trajectory)
+                     subspace_window)
 
 K = 30
 N_FOLDS = 5
@@ -62,6 +62,8 @@ def parse_args():
     p.add_argument("--no-kcca", action="store_true",
                    help="skip the (slow) kernel-CCA block metrics")
     p.add_argument("--bin-ms", type=int, default=config.DEFAULT.temporal_bin_ms)
+    p.add_argument("--smooth-ms", type=float, default=0.0,
+                   help="Gaussian s.d. (ms) for spike-train smoothing (Buzsáki = 2.5)")
     return p.parse_args()
 
 
@@ -89,8 +91,10 @@ def _rotation(ref_w, cur_w, d_use=ROT_DIMS) -> float:
 def main():
     args = parse_args()
     cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs)
-    suffix = "_fsincl" if args.include_fs else ""
+                              exclude_fast_spiking=not args.include_fs,
+                              gaussian_sd_ms=args.smooth_ms)
+    bintag = f"_bin{args.bin_ms}" if args.bin_ms != 25 else ""
+    suffix = bintag + ("_fsincl" if args.include_fs else "")
     animals = dataio.load_animals(config.DATA_DIR)
     behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
     entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)

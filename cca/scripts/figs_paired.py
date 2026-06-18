@@ -82,9 +82,8 @@ def _paired_panel(ax, pair, va, vb, labels):
         ax.errorbar(x, v.mean(), yerr=v.std(ddof=1) / np.sqrt(n) if n > 1 else 0,
                     color="#c0392b", capsize=3, zorder=4)
     p_t = st.ttest_rel(va, vb)[1] if n >= 2 else np.nan
-    _, _, _, p_w = paired_stats.wilcoxon_signed((vb - va).tolist())
     col = SIG if (np.isfinite(p_t) and p_t < 0.05) else "#3a3a36"
-    ax.set_title(f"{pair}\nt p={p_t:.3f} · W p={p_w:.2g} · n={n}", fontsize=10,
+    ax.set_title(f"{pair}\npaired t p={p_t:.3f} · n={n}", fontsize=10,
                  color=col, fontweight=("bold" if col == SIG else "normal"))
     ax.set_xlim(-0.5, 1.5); ax.set_xticks([0, 1]); ax.set_xticklabels(labels, fontsize=9)
 

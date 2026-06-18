@@ -20,7 +20,6 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats as st
@@ -28,7 +27,7 @@ from scipy import stats as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import figstyle  # noqa: E402
-from tom_cca import membership, paired_stats  # noqa: E402
+from tom_cca import membership  # noqa: E402
 
 figstyle.apply()
 ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
@@ -62,11 +61,13 @@ def _agg_area(sub):
 
 def main():
     mode = "transition" if "transition" in sys.argv[1:] else "epochs"
+    suf = "" if "fsexcl" in sys.argv[1:] else "_fsincl"     # default FS-incl (Tom's panels)
+    fs = "fsexcl" if suf == "" else "fsincl"
     if mode == "epochs":
-        wt = pd.read_csv(RES / "epoch_weights_bin10_fsincl.csv")
+        wt = pd.read_csv(RES / f"epoch_weights_bin10{suf}.csv")
         condcol, A, B, labels = "epoch", "naive", "expert", ("naïve", "trained")
     else:
-        wt = pd.read_csv(RES / "transition_weights_bin10_fsincl.csv")
+        wt = pd.read_csv(RES / f"transition_weights_bin10{suf}.csv")
         condcol, A, B, labels = "cond", "uncued", "cued", ("uncued", "cued")
 
     # per (animal, area, condition): Gini + Lorenz
@@ -96,16 +97,15 @@ def main():
         for x, v in [(0, va), (1, vb)]:
             ax.plot([x - .18, x + .18], [v.mean(), v.mean()], color="#c0392b", lw=2.4)
         p_t = st.ttest_rel(va, vb)[1] if va.size >= 2 else np.nan
-        _, _, _, p_w = paired_stats.wilcoxon_signed((vb - va).tolist())
         col = SIG if (np.isfinite(p_t) and p_t < .05) else "#3a3a36"
-        ax.set_title(f"{area}\nt p={p_t:.3f} · W p={p_w:.2g} · n={va.size}", fontsize=10,
+        ax.set_title(f"{area}\npaired t p={p_t:.3f} · n={va.size}", fontsize=10,
                      color=col, fontweight=("bold" if col == SIG else "normal"))
         ax.set_xlim(-.5, 1.5); ax.set_xticks([0, 1]); ax.set_xticklabels(labels, fontsize=9)
         ax.set_ylabel("per-area Gini")
     fig.suptitle(f"Per-area Gini (across all partners) — {labels[0]} vs {labels[1]} — "
-                 "FS-incl, 10 ms smoothed", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_areagini_{mode}_fsincl_bin10.png")
-    print(f"wrote HCV1_areagini_{mode}_fsincl_bin10.png")
+                 f"{fs}, 10 ms smoothed", fontsize=12)
+    figstyle.save(fig, ATT / f"HCV1_areagini_{mode}_{fs}_bin10.png")
+    print(f"wrote HCV1_areagini_{mode}_{fs}_bin10.png")
 
     # ---- weight cumulative distribution (Lorenz), mean±SEM, A vs B ----
     fig, axes = figstyle.grid(len(AREAS), ncols=3)
@@ -122,9 +122,9 @@ def main():
         ax.set_xlabel("fraction of neurons"); ax.set_ylabel("cum. participation")
         ax.legend(fontsize=8, loc="upper left")
     fig.suptitle(f"Weight cumulative distribution (Lorenz; Gini = area between curve & diagonal) — "
-                 f"{labels[0]} vs {labels[1]} — FS-incl, 10 ms smoothed", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_weightcdf_{mode}_fsincl_bin10.png")
-    print(f"wrote HCV1_weightcdf_{mode}_fsincl_bin10.png")
+                 f"{labels[0]} vs {labels[1]} — {fs}, 10 ms smoothed", fontsize=12)
+    figstyle.save(fig, ATT / f"HCV1_weightcdf_{mode}_{fs}_bin10.png")
+    print(f"wrote HCV1_weightcdf_{mode}_{fs}_bin10.png")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 Renders clean colour-coded tables (green = significant) as PNGs into the vault
 attachments, so the deck globs them like any figure. Two tables:
   * learning-slopes — per pair, d(Gini)/d(trial_frac) and d(IFI)/d(trial_frac),
-    LEARNERS vs POOLED (all animals) side by side, signed-rank on per-animal slopes;
+    LEARNERS vs POOLED (all animals) side by side, paired t on per-animal slopes;
   * directionality  — per pair, the held-out IFI window-sweep result (mean IFI at the
     cleanest window, t, p) — the §3.2 directionality summary.
 
@@ -81,7 +81,7 @@ def learning_slopes(stem, tag):
     binms = "10" if "10" in stem else ("50" if "50" in stem else "25")
     _table_fig(f"Learning-axis slopes vs trial-fraction — {tag} ({binms} ms)",
                heads, rows, f"HCV1_stats_slopes_{tag}_bin{binms}.png",
-               "signed-rank on per-animal slopes vs 0 · green = p<0.05 "
+               "paired t on per-animal slopes vs 0 · green = p<0.05 "
                "(*** p<.001  ** p<.01  * p<.05) · ↓/↑ = sign · pooled adds the 4 non-learners")
 
 
@@ -126,6 +126,7 @@ def main():
     if (config.RESULTS_DIR / f"{fsincl}.csv").is_file():
         learning_slopes(fsincl, "fsincl")
     directionality(stem_excl, "fsexcl")
+    directionality(stem_excl, "fsincl")
 
 
 if __name__ == "__main__":

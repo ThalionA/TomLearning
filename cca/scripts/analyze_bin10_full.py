@@ -3,7 +3,7 @@ emitted as Markdown tables for the report (exact numbers, no shortcuts).
 
 Sections:
   A. Levels (hierarchy): CC1, n_sig, MI_sig, Gini, mean IFI(±50ms) per pair.
-  B. Directionality — existence at ±50 ms: who leads, IFI, t, p(t), p(signed-rank), n.
+  B. Directionality — existence at ±50 ms: who leads, IFI, t, p(t), n.
   C. Directionality — integration curves to ±250 ms: IFI by window.
   D. Directionality — per canonical dimension (lower CCs): IFI for dim0..3.
   E. Change vs learning — slopes: CC1, Gini, IFI vs trial_frac / performance / lp_rel.
@@ -43,11 +43,12 @@ def _num(s):
     return pd.to_numeric(s, errors="coerce")
 
 
-def srk(v):
+def ptt(v):
+    """Paired t-test of per-animal deltas vs 0 → (median, p, n)."""
     v = [x for x in v if np.isfinite(x)]
     if len(v) < 3:
         return np.nan, np.nan, len(v)
-    _, med, _, p = paired_stats.wilcoxon_signed(v)
+    _, med, _, p = paired_stats.paired_t(v)
     return med, p, len(v)
 
 
@@ -89,22 +90,20 @@ def sec_levels():
 # ------------------------------------------------ B. directionality existence
 def sec_existence():
     w("## B. Directionality — existence at ±50 ms (held-out IFI window sweep, 10 ms)\n")
-    w("IFI > 0 ⇒ first-named area leads. *t* = one-sample t vs 0 across animals; "
-      "signed-rank as the assumption-light cross-check.\n")
+    w("IFI > 0 ⇒ first-named area leads. *t* = one-sample (paired) t vs 0 across animals.\n")
     for fslab, suf in FS:
         win = pd.read_csv(R / f"ifi_windows_bin10{suf}.csv")
         w50 = win[win.window_ms == 50]
         w(f"**{fslab}** ({win.animal.nunique()} animals):\n")
-        w("| pair | flow | mean IFI | t | p (t) | p (signed-rank) | n |")
-        w("|---|---|---|---|---|---|---|")
+        w("| pair | flow | mean IFI | t | p (t) | n |")
+        w("|---|---|---|---|---|---|")
         for p in PAIRS:
             v = _num(w50[w50.pair == p]["ifi"]).dropna().to_numpy()
             if v.size < 3:
                 continue
             t, pt = st.ttest_1samp(v, 0)
-            _, wp, _ = srk(v.tolist())
             w(f"| {p} | {lead(p, v.mean())} | {v.mean():+.3f} | {t:+.2f} | "
-              f"{pt:.3f}{star(pt)} | {wp:.3f}{star(wp)} | {v.size} |")
+              f"{pt:.3f}{star(pt)} | {v.size} |")
         w()
 
 
@@ -166,8 +165,8 @@ def sec_perdim():
 
 # ------------------------------------------------ E. change-slopes
 def sec_slopes():
-    w("## E. Change vs learning — per-animal slopes (10 ms, pooled-16 signed-rank)\n")
-    w("Slope of each metric vs the learning axis; `**` = signed-rank p<0.05.\n")
+    w("## E. Change vs learning — per-animal slopes (10 ms, paired t on per-animal slopes)\n")
+    w("Slope of each metric vs the learning axis; `**` = paired t p<0.05.\n")
     for metric, mlab in [("cc1", "CC₁ (strength)"), ("gini_x", "Gini (sparsity)"),
                          ("ifi", "IFI (direction, ±50 ms)")]:
         w(f"### {mlab}\n")
@@ -191,14 +190,14 @@ def sec_slopes():
 # ------------------------------------------------ F. epoch contrasts
 def sec_epochs():
     w("## F. Epoch contrasts — naive→expert and naive→intermediate (10 ms)\n")
-    w("Per-animal paired Δ; *t* = paired t, W = signed-rank. Learners only "
+    w("Per-animal paired Δ; *t* = paired t vs 0. Learners only "
       "(epochs are defined relative to the learning point).\n")
     for metric, mlab in [("cc1", "CC₁"), ("gini_x", "Gini"), ("ifi", "IFI"), ("n_sig", "n_sig")]:
         w(f"### {mlab}\n")
         for fslab, suf in FS:
             ep = pd.read_csv(R / f"epoch_metrics_bin10{suf}.csv")
             w(f"**{fslab}**:\n")
-            w("| pair | naive | int | expert | Δ(exp−nai) t-p / W | Δ(int−nai) t-p / W | n |")
+            w("| pair | naive | int | expert | Δ(exp−nai) t-p | Δ(int−nai) t-p | n |")
             w("|---|---|---|---|---|---|---|")
             for p in PAIRS:
                 g = ep[ep.pair == p]
@@ -217,12 +216,10 @@ def sec_epochs():
                 if len(dxe) < 3:
                     continue
                 te = st.ttest_1samp(dxe, 0)[1] if len(dxe) >= 2 else np.nan
-                _, we, _ = srk(dxe)
                 ti = st.ttest_1samp(dxi, 0)[1] if len(dxi) >= 2 else np.nan
-                _, wi, _ = srk(dxi)
                 w(f"| {p} | {np.mean(nv):+.3f} | {np.mean(it) if it else float('nan'):+.3f} | "
-                  f"{np.mean(xp):+.3f} | {te:.3f}{star(te)} / {we:.3f}{star(we)} | "
-                  f"{ti:.3f}{star(ti)} / {wi:.3f}{star(wi)} | {len(dxe)} |")
+                  f"{np.mean(xp):+.3f} | {te:.3f}{star(te)} | "
+                  f"{ti:.3f}{star(ti)} | {len(dxe)} |")
             w()
 
 
@@ -230,7 +227,7 @@ def sec_epochs():
 def sec_rotation():
     w("## G. Reorientation — cross-window rotation vs split-half floor (10 ms)\n")
     w("Rotation > floor ⇒ genuine reorientation. `**` = rotation significantly "
-      "*below* floor (signed-rank), the no-reorientation signature.\n")
+      "*below* floor (paired t), the no-reorientation signature.\n")
     for fslab, suf in FS:
         tr = pd.read_csv(R / f"trajectory_w15_bin10{suf}.csv")
         w(f"**{fslab}** (degrees):\n")
@@ -249,7 +246,7 @@ def sec_rotation():
                         fs.append(h)
                     if np.isfinite(r) and np.isfinite(h):
                         dz.append(r - h)
-                _, pv, _ = srk(dz)
+                _, pv, _ = ptt(dz)
                 res[key] = (np.nanmean(rs) if rs else np.nan,
                             np.nanmean(fs) if fs else np.nan, pv)
             if not np.isfinite(res["cc1"][0]):
@@ -263,7 +260,7 @@ def sec_rotation():
 # ------------------------------------------------ H. transition
 def sec_transition():
     w("## H. Transition — uncued→cued (10 ms, Δ = cued − uncued)\n")
-    w("Per-animal paired Δ, signed-rank vs 0. `**` = p<0.05.\n")
+    w("Per-animal paired Δ, paired t vs 0. `**` = p<0.05.\n")
     for fslab, suf in FS:
         path = R / f"transition_uncued_cued_bin10{suf}.csv"
         if not path.is_file() or path.stat().st_size < 50:
@@ -282,7 +279,7 @@ def sec_transition():
                 continue
             cells = []
             for m in ["d_cc1", "d_gini_x", "d_ifi", "d_n_sig"]:
-                med, pv, n = srk(_num(g[m]).dropna().tolist())
+                med, pv, n = ptt(_num(g[m]).dropna().tolist())
                 cells.append(f"{med:+.3f} (p={pv:.3f}){star(pv)}" if np.isfinite(med) else "—")
             w(f"| {p} | {cells[0]} | {cells[1]} | {cells[2]} | {cells[3]} | {g.animal.nunique()} |")
         w()

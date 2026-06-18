@@ -11,6 +11,60 @@ narrative + state of play.**
 
 ---
 
+## ⏳ IN PROGRESS (2026-06-17 cont.) — FULL REPORT REGEN: smoothed-10 ms primary, both FS co-primary
+
+**✓ REPORT REGENERATED (structure + tables + figures + framing).** Main report restructured
+(`scripts/_regen_report.py`, one-shot, removed): **§3 = the smoothed-10 ms results (primary,
+both FS)** — promoted from the old §8; **25 ms raw + KCCA → new file
+`… — 25 ms Appendix.md`** (§A/§B). Regenerated `bin10_tables.md` (smoothed + paired-t) spliced
+into §3.9. §3.7 figure block expanded to the full both-FS set + the new analyses (lag-CC curves,
+paired panels, per-area Gini, weight CDF, 5-trial-bin trajectories). Status box, §3 intro, §2.13/§2.16
+stats policy rewritten to **paired-t test of record** (Wilcoxon dropped); §5→appendix cross-refs fixed.
+38 embedded figs all resolve. Backup: `…Report.md.prebin10regen.bak`. **t-test switch** applied across
+figs_paired/area_gini/rotation_cc1/early_trials/units/report/trajectory_dims/stats_tables +
+analyze_bin10_full + analyze_trajectory_dims; `paired_stats.paired_t`/`welch_t` added (drop-in).
+**REMAINING:** (1) sentence-level **number reconciliation** of §3.1–3.6 prose + §4 cited p-values
+against the regenerated §3.9 tables (flagged in an editor's note; the qualitative narrative holds —
+this is the synthesis pass, Theo's domain); (2) early-trials (10 ms) + FS-excl per-area-Gini figures
+once the batch finishes; (3) commit + deck regen. Report prose UNCOMMITTED (vault).
+
+
+**Decision (Theo):** regenerate the ENTIRE report on smoothed-10 ms, *consistently and only*; move the
+25 ms results + KCCA (§5) to a separate appendix file; FS-excl AND FS-incl **co-primary** in the body.
+Plus (R2) add held-out **lagged-CC-curve** figures (the cross-correlation profile behind the IFI),
+n=animals (CC1) and n=subspaces (sig dims), mean ± shaded SEM, per pair.
+**Why:** §8 (10 ms) was built on the RAW run, but bin10 CSVs were later overwritten with SMOOTHED →
+§8 numbers went stale & contradicted §2.2 (e.g. CA3-DG CC1 0.271→0.315); and the new paired/area-Gini/
+CDF figures were never in the report.
+
+**BUILT this session (code; commit pending at wrap):**
+- R2: `lagged.heldout_lag_curve_flat_perdim` (per-dim held-out lag curve; CC1 wrapper kept) + 2 TDD
+  tests (16/16 pass). `run_lag_curves.py` (held-out per-dim CC vs lag ±250 ms; n_sig via
+  window_subspace; capped 12 k samples via CONSECUTIVE within-trial blocks — see new GOTCHA) +
+  `figs_lag_curves.py` (8-pair grid, both n-units). VALIDATED (CC1 peaks at 0 ms).
+- `figs_trajectory_bins.py` (B/D: cc1/n_sig/ifi/gini_x/mincc across the 6 bins, learners vs non).
+  VALIDATED on B/D fsincl.
+- Script edits for bin10 + both-FS: figs_units (epoch_*_bin10), figs_early_trials (bin10 in/out),
+  run_early_trials (--smooth-ms + bin tag), figs_area_gini (FS-param), figs_rotation_cc1 +
+  figs_stats_tables (both-FS naming, incl. directionality fsincl). Lint F-clean (uvx ruff --select F).
+- B/D 0-rows bug FIXED (even-stride cap preserved whole trials for by-trial CV; GOTCHA logged).
+
+**DATA STATE (smoothed 10 ms):** DONE = trajectory/ifi_windows/epoch/transition/dims (pre-existing
+smoothed) · B/D fsincl (`trajectory_bins_bin10_fsincl`, 438 rows) · lag-curves FS-excl
+(`lag_curves_bin10`, 76 k rows). RUNNING (detached) = `missing_smoothed.log` batch [lag-curves fsincl
+→ early-trials ×2 FS → FS-excl epoch+transition WEIGHTS ×2] + B/D FS-excl (`trajbins_excl.log`).
+
+**FIGURES regenerated smoothed, both-FS (batch-independent):** figs_report (levels/slopes/gini_traj/
+ifi_traj/direction/rotation_floor/gini_control/learnervsnon), trajectory_dims (pooled), ifi_windows,
+stats_tables (slopes+directionality), rotation_cc1 · PLUS lag-curves fsexcl, B/D fsincl (5 metrics).
+
+**NEXT (post-batch):** (1) regen batch-dependent figs both-FS — figs_paired, figs_units, figs_area_gini,
+figs_early_trials, figs_lag_curves fsincl, figs_trajectory_bins fsexcl; (2) re-run `analyze_bin10_full.py`
+→ smoothed `bin10_tables.md` (extend w/ mincc, per-area Gini, lag-curve direction summary); (3) REWRITE
+report — §2 framing → 10 ms primary; §3 rebuilt on smoothed both-FS (promote old §8 structure; fold in
+early-trials/units/rotation/lag-curves/paired/area-Gini/B-D); §4 synthesis numbers; MOVE 25 ms + KCCA to
+`… — 25 ms Appendix.md`; (4) deck + commit + log. Report prose stays UNCOMMITTED (vault, for review).
+
 ## ⏳ IN PROGRESS (2026-06-17) — Tom's meeting plots (smoothed 10 ms, FS-included)
 
 Tom's request (Slack): paired plots on the smoothed data for a meeting next week. **Built & in the

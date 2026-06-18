@@ -2,6 +2,16 @@
 
 One-line entries for non-obvious bugs, so they are not reintroduced.
 
+- **Capping samples by a contiguous/stride slice breaks by-trial CV and lag adjacency.**
+  These sessions run to ~370k engaged 10 ms bins with ~2700 bins/trial, so `idx[:MAX_SAMPLES]`
+  (first-N contiguous) spans only 3–4 trials → fails any ≥5-fold by-trial CV gate (the
+  `run_trajectory_bins` 0-rows bug, 2026-06-17). But an *even-stride* subsample is the
+  opposite trap: it destroys within-trial bin adjacency, so segment-aware lag pairing
+  (`lagged._segment_lagged_pairs`) silently mis-pairs. Correct cap = keep a CONSECUTIVE
+  within-trial block of WHOLE trials until ~MAX_SAMPLES (`run_lag_curves._capped_index`;
+  `run_trajectory_bins` uses even-stride only because it does no lagging). Choose the cap by
+  what the downstream step needs: trial count (CV) vs bin adjacency (lag).
+
 - **CSV files use CRLF line endings.** The `csv` module writes `\r\n` by default even
   with `open(..., newline="")`. So `learning_changes_*.csv`, `landmark_prune_*.csv`, and
   `sweep_landmark_summary.csv` have a trailing `\r` on every field-10 value. A naive

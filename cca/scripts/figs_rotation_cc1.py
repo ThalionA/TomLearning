@@ -64,7 +64,7 @@ def _panel(ax, learn, rot_col, sh_col, title):
             (_num(s[sh_col]).median() for _, s in g.groupby("animal")))
             if np.isfinite(rm) and np.isfinite(fm)]
         if len(diffs) >= 3:
-            pv = paired_stats.wilcoxon_signed(diffs)[3]
+            pv = paired_stats.paired_t(diffs)[3]
             if np.isfinite(pv) and pv < 0.05 and np.median(diffs) < 0:
                 top = max(np.nanmean(_per_animal_median(g, rot_col) or [0]),
                           np.nanmean(_per_animal_median(g, sh_col) or [0]))
@@ -90,10 +90,11 @@ def main():
     _panel(a2, data, "rot_x_cc1", "sh_x_cc1", "CC1 dominant dim (tight floor — meaningful)")
     fig.suptitle(f"Subspace rotation stays at/below the split-half noise floor — no reorientation — "
                  f"{cohort}\n(bars = mean ± SEM over animals; dots = animals; "
-                 "* = rotation sig. BELOW floor, signed-rank)", fontsize=11)
+                 "* = rotation sig. BELOW floor, paired t)", fontsize=11)
     binms = "10" if "bin10" in stem else ("25" if "bin25" in stem else "50")
     bintag = "" if binms == "50" else f"_bin{binms}"   # bin50 keeps the legacy report name
-    out = f"HCV1_CCA_fsexcl{'_pooled' if pool else ''}{bintag}_rotation_cc1"
+    fs = "fsincl" if "fsincl" in stem else "fsexcl"
+    out = f"HCV1_CCA_{fs}{'_pooled' if pool else ''}{bintag}_rotation_cc1"
     figstyle.save(fig, ATT / out)
     print(f"wrote {out}.{{png,svg}} ->", ATT)
 

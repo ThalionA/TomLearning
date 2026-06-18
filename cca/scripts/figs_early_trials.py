@@ -17,7 +17,6 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -51,7 +50,7 @@ def _series(df, pair, metric, level_col, level):
 def _star(base_map, other_map):
     common = sorted(set(base_map) & set(other_map))
     d = [other_map[a] - base_map[a] for a in common]
-    return paired_stats.wilcoxon_signed(d)[3] if len(d) >= 3 else np.nan
+    return paired_stats.paired_t(d)[3] if len(d) >= 3 else np.nan
 
 
 def _pair_grid(df, metric, mlab, level_col, levels, base, xlabels, tag, fname,
@@ -86,17 +85,18 @@ def _pair_grid(df, metric, mlab, level_col, levels, base, xlabels, tag, fname,
         if i >= len(PAIRS) - 2:
             ax.set_xlabel(xlab)
     fig.suptitle(f"{mlab} over very early trials — {tag}\n"
-                 f"faint = animals  ·  red = mean ± SEM  ·  ✶ = paired t/Wilcoxon vs {base}",
+                 f"faint = animals  ·  red = mean ± SEM  ·  ✶ = paired t vs {base}",
                  fontsize=13)
     figstyle.save(fig, ATT / fname)
 
 
 def main():
     ATT.mkdir(parents=True, exist_ok=True)
+    bintag = "_bin10" if "bin10" in sys.argv[1:] else ""
     for tag in ("fsexcl", "fsincl"):
         suf = "" if tag == "fsexcl" else "_fsincl"
-        pp = config.RESULTS_DIR / f"early_trials_projected{suf}.csv"
-        bp = config.RESULTS_DIR / f"early_trials_blocks{suf}.csv"
+        pp = config.RESULTS_DIR / f"early_trials_projected{bintag}{suf}.csv"
+        bp = config.RESULTS_DIR / f"early_trials_blocks{bintag}{suf}.csv"
         if not pp.is_file() or not bp.is_file():
             print(f"  (missing {pp.name}/{bp.name} — skip {tag})"); continue
         proj = pd.read_csv(pp); block = pd.read_csv(bp)
@@ -106,7 +106,7 @@ def main():
                              ("gini_part_y", "participation-Gini (Y)")]:
             _pair_grid(proj, metric, mlab, "ordinal", [1, 4, 7, 10], 1,
                        ["1", "4", "7", "10"], tag,
-                       f"HCV1_early_proj_{metric}_{tag}.png", numeric_x=True)
+                       f"HCV1_early_proj_{metric}_{tag}{bintag}.png", numeric_x=True)
 
         blevels = ["t1-5", "t1-7", "t1-10", "late"]
         for metric, mlab in [("cc1", "held-out CC$_1$"), ("gini_x", "weight-Gini (X)"),
@@ -115,7 +115,7 @@ def main():
                              ("cc_kcca", "KCCA CC$_1$"),
                              ("gini_kcca_x", "KCCA struct-coeff Gini (X)")]:
             _pair_grid(block, metric, mlab, "block", blevels, "late",
-                       blevels, tag, f"HCV1_early_block_{metric}_{tag}.png",
+                       blevels, tag, f"HCV1_early_block_{metric}_{tag}{bintag}.png",
                        numeric_x=False)
         print(f"  {tag}: early-trial figures written")
     print("figures ->", ATT)

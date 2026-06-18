@@ -90,7 +90,7 @@ def compute_table(df, min_animals=3, min_dimwin=8, pool=False):
                 sl = _per_animal_slopes(g, metric, axis)
                 a_med, a_p = (np.nan, np.nan)
                 if len(sl) >= 3:
-                    _, a_med, _, a_p = paired_stats.wilcoxon_signed(sl)
+                    _, a_med, _, a_p = paired_stats.paired_t(sl)
                 recs = [{"animal_id": int(r["animal"]), "axis": float(r[axis]),
                          "value": float(r[metric])} for _, r in g.iterrows()]
                 lmm = mixed_effects.lmm_slope(recs, value="value", axis="axis")

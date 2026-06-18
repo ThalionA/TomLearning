@@ -85,7 +85,7 @@ def _panel(ax, by_ep, hline0):
     ax.set_xticks(xs); ax.set_xticklabels(["nv", "int", "exp"], fontsize=7)
 
 
-def fig_metric(em, ed, label, acol, dcol, ylab):
+def fig_metric(em, ed, label, acol, dcol, ylab, fs="fsexcl", bintag=""):
     hline0 = (label != "cc")
     fig, axes = plt.subplots(2, len(PAIRS), figsize=(1.8 * len(PAIRS), 6),
                              squeeze=False)
@@ -112,9 +112,9 @@ def fig_metric(em, ed, label, acol, dcol, ylab):
         _panel(ax, by_ep, hline0)
         ne = ""
         if by_ep["naive"].size >= 3 and by_ep["expert"].size >= 3:
-            p = float(stats.mannwhitneyu(by_ep["expert"], by_ep["naive"],
-                                         alternative="two-sided").pvalue)
-            ne = f" e–n U p={p:.2g}{_star(p)}"
+            p = float(stats.ttest_ind(by_ep["expert"], by_ep["naive"],
+                                      equal_var=False).pvalue)
+            ne = f" e–n t p={p:.2g}{_star(p)}"
         nd = sum(by_ep[e].size for e in EPOCHS)
         ax.set_title(f"{pair} (nd={nd}){ne}", fontsize=7)
         if j == 0:
@@ -123,15 +123,19 @@ def fig_metric(em, ed, label, acol, dcol, ylab):
                  f"(bottom, ≤{CAP_DIMS} dims/animal) across epochs — points=units, "
                  "red=mean±SEM, *=vs0 p<0.05; title=naive→expert p", fontsize=11)
     ATT.mkdir(parents=True, exist_ok=True)
-    figstyle.save(fig, ATT / f"HCV1_CCA_fsexcl_units_{label}.png")
+    figstyle.save(fig, ATT / f"HCV1_CCA_{fs}{bintag}_units_{label}.png")
 
 
 def main():
-    em = pd.read_csv(config.RESULTS_DIR / "epoch_metrics.csv")
-    ed = pd.read_csv(config.RESULTS_DIR / "epoch_dims.csv")
+    args = " ".join(sys.argv[1:])
+    suf = "_fsincl" if "fsincl" in args else ""
+    fs = "fsincl" if suf else "fsexcl"
+    bintag = "_bin10" if "bin10" in args else ""
+    em = pd.read_csv(config.RESULTS_DIR / f"epoch_metrics{bintag}{suf}.csv")
+    ed = pd.read_csv(config.RESULTS_DIR / f"epoch_dims{bintag}{suf}.csv")
     for label, acol, dcol, ylab in METRICS:
-        fig_metric(em, ed, label, acol, dcol, ylab)
-        print(f"  wrote HCV1_CCA_fsexcl_units_{label}.png")
+        fig_metric(em, ed, label, acol, dcol, ylab, fs, bintag)
+        print(f"  wrote HCV1_CCA_{fs}{bintag}_units_{label}.png")
     print("units-comparison figures ->", ATT)
 
 

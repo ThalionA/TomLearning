@@ -82,7 +82,9 @@ def main():
             for bi, tb in enumerate(bins):
                 if tb.size < BIN_SIZE:
                     continue
-                idx = np.where(np.isin(trial_ids, tb))[0][:MAX_SAMPLES]
+                idx = np.where(np.isin(trial_ids, tb))[0]
+                if idx.size > MAX_SAMPLES:        # even stride, not first-N: keep ALL trials
+                    idx = idx[np.linspace(0, idx.size - 1, MAX_SAMPLES).astype(int)]
                 if idx.size < K * 50 or np.unique(trial_ids[idx]).size < N_FOLDS:
                     continue
                 groups = trial_ids[idx]
