@@ -1,0 +1,40 @@
+IFI-WINDOW sweep | bin=25ms K=30 max_lag=12 (300 ms) | FS=excl
+
+  animal 28: done (48 rows)
+  animal 34: done (72 rows)
+  animal 36: done (84 rows)
+  animal 41: done (108 rows)
+  animal 52: done (180 rows)
+  animal 61: done (252 rows)
+  animal 63: done (264 rows)
+  animal 66: done (336 rows)
+  animal 68: done (384 rows)
+  animal 70: done (456 rows)
+  animal 71: done (552 rows)
+  animal 73: done (624 rows)
+  animal 75: done (696 rows)
+  animal 77: done (768 rows)
+  animal 98: done (780 rows)
+  animal 100: done (852 rows)
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/ifi_windows_bin25.csv
+IFI-WINDOW sweep | bin=25ms K=30 max_lag=12 (300 ms) | FS=incl
+
+  animal 28: done (48 rows)
+  animal 34: done (72 rows)
+  animal 36: done (96 rows)
+  animal 41: done (120 rows)
+  animal 52: done (192 rows)
+  animal 61: done (264 rows)
+  animal 63: done (276 rows)
+  animal 66: done (348 rows)
+  animal 68: done (396 rows)
+  animal 70: done (468 rows)
+  animal 71: done (564 rows)
+  animal 73: done (636 rows)
+  animal 75: done (708 rows)
+  animal 77: done (780 rows)
+  animal 98: done (804 rows)
+  animal 100: done (876 rows)
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/ifi_windows_bin25_fsincl.csv

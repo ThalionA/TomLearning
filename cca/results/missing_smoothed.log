@@ -1,0 +1,44 @@
+START Wed Jun 17 15:02:07 BST 2026
+[1/6] lag-curves FS-excl
+LAG-CC curves | bin=10ms smooth=2.5ms K=30 max_lag=25 (250 ms) | FS=excl
+
+  animal 28 (L): done (3111 rows)
+  animal 34 (L): done (4641 rows)
+  animal 36 (L): done (5967 rows)
+  animal 41 (L): done (7395 rows)
+  animal 52 (L): done (14229 rows)
+  animal 61 (L): done (22899 rows)
+  animal 63 (L): done (23409 rows)
+  animal 66 (L): done (28764 rows)
+  animal 68 (L): done (31161 rows)
+  animal 70 (n): done (40341 rows)
+  animal 71 (n): done (50031 rows)
+  animal 73 (L): done (56610 rows)
+  animal 75 (L): done (63954 rows)
+  animal 77 (L): done (66249 rows)
+  animal 98 (n): done (67167 rows)
+  animal 100 (n): done (76347 rows)
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_curves_bin10.csv
+[2/6] lag-curves FS-incl
+LAG-CC curves | bin=10ms smooth=2.5ms K=30 max_lag=25 (250 ms) | FS=incl
+
+  animal 28 (L): done (3621 rows)
+  animal 34 (L): done (5661 rows)
+  animal 36 (L): done (7752 rows)
+  animal 41 (L): done (9996 rows)
+  animal 52 (L): done (17136 rows)
+  animal 61 (L): done (25806 rows)
+  animal 63 (L): done (26469 rows)
+  animal 66 (L): done (32232 rows)
+  animal 68 (L): done (35292 rows)
+  animal 70 (n): done (44472 rows)
+  animal 71 (n): done (54927 rows)
+  animal 73 (L): done (62220 rows)
+  animal 75 (L): done (70380 rows)
+  animal 77 (L): done (72777 rows)
+  animal 98 (n): done (74103 rows)
+  animal 100 (n): done (83283 rows)
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_curves_bin10_fsincl.csv
+[3/6] early-trials FS-excl

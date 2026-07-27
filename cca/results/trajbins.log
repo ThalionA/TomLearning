@@ -1,0 +1,23 @@
+START Wed Jun 17 14:22:57 BST 2026
+5-trial bins (first 30 trials) | bin=10ms smooth=2.5ms K=30 lag+-5 | FS incl
+
+  animal 28 (L): 24 rows
+  animal 34 (L): 12 rows
+  animal 36 (L): 12 rows
+  animal 41 (L): 12 rows
+  animal 52 (L): 36 rows
+  animal 61 (L): 36 rows
+  animal 63 (L): 6 rows
+  animal 66 (L): 36 rows
+  animal 68 (L): 24 rows
+  animal 70 (n): 36 rows
+  animal 71 (n): 48 rows
+  animal 73 (L): 36 rows
+  animal 75 (L): 36 rows
+  animal 77 (L): 36 rows
+  animal 98 (n): 12 rows
+  animal 100 (n): 36 rows
+wrote trajectory_bins_bin10_fsincl.csv (438 rows)
+wrote trajectory_bins_dims_bin10_fsincl.csv (9640 rows)
+wrote trajectory_bins_weights_bin10_fsincl.csv (48648 rows)
+DONE Wed Jun 17 15:18:29 BST 2026

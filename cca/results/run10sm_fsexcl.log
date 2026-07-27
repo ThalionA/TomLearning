@@ -1,0 +1,125 @@
+=== START smoothed(2.5ms) fsexcl Tue Jun 16 13:58:55 BST 2026 ===
+[1/4] ifi-sweep Tue Jun 16 13:58:55 BST 2026
+IFI-WINDOW sweep | bin=10ms K=30 max_lag=25 (250 ms) | FS=excl
+
+  animal 28: done (100 rows)
+  animal 34: done (150 rows)
+  animal 36: done (175 rows)
+  animal 41: done (225 rows)
+  animal 52: done (375 rows)
+  animal 61: done (525 rows)
+  animal 63: done (550 rows)
+  animal 66: done (700 rows)
+  animal 68: done (800 rows)
+  animal 70: done (950 rows)
+  animal 71: done (1150 rows)
+  animal 73: done (1300 rows)
+  animal 75: done (1450 rows)
+  animal 77: done (1600 rows)
+  animal 98: done (1625 rows)
+  animal 100: done (1775 rows)
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/ifi_windows_bin10.csv
+[2/4] trajectory Tue Jun 16 19:37:55 BST 2026
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=10ms window=15 step=5 K=30 pCCA lag+-5 (50ms) shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 13 window-rows (139 total)
+  animal 41 (L): 36 window-rows (175 total)
+  animal 52 (L): 96 window-rows (271 total)
+  animal 61 (L): 114 window-rows (385 total)
+  animal 63 (L): 61 window-rows (446 total)
+  animal 66 (L): 198 window-rows (644 total)
+  animal 68 (L): 192 window-rows (836 total)
+  animal 70 (n): 30 window-rows (866 total)
+  animal 71 (n): 312 window-rows (1178 total)
+  animal 73 (L): 240 window-rows (1418 total)
+  animal 75 (L): 108 window-rows (1526 total)
+  animal 77 (L): 192 window-rows (1718 total)
+  animal 98 (n): 17 window-rows (1735 total)
+  animal 100 (n): 192 window-rows (1927 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_w15_bin10.csv (1927 rows) + trajectory_w15_bin10_dims.csv (37602 dim-rows). Analyse with scripts/analyze_trajectory.py
+[3/4] epochs Wed Jun 17 00:01:07 BST 2026
+Epochs (naive/intermediate/expert) | bin=10ms K=20 pCCA | FS excluded
+
+  animal 28: lp=69 12 rows
+  animal 34: lp=48 6 rows
+  animal 36: lp=28 3 rows
+  animal 41: lp=29 4 rows
+  animal 52: lp=36 18 rows
+  animal 61: lp=88 18 rows
+  animal 63: lp=107 3 rows
+  animal 66: lp=28 18 rows
+  animal 68: lp=42 12 rows
+  animal 73: lp=59 18 rows
+  animal 75: lp=31 18 rows
+  animal 77: lp=49 18 rows
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/epoch_metrics_bin10.csv (148 rows) + /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/epoch_dims_bin10.csv (2302 dim-rows). Analyse with scripts/analyze_epochs.py / analyze_dims_as_n.py
+[4/4] transition Wed Jun 17 00:35:09 BST 2026
+Uncued->cued transition (full suite) | K=15 pCCA, sample-matched
+
+  animal 41 (L): uncued_run=28951 bins, 2 pairs
+  animal 52 (L): uncued_run=30955 bins, 6 pairs
+  animal 61 (L): uncued_run=10534 bins, 6 pairs
+  animal 63 (L): uncued_run=11192 bins, 1 pairs
+  animal 66 (L): uncued_run=13557 bins, 6 pairs
+  animal 68 (L): uncued_run=10297 bins, 4 pairs
+  animal 70 (n): uncued_run=31704 bins, 0 pairs
+  animal 71 (n): uncued_run=13056 bins, 8 pairs
+  animal 73 (L): uncued_run=21063 bins, 6 pairs
+  animal 75 (L): uncued_run=12835 bins, 6 pairs
+  animal 77 (L): uncued_run=12269 bins, 6 pairs
+  animal 98 (n): uncued_run=16394 bins, 1 pairs
+  animal 100 (n): uncued_run=10815 bins, 6 pairs
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/transition_uncued_cued_bin10.csv (58 rows)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/transition_dims_bin10.csv (775 dim-rows)
+
+Transition: delta = cued - uncued (sign test); rot = uncued->cued subspace angle
+
+=== ANIMALS-as-n (the inferential unit) ===
+[all]
+  CA1-RSC   n=11 rot_x= 84.5deg | d_cc1=+0.011p=0.76  | d_n_sig=+0.000p=0.84  | d_mi_sig=+0.000p=0.94  | d_ifi=+0.022p=0.21 
+  CA1-CA3   n=5  rot_x= 83.1deg | d_cc1=-0.078p=0.62  | d_n_sig=+0.000p=0.5  | d_mi_sig=+0.142p=0.25  | d_ifi=-0.027p=0.62 
+  CA1-DG    n=9  rot_x= 80.9deg | d_cc1=+0.076p=0.13  | d_n_sig=+1.000p=0.078  | d_mi_sig=+0.019p=0.039* | d_ifi=-0.020p=0.73 
+  CA1-V1    n=9  rot_x= 85.3deg | d_cc1=+0.026p=0.3  | d_n_sig=+2.000p=0.3  | d_mi_sig=+0.009p=0.16  | d_ifi=-0.020p=0.25 
+  CA3-DG    n=4  rot_x= 82.0deg | d_cc1=-0.024p=0.88  | d_n_sig=+2.000p=0.62  | d_mi_sig=+0.105p=0.62  | d_ifi=+0.033p=0.62 
+  CA1-SUB   n=6  rot_x= 86.0deg | d_cc1=+0.059p=0.094  | d_n_sig=+0.000p=0.5  | d_mi_sig=+0.016p=0.25  | d_ifi=+0.009p=0.56 
+  RSC-SUB   n=6  rot_x= 87.5deg | d_cc1=+0.074p=0.094  | d_n_sig=+0.000p=1  | d_mi_sig=+0.000p=0.5  | d_ifi=-0.031p=0.16 
+  V1-RSC    n=8  rot_x= 85.5deg | d_cc1=-0.177p=0.2  | d_n_sig=-0.500p=1  | d_mi_sig=+0.009p=0.31  | d_ifi=+0.003p=0.74 
+[learners]
+  CA1-RSC   n=8  rot_x= 84.0deg | d_cc1=+0.012p=0.74  | d_n_sig=+0.000p=0.88  | d_mi_sig=-0.000p=0.62  | d_ifi=+0.015p=0.31 
+  CA1-CA3   n=4  rot_x= 86.4deg | d_cc1=-0.074p=0.88  | d_n_sig=+0.000p=nan  | d_mi_sig=+0.071p=0.5  | d_ifi=-0.040p=0.62 
+  CA1-DG    n=7  rot_x= 80.9deg | d_cc1=+0.076p=0.3  | d_n_sig=+1.000p=0.16  | d_mi_sig=+0.019p=0.094  | d_ifi=+0.014p=0.94 
+  CA1-V1    n=7  rot_x= 85.3deg | d_cc1=+0.026p=0.38  | d_n_sig=+0.000p=0.81  | d_mi_sig=+0.005p=0.62  | d_ifi=-0.027p=0.11 
+  CA3-DG    n=3  rot_x= 86.3deg | d_cc1=-0.032p=0.25  | d_n_sig=-1.000p=1  | d_mi_sig=-0.015p=1  | d_ifi=+0.033p=0.75 
+  CA1-SUB   n=4  rot_x= 84.2deg | d_cc1=+0.059p=0.12  | d_n_sig=+1.000p=nan  | d_mi_sig=+0.016p=nan  | d_ifi=+0.011p=0.62 
+  RSC-SUB   n=4  rot_x= 88.4deg | d_cc1=+0.074p=0.25  | d_n_sig=+0.000p=nan  | d_mi_sig=+0.000p=nan  | d_ifi=-0.011p=0.62 
+  V1-RSC    n=6  rot_x= 85.7deg | d_cc1=-0.052p=0.56  | d_n_sig=-0.500p=0.62  | d_mi_sig=+0.000p=1  | d_ifi=+0.006p=0.22 
+[non-learners]
+  CA1-RSC   n=3  rot_x= 87.7deg | d_cc1=+0.011p=1  | d_n_sig=+1.000p=nan  | d_mi_sig=+0.005p=nan  | d_ifi=+0.022p=0.5 
+
+=== DIMS-as-n (n = significant canonical dimensions; power check) ===
+[dims-as-n: learners]  (sig dims pooled; signed-rank d=cued−uncued vs 0)
+  CA1-RSC   n_dims=17  | d_cc=+0.077 p=0.58  | d_ifi=+0.027 p=0.057 
+  CA1-CA3   n_dims=10  | d_cc=+0.219 p=0.19  | d_ifi=-0.046 p=0.049*
+  CA1-DG    n_dims=21  | d_cc=+0.157 p=0.0001* | d_ifi=+0.014 p=0.18 
+  CA1-V1    n_dims=18  | d_cc=+0.027 p=0.8  | d_ifi=+0.018 p=0.14 
+  CA3-DG    n_dims=19  | d_cc=+0.219 p=0.0053* | d_ifi=+0.005 p=0.57 
+  CA1-SUB   n_dims=8   | d_cc=+0.146 p=0.0078* | d_ifi=+0.020 p=0.31 
+  RSC-SUB   n_dims=7   | d_cc=+0.122 p=0.031* | d_ifi=+0.035 p=0.69 
+  V1-RSC    n_dims=20  | d_cc=-0.229 p=0.26  | d_ifi=+0.009 p=0.18 
+[dims-as-n: all (learners + non)]  (sig dims pooled; signed-rank d=cued−uncued vs 0)
+  CA1-RSC   n_dims=24  | d_cc=+0.165 p=0.042* | d_ifi=+0.011 p=0.32 
+  CA1-CA3   n_dims=18  | d_cc=+0.239 p=0.021* | d_ifi=-0.040 p=0.024*
+  CA1-DG    n_dims=30  | d_cc=+0.166 p=2.6e-07* | d_ifi=+0.009 p=0.84 
+  CA1-V1    n_dims=36  | d_cc=+0.161 p=0.043* | d_ifi=+0.002 p=0.18 
+  CA3-DG    n_dims=26  | d_cc=+0.236 p=0.00019* | d_ifi=+0.006 p=0.69 
+  CA1-SUB   n_dims=16  | d_cc=+0.146 p=0.18  | d_ifi=+0.011 p=0.25 
+  RSC-SUB   n_dims=16  | d_cc=+0.117 p=0.71  | d_ifi=+0.029 p=0.058 
+  V1-RSC    n_dims=40  | d_cc=+0.175 p=0.19  | d_ifi=-0.001 p=0.64 
+=== DONE smoothed fsexcl Wed Jun 17 00:47:31 BST 2026 ===

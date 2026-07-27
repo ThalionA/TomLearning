@@ -7,3 +7,9 @@
 *.pptx
 *.asv
 .DS_Store
+
+# Bulk analysis data — regenerable, never committed (see cca/STATE.md §6).
+# Held-out lagged-CC curves: ~3 MB each, regenerate with scripts/run_lag_curves.py
+cca/results/lag_curves_bin10*.csv
+# Tom deliverable package: 27 MB of data + figures, rebuilt from the figure scripts
+cca/share_tom_2026-06/

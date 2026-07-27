@@ -1,0 +1,80 @@
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=25ms window=15 step=5 K=30 pCCA lag+-10 shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 13 window-rows (139 total)
+  animal 41 (L): 34 window-rows (173 total)
+  animal 52 (L): 96 window-rows (269 total)
+  animal 61 (L): 114 window-rows (383 total)
+  animal 63 (L): 61 window-rows (444 total)
+  animal 66 (L): 198 window-rows (642 total)
+  animal 68 (L): 192 window-rows (834 total)
+  animal 70 (n): 30 window-rows (864 total)
+  animal 71 (n): 312 window-rows (1176 total)
+  animal 73 (L): 240 window-rows (1416 total)
+  animal 75 (L): 108 window-rows (1524 total)
+  animal 77 (L): 192 window-rows (1716 total)
+  animal 98 (n): 17 window-rows (1733 total)
+  animal 100 (n): 192 window-rows (1925 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_w15_bin25.csv (1925 rows) + trajectory_w15_bin25_dims.csv (37610 dim-rows). Analyse with scripts/analyze_trajectory.py
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=25ms window=15 step=5 K=30 pCCA lag+-10 shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 26 window-rows (152 total)
+  animal 41 (L): 36 window-rows (188 total)
+  animal 52 (L): 96 window-rows (284 total)
+  animal 61 (L): 114 window-rows (398 total)
+  animal 63 (L): 61 window-rows (459 total)
+  animal 66 (L): 198 window-rows (657 total)
+  animal 68 (L): 192 window-rows (849 total)
+  animal 70 (n): 30 window-rows (879 total)
+  animal 71 (n): 312 window-rows (1191 total)
+  animal 73 (L): 240 window-rows (1431 total)
+  animal 75 (L): 108 window-rows (1539 total)
+  animal 77 (L): 192 window-rows (1731 total)
+  animal 98 (n): 34 window-rows (1765 total)
+  animal 100 (n): 192 window-rows (1957 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_w15_bin25_fsincl.csv (1957 rows) + trajectory_w15_bin25_dims_fsincl.csv (41371 dim-rows). Analyse with scripts/analyze_trajectory.py
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=50ms window=15 step=5 K=30 pCCA lag+-10 shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 13 window-rows (139 total)
+  animal 41 (L): 32 window-rows (171 total)
+  animal 52 (L): 96 window-rows (267 total)
+  animal 61 (L): 113 window-rows (380 total)
+  animal 63 (L): 61 window-rows (441 total)
+  animal 66 (L): 198 window-rows (639 total)
+  animal 68 (L): 192 window-rows (831 total)
+  animal 70 (n): 30 window-rows (861 total)
+  animal 71 (n): 312 window-rows (1173 total)
+  animal 73 (L): 240 window-rows (1413 total)
+  animal 75 (L): 108 window-rows (1521 total)
+  animal 77 (L): 192 window-rows (1713 total)
+  animal 98 (n): 17 window-rows (1730 total)
+  animal 100 (n): 192 window-rows (1922 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_w15_bin50.csv (1922 rows) + trajectory_w15_bin50_dims.csv (37772 dim-rows). Analyse with scripts/analyze_trajectory.py
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=50ms window=15 step=5 K=30 pCCA lag+-10 shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 26 window-rows (152 total)
+  animal 41 (L): 34 window-rows (186 total)
+  animal 52 (L): 96 window-rows (282 total)
+  animal 61 (L): 114 window-rows (396 total)
+  animal 63 (L): 61 window-rows (457 total)
+  animal 66 (L): 198 window-rows (655 total)
+  animal 68 (L): 192 window-rows (847 total)
+  animal 70 (n): 30 window-rows (877 total)
+  animal 71 (n): 312 window-rows (1189 total)
+  animal 73 (L): 240 window-rows (1429 total)
+  animal 75 (L): 108 window-rows (1537 total)
+  animal 77 (L): 192 window-rows (1729 total)
+  animal 98 (n): 34 window-rows (1763 total)
+  animal 100 (n): 192 window-rows (1955 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_w15_bin50_fsincl.csv (1955 rows) + trajectory_w15_bin50_dims_fsincl.csv (41525 dim-rows). Analyse with scripts/analyze_trajectory.py

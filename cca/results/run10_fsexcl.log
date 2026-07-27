@@ -1,0 +1,92 @@
+=== START fsexcl Fri Jun 12 14:26:06 BST 2026 ===
+[1/4] ifi-sweep (max-lag 25, curves to +-250ms) Fri Jun 12 14:26:06 BST 2026
+IFI-WINDOW sweep | bin=10ms K=30 max_lag=25 (250 ms) | FS=excl
+
+  animal 28: done (100 rows)
+  animal 34: done (150 rows)
+  animal 36: done (175 rows)
+  animal 41: done (225 rows)
+  animal 52: done (375 rows)
+  animal 61: done (525 rows)
+  animal 63: done (550 rows)
+  animal 66: done (700 rows)
+  animal 68: done (800 rows)
+  animal 70: done (950 rows)
+  animal 71: done (1150 rows)
+  animal 73: done (1300 rows)
+  animal 75: done (1450 rows)
+  animal 77: done (1600 rows)
+  animal 98: done (1625 rows)
+  animal 100: done (1775 rows)
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/ifi_windows_bin10.csv
+[2/4] trajectory (max-lag 5, +-50ms) Sat Jun 13 01:45:01 BST 2026
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=10ms window=15 step=5 K=30 pCCA lag+-5 (50ms) shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 13 window-rows (139 total)
+  animal 41 (L): 36 window-rows (175 total)
+  animal 52 (L): 96 window-rows (271 total)
+  animal 61 (L): 114 window-rows (385 total)
+  animal 63 (L): 61 window-rows (446 total)
+  animal 66 (L): 198 window-rows (644 total)
+  animal 68 (L): 192 window-rows (836 total)
+  animal 70 (n): 30 window-rows (866 total)
+  animal 71 (n): 312 window-rows (1178 total)
+  animal 73 (L): 240 window-rows (1418 total)
+  animal 75 (L): 108 window-rows (1526 total)
+  animal 77 (L): 192 window-rows (1718 total)
+  animal 98 (n): 17 window-rows (1735 total)
+  animal 100 (n): 192 window-rows (1927 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_w15_bin10.csv (1927 rows) + trajectory_w15_bin10_dims.csv (37599 dim-rows). Analyse with scripts/analyze_trajectory.py
+[3/4] epochs Sat Jun 13 06:04:30 BST 2026
+Epochs (naive/intermediate/expert) | bin=10ms K=20 pCCA | FS excluded
+
+  animal 28: lp=69 12 rows
+  animal 34: lp=48 6 rows
+  animal 36: lp=28 3 rows
+  animal 41: lp=29 4 rows
+  animal 52: lp=36 18 rows
+  animal 61: lp=88 18 rows
+  animal 63: lp=107 3 rows
+  animal 66: lp=28 18 rows
+  animal 68: lp=42 12 rows
+  animal 73: lp=59 18 rows
+  animal 75: lp=31 18 rows
+  animal 77: lp=49 18 rows
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/epoch_metrics_bin10.csv (148 rows) + /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/epoch_dims_bin10.csv (2302 dim-rows). Analyse with scripts/analyze_epochs.py / analyze_dims_as_n.py
+[4/4] transition Sat Jun 13 06:35:18 BST 2026
+Uncued->cued transition (full suite) | K=15 pCCA, sample-matched
+
+  animal 41 (L): uncued_run=28951 bins, 0 pairs
+  animal 52 (L): uncued_run=30955 bins, 0 pairs
+  animal 61 (L): uncued_run=10534 bins, 0 pairs
+  animal 63 (L): uncued_run=11192 bins, 0 pairs
+  animal 66 (L): uncued_run=13557 bins, 0 pairs
+  animal 68 (L): uncued_run=10297 bins, 0 pairs
+  animal 70 (n): uncued_run=31704 bins, 0 pairs
+  animal 71 (n): uncued_run=13056 bins, 0 pairs
+  animal 73 (L): uncued_run=21063 bins, 0 pairs
+  animal 75 (L): uncued_run=12835 bins, 0 pairs
+  animal 77 (L): uncued_run=12269 bins, 0 pairs
+  animal 98 (n): uncued_run=16394 bins, 0 pairs
+  animal 100 (n): uncued_run=10815 bins, 0 pairs
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/transition_uncued_cued.csv (0 rows)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/transition_dims.csv (0 dim-rows)
+
+Transition: delta = cued - uncued (sign test); rot = uncued->cued subspace angle
+
+=== ANIMALS-as-n (the inferential unit) ===
+[all]
+[learners]
+[non-learners]
+
+=== DIMS-as-n (n = significant canonical dimensions; power check) ===
+[dims-as-n: learners]  (sig dims pooled; signed-rank d=cued−uncued vs 0)
+[dims-as-n: all (learners + non)]  (sig dims pooled; signed-rank d=cued−uncued vs 0)
+=== DONE fsexcl Sat Jun 13 06:41:29 BST 2026 ===
