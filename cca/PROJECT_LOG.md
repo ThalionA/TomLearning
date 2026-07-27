@@ -11,7 +11,58 @@ narrative + state of play.**
 
 ---
 
-## ⏳ IN PROGRESS (2026-06-17 cont.) — FULL REPORT REGEN: smoothed-10 ms primary, both FS co-primary
+## CURRENT STATE (2026-07-27) — doc reconciliation after a 6-week gap; nothing running
+
+**Nothing is in flight.** Last analysis output 2026-06-18 16:11; last commit `7b6f341`
+(2026-06-18). No live processes. The three entries below that were flagged ⏳ IN PROGRESS /
+RUNNING have been **retitled ✓ DONE** — their batches did finish; the headers were stale, not
+the work.
+
+**Verified this session (evidence, not assumption):**
+- **Tests: 265 pass** (48 s, `PYTHONPATH=src python -m pytest -q`).
+- **All batches completed.** `missing_smoothed.log` died at `[3/6]`, but steps 5–6 (FS-excl
+  epoch + transition weights) were relaunched and finished (`fsexcl_weights.log` DONE 19:11;
+  `epoch_weights_bin10.csv` 18:58, `transition_weights_bin10.csv` 19:11). Lag-curves both FS
+  and 5-trial-bin trajectories both FS all completed. **Do not re-launch these.**
+- **Report figures are sound:** all **62** `![[…]]` embeds across the vault report + appendix
+  resolve; the main report is **37 bin10 embeds + graphical abstract**, i.e. no 25 ms leakage
+  into the smoothed body.
+
+**`STATE.md` REWRITTEN** — it was 6 weeks stale *and wrong*: it still asserted the Arm A
+temporal analysis was "designed but **not run** — no `temporal_arm_*` pkls exist", while §3
+carried only landmark/spatial findings. Since STATE.md declares itself the tie-breaker, a cold
+session was being actively misled. Now restructured: three arms (§2), **temporal arm promoted
+to PRIMARY with its own verdict block (§3.0)** — hierarchy table, strength-null, Gini↓
+participation-broadening + the learning-vs-experience caveat, CA1→RSC flow existence
+(p=3.9×10⁻⁴), rotation-null, early-trials, KCCA-linearity, units-of-analysis policy — landmark
+/spatial demoted to §3.1 "superseded, retained for the record" with the pseudoreplication
+caveat kept; §4 gains the temporal canonical config; §5 open decisions rewritten
+(learning-vs-time-on-task is now the binding question); §6 gains the temporal reproduce block
+(flags verified against argparse — it is `--include-fs`, not `--fs-incl`).
+
+**OUTSTANDING (nothing blocking):**
+1. **Report number reconciliation** (Theo's domain, vault prose) — the editor's note at the top
+   of the report still stands: §3.1–3.6 prose carries pre-smoothing numbers; **§3.9 tables are
+   authoritative**. Two concrete discrepancies confirmed against `bin10_tables.md` §A: the
+   graphical-abstract/§4 CA3-DG **CC₁ 0.36** is stale (smoothed = **0.315** FS-excl / **0.409**
+   FS-incl), and "**~2.9 sig dims**" is stale (smoothed = **5.74** FS-excl / **6.14** FS-incl).
+   Also §6 Provenance names branch `cca-consolidation` (we are on `main`) and cites the old
+   `trajectory_windows.csv` rather than the `_bin10` set.
+2. **Orphaned FS-excl bin10 early-trials.** `early_trials_blocks_bin10.csv` +
+   `early_trials_projected_bin10.csv` exist (Jun 17 18:20) but `analyze_early_trials.py` never
+   ran on them (no `early_trials_summary_bin10.csv`) and no `HCV1_early_*_bin10` figures exist.
+   The expensive block-refit is already paid for; analysis + figs are minutes. FS-incl bin10
+   early-trials stays deliberately skipped (pathologically slow, low value).
+3. Vault `Hippocampus-V1-Tasks.md` last triaged 2026-05-07 — "Refine temporal CCA analysis"
+   still open, plus Granger/LFP, synthetic-data CCA recovery, hyperparameter re-sweep.
+
+**Git hygiene decided this session:** results CSVs/logs and `AGENTS.md` committed; the two
+~3 MB `lag_curves_bin10*.csv` and the 27 MB `share_tom_2026-06/` deliverable **gitignored**
+(never commit data — they regenerate from `run_lag_curves.py` / the figure scripts).
+
+---
+
+## ✓ DONE (2026-06-17 cont.) — FULL REPORT REGEN: smoothed-10 ms primary, both FS co-primary
 
 **✓ REPORT REGENERATED (structure + tables + figures + framing).** Main report restructured
 (`scripts/_regen_report.py`, one-shot, removed): **§3 = the smoothed-10 ms results (primary,
@@ -71,7 +122,7 @@ report — §2 framing → 10 ms primary; §3 rebuilt on smoothed both-FS (promo
 early-trials/units/rotation/lag-curves/paired/area-Gini/B-D); §4 synthesis numbers; MOVE 25 ms + KCCA to
 `… — 25 ms Appendix.md`; (4) deck + commit + log. Report prose stays UNCOMMITTED (vault, for review).
 
-## ⏳ IN PROGRESS (2026-06-17) — Tom's meeting plots (smoothed 10 ms, FS-included)
+## ✓ DONE (2026-06-17) — Tom's meeting plots (smoothed 10 ms, FS-included)
 
 Tom's request (Slack): paired plots on the smoothed data for a meeting next week. **Built & in the
 vault (`figs_paired.py`, committed):** 12 paired-panel figures (per pair, per-animal connected dots,
@@ -107,7 +158,7 @@ Methods §2 rewritten thorough (17 subsections; vault, uncommitted).
 bins, learners vs non) — needs the 5-trial-bin run (in flight); (a) FS-incl/learners summary-schema
 variant. Then assemble Tom's deck/figure set.
 
-## ⏳ RUNNING (2026-06-13) — Gaussian-smoothed (Buzsáki) 10 ms re-run, both FS
+## ✓ DONE (2026-06-13) — Gaussian-smoothed (Buzsáki) 10 ms re-run, both FS
 
 **Why.** Align preprocessing with the cited paper. **Gonzalez & Buzsáki 2026 Methods** ("Preprocessing
 single-unit spiking", read from Zotero `IQYYYVBB`): *convolve each unit's spike train with a Gaussian
