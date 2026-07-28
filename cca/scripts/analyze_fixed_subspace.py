@@ -48,12 +48,15 @@ def reduce_curves(df: pd.DataFrame, dim: int = 1) -> pd.DataFrame:
         r = g["r"].to_numpy(float)
         if not np.any(np.isfinite(r)):
             continue
+        side_ms, side_ratio = fixed_subspace.side_peak(lag, r)
         rows.append({
             "animal": animal, "pair": pair, "epoch": epoch,
             "peak_r": float(np.nanmax(r)),
             "peak_lag_ms": perdim_ifi.curve_peak_lag(lag, r),
             "ifi": perdim_ifi.curve_ifi(lag, r),
             "width_ms": fixed_subspace.curve_half_width(lag, r),
+            "side_peak_ms": side_ms,
+            "side_peak_ratio": side_ratio,
             "n_bins": int(g["n_bins"].iloc[0]),
             "r_fit": float(g["r_fit"].iloc[0]) if pd.notna(g["r_fit"].iloc[0])
                      else np.nan,
@@ -109,6 +112,36 @@ def _md(stats: pd.DataFrame, fs: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _md_ringing(tab: pd.DataFrame, fs: str) -> str:
+    """How to read the integration window, per pair — decaying or ringing?"""
+    lines = [f"#### {fs} — is the lag curve decaying or RINGING?", "",
+             "A secondary peak above half the central peak means the curve oscillates "
+             "rather than decays. On a ringing curve the half-max width is the "
+             "**half-period of the rhythm, not a temporal integration window**, and the "
+             "IFI compares two lobes of that rhythm rather than a lead.", "",
+             "| pair | curves with a side peak | side-peak lag | implied freq | "
+             "mean width | read the width as |",
+             "|---|---|---|---|---|---|"]
+    for pair, g in tab.groupby("pair"):
+        ring = g[(g["side_peak_ratio"] > 0.5) & g["side_peak_ms"].notna()]
+        frac = len(ring) / len(g) if len(g) else np.nan
+        off = float(ring["side_peak_ms"].mean()) if len(ring) else np.nan
+        freq = f"{1000 / off:.1f} Hz" if np.isfinite(off) and off > 0 else "—"
+        # The verdict has to follow the MAJORITY of curves. A pair where a third of
+        # animals ring is not a pair whose width is a half-period.
+        if not np.isfinite(frac) or frac == 0:
+            verdict = "integration window"
+        elif frac >= 0.5:
+            verdict = "**half-period of a rhythm**"
+        else:
+            verdict = "mixed — mostly integration window"
+        lines.append(
+            f"| {pair} | {len(ring)}/{len(g)} ({frac:.0%}) | "
+            f"{'%.0f ms' % off if np.isfinite(off) else '—'} | {freq} | "
+            f"{g['width_ms'].mean():.0f} ms | {verdict} |")
+    return "\n".join(lines) + "\n"
+
+
 def main():
     md = ["# Fixed-subspace lag curves by epoch — meeting items 5, 6, 7", "",
           "One canonical component, identified once across balanced trials and frozen, "
@@ -131,8 +164,16 @@ def main():
         stats.to_csv(RES / f"fixed_subspace_stats_bin10{suf}.csv", index=False,
                      lineterminator="\n")
         md.append(_md(stats, fs))
+        md.append(_md_ringing(tab, fs))
         print(f"\n{fs}: {tab['animal'].nunique()} animals, {len(tab)} "
               f"(animal,pair,epoch) curves")
+        ring = tab.dropna(subset=["side_peak_ms"])
+        ring = ring[ring["side_peak_ratio"] > 0.5]
+        if len(ring):
+            per_pair = ring.groupby("pair")["side_peak_ms"].mean()
+            print("  RINGING curves (width = half-period, NOT an integration window): "
+                  + ", ".join(f"{p} ~{v:.0f} ms ({1000 / v:.1f} Hz)"
+                              for p, v in per_pair.items()))
         for metric, lab in METRICS:
             hits = stats[stats[f"p_{metric}"] < 0.05]
             print(f"  {lab}: {len(hits)}/{len(stats)} pairs at p<0.05" +

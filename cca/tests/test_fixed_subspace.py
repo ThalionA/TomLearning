@@ -187,3 +187,34 @@ def test_half_width_handles_unsorted_lags():
     lags = np.array([2.0, -2.0, 0.0, 1.0, -1.0])
     r = np.array([0.1, 0.1, 1.0, 1.0, 1.0])
     assert fixed_subspace.curve_half_width(lags, r) == pytest.approx(2.0)
+
+
+# ---------------------------------------------------------------------------
+# side_peak — is the lag curve ringing rather than decaying?
+# ---------------------------------------------------------------------------
+def test_side_peak_finds_an_oscillation_period():
+    lags = np.arange(-250, 251, 10, dtype=float)
+    r = np.cos(2 * np.pi * lags / 130.0)          # ~7.7 Hz, theta
+    off, ratio = fixed_subspace.side_peak(lags, r)
+    assert off == pytest.approx(130.0, abs=10.0)
+    assert ratio > 0.9
+
+
+def test_side_peak_is_nan_for_a_decaying_curve():
+    lags = np.arange(-100, 101, 10, dtype=float)
+    r = np.exp(-(lags ** 2) / (2 * 30.0 ** 2))    # clean Gaussian, no ringing
+    off, ratio = fixed_subspace.side_peak(lags, r)
+    assert np.isnan(off) and np.isnan(ratio)
+
+
+def test_side_peak_ignores_the_central_peak_itself():
+    """A broad flat central lobe must not be reported as its own side peak."""
+    lags = np.arange(-50, 51, 10, dtype=float)
+    r = np.where(np.abs(lags) <= 20, 1.0, 0.05)
+    off, _ = fixed_subspace.side_peak(lags, r)
+    assert np.isnan(off) or off > 20
+
+
+def test_side_peak_is_nan_for_a_non_positive_curve():
+    lags = np.arange(-30, 31, 10, dtype=float)
+    assert np.isnan(fixed_subspace.side_peak(lags, np.full(lags.size, -0.3))[0])

@@ -178,3 +178,46 @@ def curve_half_width(lags, r) -> float:
     while hi + 1 < r.size and r[hi + 1] >= half:
         hi += 1
     return float(lags[hi] - lags[lo])
+
+
+def side_peak(lags, r):
+    """``(lag_offset, height_ratio)`` of the largest SECONDARY peak outside the central
+    half-max region — the tell for an oscillatory lag curve.
+
+    Intra-hippocampal canonical components are theta-modulated, so their lag curve rings
+    at ~7-8 Hz rather than decaying. That matters for interpretation: on a ringing curve
+    :func:`curve_half_width` measures the half-period of the oscillation, NOT a temporal
+    integration window, and the IFI compares two lobes of a rhythm rather than a lead.
+
+    Returns ``(nan, nan)`` when the curve has no secondary peak (a genuinely decaying
+    curve, where the width does mean an integration window). ``height_ratio`` is the
+    secondary peak's height as a fraction of the central peak.
+    """
+    lags = np.asarray(lags, dtype=float)
+    r = np.asarray(r, dtype=float)
+    ok = np.isfinite(lags) & np.isfinite(r)
+    if ok.sum() < 5:
+        return float("nan"), float("nan")
+    lags, r = lags[ok], r[ok]
+    order = np.argsort(lags, kind="stable")
+    lags, r = lags[order], r[order]
+    pk = int(np.argmax(r))
+    if r[pk] <= 0:
+        return float("nan"), float("nan")
+    half = r[pk] / 2.0
+    lo = hi = pk
+    while lo - 1 >= 0 and r[lo - 1] >= half:
+        lo -= 1
+    while hi + 1 < r.size and r[hi + 1] >= half:
+        hi += 1
+    best_i, best_v = -1, -np.inf
+    for i in range(1, r.size - 1):
+        if lo <= i <= hi:
+            continue
+        # STRICT on both sides: a flat shoulder is not a ring, and with `>=` every
+        # point of a plateau qualifies as a local maximum.
+        if r[i] > r[i - 1] and r[i] > r[i + 1] and r[i] > best_v:
+            best_i, best_v = i, r[i]
+    if best_i < 0 or best_v <= 0:
+        return float("nan"), float("nan")
+    return float(abs(lags[best_i] - lags[pk])), float(best_v / r[pk])
