@@ -1,0 +1,35 @@
+START Wed Jul 29 00:08:11 BST 2026
+FIXED SUBSPACE | bin=10ms smooth=2.5ms K=30 | lags +/-25 bins | FS=excl
+
+  animal 28: 1836 rows total
+  animal 34: 2754 rows total
+  animal 36: 3213 rows total
+  animal 41: 4131 rows total
+  animal 52: 6885 rows total
+  animal 61: 9639 rows total
+  animal 63: 10098 rows total
+  animal 66: 12852 rows total
+  animal 68: 14688 rows total
+  animal 73: 17442 rows total
+  animal 75: 20196 rows total
+  animal 77: 22950 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/fixed_subspace_bin10.csv
+DONE-EXCL Wed Jul 29 00:14:47 BST 2026
+FIXED SUBSPACE | bin=10ms smooth=2.5ms K=30 | lags +/-25 bins | FS=incl
+
+  animal 28: 1836 rows total
+  animal 34: 2754 rows total
+  animal 36: 3672 rows total
+  animal 41: 4590 rows total
+  animal 52: 7344 rows total
+  animal 61: 10098 rows total
+  animal 63: 10557 rows total
+  animal 66: 13311 rows total
+  animal 68: 15147 rows total
+  animal 73: 17901 rows total
+  animal 75: 20655 rows total
+  animal 77: 23409 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/fixed_subspace_bin10_fsincl.csv
+ALL DONE Wed Jul 29 00:21:38 BST 2026
