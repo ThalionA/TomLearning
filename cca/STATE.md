@@ -1,6 +1,6 @@
 # STATE — Tom-learning CCA project
 
-**Last updated:** 2026-07-27. This is the entry point. It reconciles the three analysis
+**Last updated:** 2026-07-28. This is the entry point. It reconciles the three analysis
 arms, names the canonical configs, and states the findings honestly. `README.md` is
 quick-start; `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` are the design specs;
 `PROJECT_LOG.md` is the state of play; `NOTES.md` is the older chronological log. When they
@@ -75,12 +75,21 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
 1. **Strength: NULL, and genuinely so.** All trajectory strength slopes n.s.; transition
    n.s.; flat even under dims-as-n (the most anti-conservative unit). This is a real null,
    not a power failure.
-2. **Membership: participation broadens (the one robust signal).** Weight-Gini ↓ over the
-   session — CA1-RSC (LMM trajectory p = 4×10⁻⁵; epoch naive→intermediate LMM p = 7×10⁻⁵,
-   expert−intermediate n.s.) and CA1-DG (LMM p = 1.9×10⁻⁵). Early (by intermediate), then
-   plateaus. Parametric, FS-invariant, and **invisible to CC₁**.
-   **⚠ Attribution to learning is NOT established** — non-learners de-sparsify comparably and
-   the `trial_frac × learner` interaction is n.s. for every pair. Most parsimonious reading is
+2. **Membership: participation broadens — but see the metric caveat, this is now UNDER REVIEW.**
+   Weight-Gini ↓ over the session — CA1-RSC (LMM trajectory p = 4×10⁻⁵; epoch naive→intermediate
+   LMM p = 7×10⁻⁵, expert−intermediate n.s.) and CA1-DG (LMM p = 1.9×10⁻⁵). Early (by
+   intermediate), then plateaus. Parametric, FS-invariant, and **invisible to CC₁**.
+   **⚠⚠ METRIC CAVEAT (2026-07-28) — the Gini that produced this result is partner-invariant.**
+   `membership.subspace_contribution` takes an unweighted L2 row-norm over all retained dims, so
+   the square-orthogonal `Uc` cancels and the partner area drops out exactly (verified
+   analytically, on synthetic data to 4×10⁻¹⁵, and empirically: CA1 `gini_x` correlates at median
+   r = 0.981 across five partners). It is an **area-intrinsic** readout of a population's own
+   whitened-PCA loading geometry, **not** participation in a communication subspace. Two
+   connection-specific replacements (`gini_*_conn`, `gini_*_sig`) now exist and the trajectory
+   re-run is under way; **whether the broadening survives them is OPEN.** Until it is re-tested,
+   do not cite this as a communication-subspace finding. See `PROJECT_LOG.md` (2026-07-28).
+   **⚠ Attribution to learning is NOT established** either — non-learners de-sparsify comparably
+   and the `trial_frac × learner` interaction is n.s. for every pair. Most parsimonious reading is
    **experience / time-on-task**, with an LP-locked component suggestive but unproven at this N.
 3. **Direction: a flow *exists*; its *change* is underpowered.** Held-out segment-aware IFI
    window sweep, animals-as-n: **CA1→RSC +0.079 at ±50 ms, t₁₁ = 5.0, p = 3.9×10⁻⁴** (survives
@@ -100,10 +109,12 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    median KCCA − linear gap is only +0.015, and CA3-DG (the strongest pair) is ≈ linear. The
    subspace is largely linear.
 
-**Headline (Contested).** Over the task the hippocampal–cortical communication subspace
-**broadens** — recruiting more neurons (Gini↓, CA1-RSC/CA1-DG, LMM p ~ 10⁻⁵, early then
-plateau) — rather than changing coupling magnitude, direction, or orientation. Whether the
-broadening is *learning* or *experience* is the open question.
+**Headline (Contested — and now under review).** Over the task the hippocampal–cortical
+communication subspace **broadens** — recruiting more neurons (Gini↓, CA1-RSC/CA1-DG, LMM
+p ~ 10⁻⁵, early then plateau) — rather than changing coupling magnitude, direction, or
+orientation. Whether the broadening is *learning* or *experience* is one open question; **whether
+it is a property of the *connection* at all is the other** (2026-07-28: the Gini behind it is
+partner-invariant — see finding 2's metric caveat). Both must resolve before this is a claim.
 
 **Units of analysis (stats policy).** Animals-as-n is the inferential unit. Dims-as-n (the
 Gonzalez & Buzsáki convention) is reported **as a power check only** — dims are nested in cells

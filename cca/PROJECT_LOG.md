@@ -11,7 +11,70 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-07-27) — doc reconciliation after a 6-week gap; nothing running
+## CURRENT STATE (2026-07-28) — Gini partner-invariance found; meeting sets a new agenda
+
+**⚠ The headline metric was measuring the wrong thing.** `gini_x` / `gini_y` — the basis of the
+§3.0 finding 2 "participation broadens" headline — is **provably partner-invariant**. In
+`core.cca_fit`, `A = Vx @ diag(1/sx) @ Uc[:, :d] * scale`; `membership.subspace_contribution`
+takes the *unweighted* L2 row-norm over all `d` retained dims, so when `d = rank(X) ≤ rank(Y)`
+the square-orthogonal `Uc` cancels exactly out of every row norm and the partner area drops out
+of the arithmetic. Verified three ways: (i) a new test pins the identity; (ii) synthetic X against
+a cc₁=1.0 partner vs a pure-noise partner gives bit-identical contributions (max diff 4×10⁻¹⁵);
+(iii) in the shipped data CA1's `gini_x` correlates at **median r = 0.981** across five different
+partner areas (r = 1.000 for CA1-CA3 vs CA1-SUB), while the CCA-free Pearson control on the same
+cells sits at r = 0.392. So the shipped metric is an **area-intrinsic** readout of a population's
+own whitened-PCA loading geometry — legitimate, but *not* participation in a communication
+subspace. Commits `9421092` (+ TDD) and `28f0c44`.
+
+**Two connection-specific definitions added** (`membership.subspace_contribution_connection`),
+computed in the same pass by `run_trajectory` / `run_epochs` / `run_transition`:
+- `gini_*_conn` — contributions weighted by each dim's held-out canonical correlation (clipped at
+  0). Always defined; reduces exactly to the area-intrinsic Gini when the canonical spectrum is
+  flat (Gini is scale-invariant). Caveat: conflates concentration with how many dims survive
+  clipping.
+- `gini_*_sig` — restricted to significant dims only. Cleaner, free of that confound, but **NaN
+  when `n_sig` = 0**, which is 56 % of CA1-RSC windows — precisely where the area-intrinsic
+  version misleads most.
+Both drivers now route through `membership.*` instead of an inline `np.linalg.norm`, so the two
+definitions live in one place. Epoch/transition also export `contrib_conn` per neuron, which makes
+the across-partners aggregate in `figs_area_gini.py` meaningful for the first time (it was
+averaging near-identical copies of one partner-invariant vector).
+
+**RUNNING (do not clobber):** `run_trajectory.py … --include-fs --out trajectory_gini3_bin10`
+(PID 20601, launched 16:41, still going at 23:40 — ~1192 of an expected ~1900 window-rows).
+FS-excluded finished 16:41 (`trajectory_gini3_bin10.csv` 1927 rows +
+`trajectory_gini3_bin10_dims.csv` 37 602 dim-rows). Log: `results/gini3.log`.
+
+**⚠ §3.0 finding 2 is NOT yet re-tested.** The Gini↓ trajectory result stands only for the
+area-intrinsic definition. Whether participation-broadening survives under `gini_*_conn` /
+`gini_*_sig` is **open** and is the first thing to check when the FS-incl run lands. Do not cite
+the broadening headline as a communication-subspace result until then.
+
+**Meeting — Nathalie + Tom, 2026-07-28 (next meeting 14:00, 2026-08-07).** Seven asks, mapped to
+the repo:
+1. *Do different CCs have different IFI?* — data already on disk
+   (`results/lag_curves_bin10{,_fsincl}.csv`, dims 1–30 × lags ±25 bins, both FS). Pure
+   re-analysis.
+2. *Separate subspaces into FF/FB, track evolution with learning* — **nothing exists**; no FF/FB
+   machinery anywhere in `src/`. Sits on top of (1): sign of per-dim IFI → FF/FB tag.
+3. *How stable/similar are the CCs across time lags?* — `lagged.heldout_lag_curve_flat_perdim`
+   returns CCs only, not weights; needs a weight export + principal angles (reuse
+   `subspace_stats`).
+4. *Separate lagged curves by FF/FB, and naive vs exp* — follows (1)+(2).
+5. *Go back to one CC, lagged across time* — with (7), a fixed-subspace method change.
+6. *Plot lagged curves + integration windows, naive vs exp* — drivers exist but are
+   session-pooled; need an epoch restriction.
+7. *Fixed subspaces identified across all trials, naive vs exp* — new driver.
+
+**Stats flag raised at the meeting-mapping stage:** tagging dims FF/FB by the sign of their IFI is
+a selection on a noisy statistic — per-dim held-out CC for the weak pairs is 0.02–0.09, where the
+IFI sign is near a coin flip. Gate the tag on (a) dim significance vs the circular-shift null and
+(b) an IFI magnitude floor from the same surrogate, or the FF/FB split is noise-splitting followed
+by a circular test.
+
+---
+
+## ✓ DONE (2026-07-27) — doc reconciliation after a 6-week gap; nothing running
 
 **Nothing is in flight.** Last analysis output 2026-06-18 16:11; last commit `7b6f341`
 (2026-06-18). No live processes. The three entries below that were flagged ⏳ IN PROGRESS /

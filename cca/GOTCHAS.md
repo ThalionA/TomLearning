@@ -2,6 +2,17 @@
 
 One-line entries for non-obvious bugs, so they are not reintroduced.
 
+- **An unweighted L2 row-norm over CCA weights is partner-invariant — it is NOT a
+  communication-subspace readout.** `core.cca_fit` returns `A = Vx @ diag(1/sx) @ Uc[:, :d] *
+  scale`. If you take `norm(A[i, :])` across **all** `d` retained dims and `d = rank(X) ≤ rank(Y)`,
+  the square-orthogonal `Uc` cancels out of every row norm exactly, so the partner area
+  disappears from the arithmetic: the same neuron gets the same "contribution" whether its partner
+  is perfectly coupled or pure noise (max diff 4×10⁻¹⁵ on synthetic data; median r = 0.981 across
+  five real partners). Any Gini/membership metric built on it measures the population's own
+  whitened-PCA loading geometry. Use `membership.subspace_contribution_connection` (CC-weighted,
+  `gini_*_conn`) or restrict to significant dims (`gini_*_sig`) when you mean *connection*.
+  Found 2026-07-28 — it silently underpinned the §3.0 "participation broadens" headline.
+
 - **Capping samples by a contiguous/stride slice breaks by-trial CV and lag adjacency.**
   These sessions run to ~370k engaged 10 ms bins with ~2700 bins/trial, so `idx[:MAX_SAMPLES]`
   (first-N contiguous) spans only 3–4 trials → fails any ≥5-fold by-trial CV gate (the
