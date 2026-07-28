@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, dataio, subspace_window  # noqa: E402
+from tom_cca import config, dataio, membership, subspace_window  # noqa: E402
 
 K = 20
 N_FOLDS = 5
@@ -29,7 +29,8 @@ EPOCHS = ["naive", "intermediate", "expert"]
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
          ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
 FIELDS = ["animal", "learner", "pair", "epoch", "n_bins", "cc1", "n_sig",
-          "mi_sig", "ifi", "optimal_lag", "gini_x", "gini_y"]
+          "mi_sig", "ifi", "optimal_lag", "gini_x", "gini_y",
+          "gini_x_conn", "gini_y_conn", "gini_x_sig", "gini_y_sig"]
 
 
 def parse_args():
@@ -109,16 +110,30 @@ def main():
                     "epoch": epoch, "n_bins": int(mask.sum()), "cc1": round(cc1, 4),
                     "n_sig": ws.n_sig, "mi_sig": round(ws.mi_sig, 4),
                     "ifi": round(ws.ifi, 4), "optimal_lag": ws.optimal_lag,
-                    "gini_x": round(ws.gini_x, 4), "gini_y": round(ws.gini_y, 4)})
+                    "gini_x": round(ws.gini_x, 4), "gini_y": round(ws.gini_y, 4),
+                    "gini_x_conn": round(ws.gini_x_conn, 4),
+                    "gini_y_conn": round(ws.gini_y_conn, 4),
+                    "gini_x_sig": round(ws.gini_x_sig, 4),
+                    "gini_y_sig": round(ws.gini_y_sig, 4)})
                 n_rows += 1
-                # per-neuron Gini-input contribution (L2 of canonical weight scores
-                # across dims) — for the weight CDF and the per-area (cross-partner) Gini
+                # Per-neuron Gini-input contribution — for the weight CDF and the
+                # per-AREA (cross-partner) Gini. Two flavours:
+                #   contrib      — unweighted L2 over dims. AREA-INTRINSIC: the partner
+                #                  cancels out exactly (see membership docstring), so
+                #                  aggregating it "across partners" re-averages copies.
+                #   contrib_conn — weighted by each dim's held-out canonical correlation,
+                #                  so it genuinely differs per partner. This is the one
+                #                  that makes an across-connections area aggregate mean
+                #                  something.
+                r_ho = np.clip(np.nan_to_num(np.asarray(ws.cc, dtype=float)), 0.0, 1.0)
                 for area, W in ((ax, ws.weights_x), (ay, ws.weights_y)):
-                    contrib = np.linalg.norm(np.atleast_2d(W), axis=1)
-                    for u, c in enumerate(contrib):
+                    contrib = membership.subspace_contribution(W)
+                    contrib_conn = membership.subspace_contribution_connection(W, r_ho)
+                    for u, (c, cn) in enumerate(zip(contrib, contrib_conn)):
                         wt_rows.append({"animal": a.animal_id, "pair": f"{ax}-{ay}",
                                         "epoch": epoch, "area": area, "unit": u,
-                                        "contrib": round(float(c), 6)})
+                                        "contrib": round(float(c), 6),
+                                        "contrib_conn": round(float(cn), 6)})
                 for d in range(int(ws.cc.size)):      # per-dimension (dims-as-n)
                     dim_rows.append({
                         "animal": a.animal_id, "pair": f"{ax}-{ay}", "epoch": epoch,
@@ -142,7 +157,7 @@ def main():
     out_w = config.RESULTS_DIR / f"epoch_weights{args.tag}{suffix}.csv"
     with open(out_w, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["animal", "pair", "epoch", "area", "unit",
-                                          "contrib"], lineterminator="\n")
+                                          "contrib", "contrib_conn"], lineterminator="\n")
         w.writeheader(); w.writerows(wt_rows)
     print(f"\nwrote {out} ({len(rows)} rows) + {out_d} ({len(dim_rows)} dim-rows) + "
           f"{out_w} ({len(wt_rows)} weight-rows). Analyse: analyze_epochs / analyze_dims_as_n")

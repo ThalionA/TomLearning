@@ -37,7 +37,8 @@ MAX_SAMPLES_MS = 150_000      # cap matched block at 150 s of running, NOT a fix
                              # count (=6000 @25ms, but only 60s @10ms → too few trials for
                              # the trial-based cued CV → NaN held-out CC). bins = ms // bin_ms.
 WORLD_UNCUED, WORLD_CUED = 4, 3
-DELTAS = ["cc1", "n_sig", "mi_sig", "ifi", "optimal_lag", "gini_x", "gini_y"]
+DELTAS = ["cc1", "n_sig", "mi_sig", "ifi", "optimal_lag", "gini_x", "gini_y",
+          "gini_x_conn", "gini_y_conn", "gini_x_sig", "gini_y_sig"]
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
          ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
 
@@ -149,14 +150,21 @@ def main():
             rows.append(row)
             # per-neuron Gini-input contribution (L2 of canonical weight scores) for the
             # weight CDF + per-area (cross-partner) Gini, uncued and cued conditions
-            for cond, W in (("uncued", (wu.weights_x, wu.weights_y)),
-                            ("cued", (wc.weights_x, wc.weights_y))):
+            # contrib      = unweighted L2 over dims -- AREA-INTRINSIC (the partner
+            #                cancels exactly; see membership docstring)
+            # contrib_conn = weighted by each dim's held-out canonical correlation,
+            #                so it is genuinely connection-specific
+            for cond, W, ws_ in (("uncued", (wu.weights_x, wu.weights_y), wu),
+                                 ("cued", (wc.weights_x, wc.weights_y), wc)):
+                r_ho = np.clip(np.nan_to_num(np.asarray(ws_.cc, dtype=float)), 0.0, 1.0)
                 for area, Wa in ((ax, W[0]), (ay, W[1])):
-                    contrib = np.linalg.norm(np.atleast_2d(Wa), axis=1)
-                    for u_i, c in enumerate(contrib):
+                    contrib = membership.subspace_contribution(Wa)
+                    contrib_conn = membership.subspace_contribution_connection(Wa, r_ho)
+                    for u_i, (c, cn) in enumerate(zip(contrib, contrib_conn)):
                         wt_rows.append({"animal": a.animal_id, "learner": int(is_learner),
                                         "pair": f"{ax}-{ay}", "cond": cond, "area": area,
-                                        "unit": u_i, "contrib": round(float(c), 6)})
+                                        "unit": u_i, "contrib": round(float(c), 6),
+                                        "contrib_conn": round(float(cn), 6)})
             # dims-as-n: one row per canonical dimension (the Gonzalez/Buzsáki unit)
             for d in range(int(min(wu.cc.size, wc.cc.size))):
                 def _pd(w, attr):                         # per-dim value, NaN-safe
@@ -195,7 +203,7 @@ def main():
     print(f"wrote {rdir/f'transition_dims{suffix}.csv'} ({len(dim_rows)} dim-rows)\n")
     with open(rdir / f"transition_weights{suffix}.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["animal", "learner", "pair", "cond", "area",
-                                          "unit", "contrib"], lineterminator="\n")
+                                          "unit", "contrib", "contrib_conn"], lineterminator="\n")
         w.writeheader(); w.writerows(wt_rows)
     print(f"wrote {rdir/f'transition_weights{suffix}.csv'} ({len(wt_rows)} weight-rows)\n")
 
