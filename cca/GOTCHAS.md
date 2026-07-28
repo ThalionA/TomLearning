@@ -2,6 +2,17 @@
 
 One-line entries for non-obvious bugs, so they are not reintroduced.
 
+- **A subspace-angle test at 3 dims is UNMEASURABLE here — check the split-half floor
+  before reading any angle p-value.** The floor (two halves of the *same* data, *same*
+  lag/window) is **~79°** at d=3 and **~56°** at d=1. At d=3 the comparison angle is ~75°,
+  so it has nowhere to go: "not significantly above floor" means the estimate is not
+  reproducible, NOT that the subspace is stable. This is the same ~80° property noted for
+  the rotation-null (a ~1-D subspace, not a bug), but the consequence is stronger than
+  recorded — it silently converts a power failure into an apparent null. Run cross-lag /
+  cross-window subspace comparisons at **d=1**, and carry an `estimable` flag (floor
+  < 70°) that is read before the p-value. Found 2026-07-29: at d=3 the FF/FB gate said
+  2/8 pairs "separable"; at d=1 it says 0/8.
+
 - **An unweighted L2 row-norm over CCA weights is partner-invariant — it is NOT a
   communication-subspace readout.** `core.cca_fit` returns `A = Vx @ diag(1/sx) @ Uc[:, :d] *
   scale`. If you take `norm(A[i, :])` across **all** `d` retained dims and `d = rank(X) ≤ rank(Y)`,

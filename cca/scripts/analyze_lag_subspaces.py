@@ -163,6 +163,68 @@ def ff_fb(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def ff_fb_evolution(df: pd.DataFrame) -> pd.DataFrame:
+    """Item 2's second half + item 4: does the FF/FB picture CHANGE with learning?
+
+    Operates on the ``--epochs`` output. Per pair, expert vs naive paired t on four
+    quantities: the feedforward and feedback CC1 separately, their difference (the
+    directional asymmetry), and the FF/FB subspace angle. Animals-as-n, learners only.
+
+    A change in `d_cc1` is the interesting one — it is the directional asymmetry moving
+    with learning, which is what "check their evolution with learning" asks for. But read
+    it against the session-level gate first: if FF and FB are not separable subspaces to
+    begin with, a change in their difference is a change within ONE subspace.
+    """
+    tau_ms = TAU_BINS * int(df["bin_ms"].iloc[0])
+    rows = []
+    for pair in PAIRS:
+        sub = df[df["pair"] == pair]
+        if sub.empty:
+            continue
+        acc = {k: [] for k in ("ff", "fb", "asym", "angle")}
+        for _, g in sub.groupby("animal"):
+            vals = {}
+            for epoch in ("naive", "expert"):
+                e = g[g["epoch"] == epoch]
+                ff = e[e["lag_ms"] == tau_ms]
+                fb = e[e["lag_ms"] == -tau_ms]
+                if ff.empty or fb.empty:
+                    break
+                vals[epoch] = {
+                    "ff": float(ff["cc1"].iloc[0]), "fb": float(fb["cc1"].iloc[0]),
+                    "asym": float(ff["cc1"].iloc[0]) - float(fb["cc1"].iloc[0]),
+                    "angle": float(ff["angle_ff_fb_cc1"].iloc[0]),
+                }
+            if len(vals) == 2:
+                for k in acc:
+                    acc[k].append(vals["expert"][k] - vals["naive"][k])
+        row = {"pair": pair}
+        for k, label in [("ff", "ff"), ("fb", "fb"), ("asym", "asym"),
+                         ("angle", "angle")]:
+            n, m, t, p = _paired(acc[k])
+            row |= {f"n_{label}": n, f"d_{label}": m, f"t_{label}": t, f"p_{label}": p}
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def _md_evolution(tab: pd.DataFrame, fs: str, tau_ms: int) -> str:
+    lines = [f"### {fs} — item 2/4: does the FF/FB picture change with learning?", "",
+             f"Expert − naive, animals-as-n paired *t*, learners only. FF = +{tau_ms} ms "
+             f"(first area leads), FB = −{tau_ms} ms. `asym` = cc₁(FF) − cc₁(FB), the "
+             "directional asymmetry.", "",
+             "> Read against the session-level gate: if FF and FB are not separable "
+             "> subspaces, a change in `asym` is a change *within one* subspace, not a "
+             "> shift between two streams.", "",
+             "| pair | n | Δ cc₁ FF | p | Δ cc₁ FB | p | Δ asym | p | Δ FF/FB angle | p |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
+    for _, r in tab.iterrows():
+        lines.append(
+            f"| {r['pair']} | {r['n_asym']:.0f} | {r['d_ff']:+.3f} | {r['p_ff']:.3g} | "
+            f"{r['d_fb']:+.3f} | {r['p_fb']:.3g} | {r['d_asym']:+.3f} | "
+            f"{r['p_asym']:.3g} | {r['d_angle']:+.1f}° | {r['p_angle']:.3g} |")
+    return "\n".join(lines) + "\n"
+
+
 def _md_stability(stab, width, fs, dims):
     what = "CC₁ only" if dims == 1 else "3 canonical dims"
     lines = [f"### {fs} — item 3: subspace stability across lag ({what})", "",
@@ -258,6 +320,23 @@ def main():
         cens = w1[w1["censored_at_max_lag"] & w1["pair"].map(est1).fillna(False)]
         print(f"  CC₁ subspace at floor across the WHOLE swept range: "
               f"{len(cens)}/{int(est1.sum())} estimable pairs")
+
+        # items 2/4 — the FF/FB evolution, if the --epochs run has landed
+        ep_src = RES / f"lag_subspaces_bin10_epochs{suf}.csv"
+        if ep_src.exists():
+            ep = pd.read_csv(ep_src)
+            for c in ("cc1", "angle_ff_fb_cc1", "floor_cc1", "gini_x_conn",
+                      "gini_y_conn"):
+                ep[c] = pd.to_numeric(ep[c], errors="coerce")
+            evo = ff_fb_evolution(ep)
+            evo.to_csv(RES / f"lag_subspaces_evolution_bin10{suf}.csv", index=False,
+                       lineterminator="\n")
+            md.append(_md_evolution(evo, fs, tau_ms))
+            hits = evo[evo["p_asym"] < 0.05]
+            print(f"  FF/FB asymmetry changes with learning: {len(hits)}/{len(evo)} "
+                  f"pairs" + (" — " + ", ".join(hits["pair"]) if len(hits) else ""))
+        else:
+            print(f"  (epoch run pending — {ep_src.name} not found)")
     (RES / "lag_subspaces_tables.md").write_text("\n".join(md))
     print(f"\nwrote {RES / 'lag_subspaces_tables.md'}")
 
