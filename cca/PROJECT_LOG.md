@@ -11,7 +11,75 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-07-28) — Gini partner-invariance found; meeting sets a new agenda
+## CURRENT STATE (2026-07-29) — meeting items 1, 5, 6, 7 DONE (all null); 2/3/4 running
+
+**Answered so far — three nulls and one positive control.**
+
+**Item 1 — do different CCs have different IFI? NO.** `src/tom_cca/perdim_ifi.py` +
+`analyze_perdim_ifi.py` (commit `8dafedb`), a pure re-analysis of `lag_curves_bin10*.csv`
+— no refits. No pair shows a CC₁-vs-significant-tail IFI difference FS-excluded; the one
+FS-included hit (RSC-SUB, Δ=−0.056, p=0.039) is n=3 and is 1 of 16 tests. Sign agreement
+across rank runs 0.25–0.86, nothing significant. **Direction does not depend on canonical
+rank.**
+
+**⚠ The `sig` flag does not mean what it looks like.** Falling out of item 1: significance
+is scattered across all 30 canonical ranks, not concentrated at the top. Held-out CC does
+fall with rank (0.170 → 0.045 → 0.024, Spearman −0.66), but only ~44 % of significant dims
+sit at rank ≤ 5, ~10–15 % sit beyond rank 20 at the CC floor, and the significant set is a
+contiguous leading run in only ~half of cells. Cause: the circular-shift bar is the
+*dominant-dim* null, which is itself tiny in a weakly-coupled cell, so floor-level dims
+clear it. **Gate any per-dim label on CC magnitude, never on `sig` alone.** This is why
+FF/FB is defined below by fit lag rather than by per-dim IFI sign.
+
+**Items 5 + 7 — fixed subspace, and item 6 — integration windows. Epoch contrast NULL.**
+`src/tom_cca/fixed_subspace.py` + `run_fixed_subspace.py` (commits `aaed8be`, `46389de`,
+`6ec4735`). Subspace identified once per (animal, pair) on trials **balanced across
+epochs**, frozen, then each epoch projected through identical weights — so this tests the
+*activity*, with the refit confound removed from every previous epoch contrast. 12
+learners, 153 curves per FS condition. Expert vs naive is null on peak r, IFI, peak lag
+and half-max width in 31/32 tests FS-excluded and 31/32 FS-included.
+
+**POSITIVE CONTROL — the frozen component rings at theta.** Every pair shows a secondary
+lag-curve peak at 113–186 ms (**5.4–8.9 Hz**) in 33–92 % of curves. Recovered without
+being told about it; good evidence the fixed-subspace projection tracks real dynamics.
+
+**⚠ This changes how the item-6 integration windows must be read.** Raw half-max widths
+look like a clean hierarchy — intra-hippocampal CA1-DG 22 / CA3-DG 26 / CA1-CA3 29 ms vs
+cortical CA1-V1 183 / RSC-SUB 220 / V1-RSC 256 ms — but on a *ringing* curve the half-max
+width is the **half-period of the rhythm, not an integration window** (the region is
+truncated by the first theta trough). Only **RSC-SUB (42 % ringing) and V1-RSC (33 %)**
+have widths readable as integration windows. `fixed_subspace.side_peak` detects this and
+`fixed_subspace_tables.md` prints the ringing fraction beside every width, so the number
+cannot be quoted without its caveat.
+
+**One candidate worth powering up (NOT established).** CA1-RSC's integration window
+narrows naive→expert: Δ = −79 ms (p = 0.255) FS-excluded, Δ = −205 ms (p = 0.029)
+FS-included. Same sign in both, significant in one, out of 64 tests. Checked against the
+obvious artefact — a low peak lowers the half-max threshold and inflates width — but
+corr(peak, width) = **+0.78 / +0.80**, so the wide naive curves have *higher* peaks, not
+lower. Naive CA1-RSC = stronger, broader, slower-ringing; expert = weaker, narrower,
+faster-ringing.
+
+**RUNNING (items 2, 3, 4):** `run_lag_subspaces.py`, 4 queued runs (session × both FS,
+then `--epochs` × both FS), ~2 h each. Also still running: the gini3 FS-included
+trajectory from 2026-07-28 (PID 20601, 7.7 h elapsed, animal 75 / 1540 rows — verified
+*computing*, not wedged: 45 s CPU per 5 s wall). **Do not clobber either.**
+
+**New machinery (commit `aaed8be`, 41 new tests, 335 pass).** `lag_subspace.py` fits CCA
+at a fixed segment-aware lag and exports neuron-space **weights**, which nothing did
+before — that is what makes cross-lag subspace comparison possible at all. Three design
+points worth not re-deriving: (1) `segment_lag` aligns the confound to each area's *own*
+timepoints, since partialling a third area out of Y at X's times would inject the very lag
+being measured; (2) `lag_sweep` hoists both the confound regression and the PCA out of the
+lag loop — leak-free (lagging only selects rows), ~20× cheaper, and every lag shares ONE
+neuron→PC basis so a cross-lag angle reflects CCA rotation rather than PCA jitter;
+(3) `split_half_floor` returns a **separate floor per area** because the floor rises with
+fewer units and these pairs are lopsided (CA1 vs SUB) — a shared floor would misplace the
+threshold item 3's verdict turns on.
+
+---
+
+## ✓ DONE (2026-07-28) — Gini partner-invariance found; meeting sets a new agenda
 
 **⚠ The headline metric was measuring the wrong thing.** `gini_x` / `gini_y` — the basis of the
 §3.0 finding 2 "participation broadens" headline — is **provably partner-invariant**. In
