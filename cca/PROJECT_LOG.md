@@ -60,7 +60,37 @@ corr(peak, width) = **+0.78 / +0.80**, so the wide naive curves have *higher* pe
 lower. Naive CA1-RSC = stronger, broader, slower-ringing; expert = weaker, narrower,
 faster-ringing.
 
-**RUNNING (items 2, 3, 4):** `run_lag_subspaces.py`, 4 queued runs (session × both FS,
+**Items 2 + 3 — FS-EXCLUDED ANSWERED (16 animals, commit `705213b`).**
+
+*Item 3, how stable are the CCs across time lags?* The **CC₁** subspace never separates
+from its own split-half floor anywhere in ±250 ms — 8/8 pairs, all p(Bonf) = 1, Δ at
+±50 ms spanning −9.2° to +10.2°. **State it with the floor: the floor is ~56°, so this
+excludes a *large* rotation, not a modest one.**
+
+*Item 2, separate the subspace into FF/FB?* **The data does not support the split.** The
+FF-vs-FB subspace angle never clears the floor in any pair (−9.1° to +15.3°, all n.s.);
+connection-specific Gini does not differ in any pair; strength differs in 1/8 (RSC-SUB
++0.012, p = 0.045, n = 7 — 1 of 8, would not survive correction). At ±50 ms these are
+**one subspace read at two delays**, not two directions of flow.
+
+**⚠ The 3-dim version of this test is UNMEASURABLE — see the new GOTCHA.** Split-half
+floor ~77° at d=3 vs ~56° at d=1. At d=3 the lagged angle (~75°) has no headroom, so
+"not above floor" would report a power failure as stability. The FF/FB gate said 2/8
+pairs "separable" at d=3 and **0/8** at d=1. Always read the `estimable` column first.
+
+**Sanity check worth keeping.** The group-mean direction recovers hippocampal anatomy in
+**3/3** intra-hippocampal pairs — CA3→CA1, DG→CA1, DG→CA3. But per-animal sign
+consistency is at chance (4/7, 6/11, 3/5), so the mean is carried by magnitude in a few
+animals: suggestive, not established. The animal-consistent directions are instead
+**RSC→SUB (6/7)** and **V1→RSC (7/9)**; the latter agrees with §3.0 finding 3.
+
+**⚠ DISCREPANCY to reconcile.** CA1-SUB reads **CA1→SUB** here (5/7 animals), whereas
+STATE.md §3.0 finding 3 lists **SUB→CA1** among the FS-robust tight-lag flows. Different
+method (subspace refit at a fixed lag vs IFI integrated from one session-level fit), so
+not directly comparable — but it should be reconciled rather than ignored.
+
+**RUNNING (items 2, 3, 4):** `run_lag_subspaces.py`, run 1 of 4 done 00:37; remaining
+(session × both FS,
 then `--epochs` × both FS), ~2 h each. Also still running: the gini3 FS-included
 trajectory from 2026-07-28 (PID 20601, 7.7 h elapsed, animal 75 / 1540 rows — verified
 *computing*, not wedged: 45 s CPU per 5 s wall). **Do not clobber either.**
