@@ -51,8 +51,23 @@ def _paired(deltas):
     return n, float(np.mean(d)), t, p
 
 
-def stability(df: pd.DataFrame) -> pd.DataFrame:
-    """Item 3: angle-vs-floor at each lag, per pair."""
+NOT_ESTIMABLE_DEG = 70.0     # a split-half floor above this = no usable subspace estimate
+
+
+def stability(df: pd.DataFrame, dims: int = 1) -> pd.DataFrame:
+    """Item 3: angle-vs-floor at each lag, per pair, at ``dims`` canonical dimensions.
+
+    **Read the floor before the p-value.** The floor is the angle between two halves of
+    the SAME data at the SAME lag — i.e. how reproducible the subspace estimate is at
+    all. At d=3 it comes out at ~78 deg, essentially orthogonal, so the lagged angle
+    (~75 deg) has nowhere to go and "not different from floor" means UNMEASURABLE, not
+    stable. At d=1 the floor is ~53 deg and there is real headroom. CC1 is therefore the
+    primary readout and d=3 is reported only to document the power failure — hence the
+    `estimable` column, which must be checked before any verdict is read off `p_bonf`.
+    """
+    ax, ay, fx, fy = (("angle_x_cc1", "angle_y_cc1", "floor_cc1", "floor_cc1")
+                      if dims == 1 else
+                      ("angle_x", "angle_y", "floor_x", "floor_y"))
     rows = []
     for pair in PAIRS:
         sub = df[df["pair"] == pair]
@@ -62,25 +77,20 @@ def stability(df: pd.DataFrame) -> pd.DataFrame:
         n_tests = len({abs(x) for x in lags})
         for lag in lags:
             at = sub[sub["lag_ms"] == lag]
-            # each area contributes its own angle against its own floor
-            deltas = np.concatenate([
-                (at["angle_x"] - at["floor_x"]).to_numpy(float),
-                (at["angle_y"] - at["floor_y"]).to_numpy(float)])
-            per_animal = {}
-            for animal, g in at.groupby("animal"):
-                per_animal[animal] = np.nanmean([
-                    float(g["angle_x"].iloc[0]) - float(g["floor_x"].iloc[0]),
-                    float(g["angle_y"].iloc[0]) - float(g["floor_y"].iloc[0])])
-            n, mean, t, p = _paired(list(per_animal.values()))
+            per_animal = []
+            for _, g in at.groupby("animal"):
+                per_animal.append(np.nanmean([
+                    float(g[ax].iloc[0]) - float(g[fx].iloc[0]),
+                    float(g[ay].iloc[0]) - float(g[fy].iloc[0])]))
+            n, mean, t, p = _paired(per_animal)
+            floor = float(np.nanmean([at[fx].mean(), at[fy].mean()]))
             rows.append({
-                "pair": pair, "lag_ms": lag, "n_animals": n,
+                "pair": pair, "dims": dims, "lag_ms": lag, "n_animals": n,
                 "angle_minus_floor": mean, "t": t, "p": p,
                 "p_bonf": min(1.0, p * n_tests) if np.isfinite(p) else np.nan,
-                "mean_angle": float(np.nanmean([at["angle_x"].mean(),
-                                                at["angle_y"].mean()])),
-                "mean_floor": float(np.nanmean([at["floor_x"].mean(),
-                                                at["floor_y"].mean()])),
-                "n_obs": int(np.sum(np.isfinite(deltas))),
+                "mean_angle": float(np.nanmean([at[ax].mean(), at[ay].mean()])),
+                "mean_floor": floor,
+                "estimable": bool(np.isfinite(floor) and floor < NOT_ESTIMABLE_DEG),
             })
     return pd.DataFrame(rows)
 
@@ -134,9 +144,10 @@ def ff_fb(df: pd.DataFrame) -> pd.DataFrame:
                                       float(ff["gini_y_conn"])]) -
                           np.nanmean([float(fb["gini_x_conn"]),
                                       float(fb["gini_y_conn"])]))
-            ang_d.append(np.nanmean([float(ff["angle_ff_fb_x"]),
-                                     float(ff["angle_ff_fb_y"])]) -
-                         np.nanmean([float(ff["floor_x"]), float(ff["floor_y"])]))
+            # CC1, not 3 dims: the 3-dim split-half floor is ~78 deg (the subspace is
+            # not estimable there), so an FF/FB angle measured at 3 dims has no
+            # headroom and the comparison would be vacuous. Both terms are x-area.
+            ang_d.append(float(ff["angle_ff_fb_cc1"]) - float(ff["floor_cc1"]))
         n_cc, m_cc, t_cc, p_cc = _paired(cc_d)
         n_g, m_g, t_g, p_g = _paired(gini_d)
         n_a, m_a, t_a, p_a = _paired(ang_d)
@@ -152,25 +163,35 @@ def ff_fb(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _md_stability(stab, width, fs):
-    lines = [f"### {fs} — item 3: subspace stability across lag", "",
+def _md_stability(stab, width, fs, dims):
+    what = "CC₁ only" if dims == 1 else "3 canonical dims"
+    lines = [f"### {fs} — item 3: subspace stability across lag ({what})", "",
              "`angle − floor` is the principal angle between the lag-0 and lagged "
              "subspace minus that pair's own split-half floor, averaged over the two "
-             "areas; animals-as-n, Bonferroni across |lag| within a pair.", "",
-             "| pair | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |",
-             "|---|---|---|---|---|---|"]
+             "areas; animals-as-n, Bonferroni across |lag| within a pair.", ""]
+    if dims != 1:
+        lines += ["> **⚠ This table is a power check, not a result.** The split-half "
+                  "floor at 3 dims is ~78°, i.e. two halves of the *same* data at the "
+                  "*same* lag are nearly orthogonal — the 3-dim subspace is not "
+                  "estimable at this N. A lagged angle that fails to exceed that floor "
+                  "means UNMEASURABLE, not stable. Read the CC₁ table instead.", ""]
+    lines += ["| pair | estimable? | stability width | mean angle @ ±50 ms | floor | "
+              "Δ | p (Bonf) |", "|---|---|---|---|---|---|---|"]
     for _, w in width.iterrows():
         g = stab[(stab["pair"] == w["pair"]) & (stab["lag_ms"].abs() == 50)]
         ang = g["mean_angle"].mean() if len(g) else np.nan
         flr = g["mean_floor"].mean() if len(g) else np.nan
         d = g["angle_minus_floor"].mean() if len(g) else np.nan
         p = g["p_bonf"].min() if len(g) else np.nan
+        est = bool(g["estimable"].all()) if len(g) else False
         wid = ("≥ %.0f ms (censored)" % w["max_lag_swept_ms"]
                if w["censored_at_max_lag"] else
                ("%.0f ms" % w["stability_width_ms"]
                 if pd.notna(w["stability_width_ms"]) else "< smallest lag"))
-        lines.append(f"| {w['pair']} | {wid} | {ang:.1f}° | {flr:.1f}° | "
-                     f"{d:+.1f}° | {p:.3g} |")
+        if not est:
+            wid = "n/a — not estimable"
+        lines.append(f"| {w['pair']} | {'yes' if est else '**NO**'} | {wid} | "
+                     f"{ang:.1f}° | {flr:.1f}° | {d:+.1f}° | {p:.3g} |")
     return "\n".join(lines) + "\n"
 
 
@@ -203,19 +224,29 @@ def main():
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue
         df = pd.read_csv(src)
-        for c in ("cc1", "cc_mean3", "angle_x", "angle_y", "floor_x", "floor_y",
-                  "gini_x_conn", "gini_y_conn", "angle_ff_fb_x", "angle_ff_fb_y"):
+        for c in ("cc1", "cc_mean3", "angle_x", "angle_y", "angle_x_cc1",
+                  "angle_y_cc1", "floor_x", "floor_y", "floor_cc1", "gini_x_conn",
+                  "gini_y_conn", "angle_ff_fb_x", "angle_ff_fb_y",
+                  "angle_ff_fb_cc1"):
             df[c] = pd.to_numeric(df[c], errors="coerce")
-        stab = stability(df)
-        width = stability_width(stab)
+        stab1 = stability(df, dims=1)
+        stab3 = stability(df, dims=3)
+        w1, w3 = stability_width(stab1), stability_width(stab3)
         tab = ff_fb(df)
-        stab.to_csv(RES / f"lag_subspaces_stability_bin10{suf}.csv", index=False,
-                    lineterminator="\n")
+        pd.concat([stab1, stab3]).to_csv(
+            RES / f"lag_subspaces_stability_bin10{suf}.csv", index=False,
+            lineterminator="\n")
         tab.to_csv(RES / f"lag_subspaces_fffb_bin10{suf}.csv", index=False,
                    lineterminator="\n")
         tau_ms = TAU_BINS * int(df["bin_ms"].iloc[0])
-        md += [_md_stability(stab, width, fs), "", _md_fffb(tab, fs, tau_ms), ""]
+        md += [_md_stability(stab1, w1, fs, 1), "",
+               _md_stability(stab3, w3, fs, 3), "", _md_fffb(tab, fs, tau_ms), ""]
         print(f"\n{fs}: {df['animal'].nunique()} animals, {len(df)} rows")
+        print(f"  split-half floor: CC₁ {stab1['mean_floor'].mean():.1f}° | "
+              f"3-dim {stab3['mean_floor'].mean():.1f}°"
+              f"  (>{NOT_ESTIMABLE_DEG:.0f}° = subspace not estimable)")
+        n_est = stab1.groupby('pair')['estimable'].all().sum()
+        print(f"  pairs with an estimable CC₁ subspace: {n_est}/{len(PAIRS)}")
         sep = tab[tab["p_angle"] < 0.05]
         print(f"  FF/FB separable from floor: "
               f"{len(sep)}/{len(tab)} pairs" +
@@ -223,9 +254,10 @@ def main():
         hits = tab[tab["p_cc1"] < 0.05]
         print(f"  FF vs FB strength differs: {len(hits)}/{len(tab)} pairs" +
               (" — " + ", ".join(hits['pair']) if len(hits) else ""))
-        cens = width[width["censored_at_max_lag"]]
-        print(f"  subspace at floor across the WHOLE swept range: "
-              f"{len(cens)}/{len(width)} pairs")
+        est1 = stab1.groupby("pair")["estimable"].all()
+        cens = w1[w1["censored_at_max_lag"] & w1["pair"].map(est1).fillna(False)]
+        print(f"  CC₁ subspace at floor across the WHOLE swept range: "
+              f"{len(cens)}/{int(est1.sum())} estimable pairs")
     (RES / "lag_subspaces_tables.md").write_text("\n".join(md))
     print(f"\nwrote {RES / 'lag_subspaces_tables.md'}")
 
