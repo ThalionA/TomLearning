@@ -92,7 +92,8 @@ def _rotation(prev_w, cur_w, d_use=ROT_DIMS) -> float:
 
 FIELDS = ["animal", "learner", "pair", "center_trial", "trial_frac",
           "performance", "lp_rel", "n_bins", "cc1", "n_sig", "mi_sig", "ifi",
-          "optimal_lag", "gini_x", "gini_y", "gini_pearson_x", "gini_pearson_y",
+          "optimal_lag", "gini_x", "gini_y", "gini_x_conn", "gini_y_conn", "gini_x_sig", "gini_y_sig",
+          "gini_pearson_x", "gini_pearson_y",
           "rot_x", "rot_y", "rot_x_cc1", "rot_y_cc1",
           "jac_x", "jac_y", "sh_x", "sh_y", "sh_x_cc1", "sh_y_cc1"]
 
@@ -195,6 +196,10 @@ def main():
                     "n_sig": ws.n_sig, "mi_sig": round(ws.mi_sig, 4),
                     "ifi": round(ws.ifi, 4), "optimal_lag": ws.optimal_lag,
                     "gini_x": round(ws.gini_x, 4), "gini_y": round(ws.gini_y, 4),
+                    "gini_x_conn": round(ws.gini_x_conn, 4),
+                    "gini_y_conn": round(ws.gini_y_conn, 4),
+                    "gini_x_sig": round(ws.gini_x_sig, 4),
+                    "gini_y_sig": round(ws.gini_y_sig, 4),
                     "gini_pearson_x": round(ws.gini_pearson_x, 4),
                     "gini_pearson_y": round(ws.gini_pearson_y, 4),
                     "rot_x": round(_rotation(pwx, ws.weights_x), 2),
