@@ -1,0 +1,44 @@
+START Tue Jul 28 12:02:42 BST 2026
+[1/2] FS-excluded
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=10ms window=15 step=5 K=30 pCCA lag+-5 (50ms) shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 13 window-rows (139 total)
+  animal 41 (L): 36 window-rows (175 total)
+  animal 52 (L): 96 window-rows (271 total)
+  animal 61 (L): 114 window-rows (385 total)
+  animal 63 (L): 61 window-rows (446 total)
+  animal 66 (L): 198 window-rows (644 total)
+  animal 68 (L): 192 window-rows (836 total)
+  animal 70 (n): 30 window-rows (866 total)
+  animal 71 (n): 312 window-rows (1178 total)
+  animal 73 (L): 240 window-rows (1418 total)
+  animal 75 (L): 108 window-rows (1526 total)
+  animal 77 (L): 192 window-rows (1718 total)
+  animal 98 (n): 17 window-rows (1735 total)
+  animal 100 (n): 192 window-rows (1927 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_gini3_bin10.csv (1927 rows) + trajectory_gini3_bin10_dims.csv (37602 dim-rows). Analyse with scripts/analyze_trajectory.py
+[2/2] FS-included
+Frame A FULL suite | ALL 16 animals (12 learners) | bin=10ms window=15 step=5 K=30 pCCA lag+-5 (50ms) shuffles=100
+
+  animal 28 (L): 100 window-rows (100 total)
+  animal 34 (L): 26 window-rows (126 total)
+  animal 36 (L): 26 window-rows (152 total)
+  animal 41 (L): 37 window-rows (189 total)
+  animal 52 (L): 96 window-rows (285 total)
+  animal 61 (L): 114 window-rows (399 total)
+  animal 63 (L): 61 window-rows (460 total)
+  animal 66 (L): 198 window-rows (658 total)
+  animal 68 (L): 192 window-rows (850 total)
+  animal 70 (n): 30 window-rows (880 total)
+  animal 71 (n): 312 window-rows (1192 total)
+  animal 73 (L): 240 window-rows (1432 total)
+  animal 75 (L): 108 window-rows (1540 total)
+  animal 77 (L): 192 window-rows (1732 total)
+  animal 98 (n): 34 window-rows (1766 total)
+  animal 100 (n): 192 window-rows (1958 total)
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/trajectory_gini3_bin10_fsincl.csv (1958 rows) + trajectory_gini3_bin10_dims_fsincl.csv (41359 dim-rows). Analyse with scripts/analyze_trajectory.py
+DONE Wed Jul 29 01:32:28 BST 2026
