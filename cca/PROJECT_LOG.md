@@ -11,7 +11,57 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-07-29) — meeting items 1, 5, 6, 7 DONE (all null); 2/3/4 running
+## CURRENT STATE (2026-07-29) — ALL SEVEN MEETING ITEMS ANSWERED; nothing running
+
+**Every item from the 2026-07-28 meeting now has an answer, both FS conditions.** Six of
+seven are null; the substantive output of the session is three methodological traps found
+and one positive control. Next meeting 14:00, 2026-08-07.
+
+| item | question | answer |
+|---|---|---|
+| 1 | Do different CCs have different IFI? | **No** — no rank dependence |
+| 2 | Separate the subspace into FF/FB | **Not supported** — 0/8 pairs separable |
+| 3 | How stable are the CCs across lags? | **No detectable rotation** in ±250 ms, 8/8 |
+| 4 | FF/FB evolution with learning | **Null** — 0/8, 64 tests, min p = 0.056 |
+| 5 | One CC lagged across time | Built (fixed subspace); epoch contrast null |
+| 6 | Lagged curves + integration windows, naive vs exp | **Null**; widths need the theta caveat |
+| 7 | Fixed subspace, all trials, naive vs exp | **Null** — 31/32 tests, both FS |
+
+**⚠ Three traps found, all now in `GOTCHAS.md`. Each would have produced a confident
+wrong answer, and the second nearly did.**
+1. The `sig` flag is cleared by floor-level dims at ANY canonical rank (the circular-shift
+   bar is the dominant-dim null, tiny in a weakly-coupled cell). Never select on `sig`
+   alone.
+2. Subspace-angle tests at 3 dims are **unmeasurable** at this N (split-half floor ~78°
+   vs a comparison angle of ~75°). Run them at d=1 and gate on `estimable`. This flipped
+   the FF/FB verdict from 2/8 "separable" to 0/8.
+3. Half-max width on a **ringing** lag curve is a theta half-period, not an integration
+   window.
+
+**⚠ The split-half floor is conservative by construction** — it is measured from two
+half-data fits while the comparison it gates uses full windows, so it sits above the
+comparison's true noise level. Visible in the report's own §G, where cross-window rotations
+come out significantly *below* floor. Consequence: every "at floor" verdict here excludes a
+*large* effect, not a modest one.
+
+**Cross-check on an existing claim (good news).** §3.0 finding 4's rotation-null is tested
+at CC₁ in `bin10_tables.md` §G (CC₁ floors 36–69°), so it survives trap 2. But §G's top-3
+column and `figs_report.fig_rotation_floor` use the unmeasurable 3-dim angle — **the figure
+should be switched to CC₁; the verdict does not change.**
+
+**Two method discrepancies to reconcile before anything is written up.**
+- **CA1-SUB direction.** CA1→SUB here (5/7 animals, both FS) vs SUB→CA1 in §3.0 finding 3.
+- **CA1→RSC robustness.** Here p = 0.015 FS-included but p = 0.764 FS-excluded; §3.0 has it
+  robust at p = 3.9×10⁻⁴. Different methods (subspace refit at a fixed lag vs IFI integrated
+  from one session-level fit) — not directly comparable, but not ignorable either.
+
+**Lint note:** 12 pre-existing F-errors remain in older scripts (`analyze_ifi.py`,
+`figs_paired.py`, `learning_changes.py`, `run_transition.py`, `lagged_landmark.py` …). None
+are in this session's files; left alone to avoid bundling unrelated changes.
+
+---
+
+## ✓ DONE (2026-07-29, earlier) — meeting items 1, 5, 6, 7; 2/3/4 then running
 
 **Answered so far — three nulls and one positive control.**
 

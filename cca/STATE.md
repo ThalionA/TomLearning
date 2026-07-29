@@ -98,9 +98,34 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    session-pooled: it speaks to the *existence* of a flow, not its change. Directional *change*
    with learning holds its sign but is weak and underpowered (n = 4–6/pair); the CA1→V1 IFI
    rise is the one slope supported at the honest unit and it is **FS-fragile** (null with FS in).
-4. **Orientation: NULL.** Cross-window rotation is at or below the split-half noise floor for
-   every pair, both FS conditions (all p > 0.05). No reorientation. (See `GOTCHAS.md` — the
-   ~80° floor is a ~1-D subspace, not a bug.)
+4. **Orientation: NULL — and it also does not change with LAG.** Cross-window rotation is at
+   or below the split-half noise floor for every pair, both FS conditions (all p > 0.05). No
+   reorientation. **This claim is safe because §G of `bin10_tables.md` tests it at CC₁**
+   (CC₁ floors 36–69°), not only at top-3. ⚠ The top-3 column of §G, and the
+   `fig_rotation_floor` figure in `figs_report.py`, use the 3-dim angle whose floor is
+   ~78–82° — *unmeasurable* (see `GOTCHAS.md`, 2026-07-29). **The figure should be switched
+   to CC₁; the verdict does not change.**
+   Added 2026-07-29 (`run_lag_subspaces.py`): the CC₁ subspace likewise never separates from
+   its floor across **±250 ms of lag**, 8/8 pairs, both FS — the subspace is the same one at
+   every delay in that range. Caveat in both cases: the floor is measured from half-data
+   fits while the comparison uses full windows, so the floor sits above the comparison's true
+   noise level and the test is conservative — it excludes a *large* rotation, not a modest one.
+
+7. **Feedforward vs feedback: NOT separable subspaces (2026-07-29).** Fitting the subspace at
+   +50 ms (X leads) and at −50 ms (Y leads) gives two subspaces whose principal angle never
+   clears the noise floor — **0/8 pairs, both FS**. Connection-specific Gini does not differ
+   between them in any pair, and the FF/FB asymmetry does not change with learning (0/8 pairs,
+   both FS; 64 tests, min p = 0.056). **At ±50 ms this is one subspace read at two delays, not
+   two directions of flow** — so "split the subspace into FF/FB" is not supported by this data.
+   *But the strength through that one subspace is time-asymmetric*: the sign of cc₁(+50) −
+   cc₁(−50) agrees across both FS conditions in **8/8** pairs and recovers hippocampal anatomy
+   (CA3→CA1, DG→CA1, DG→CA3). Treat as a consistency check, not a replication — FS-included
+   is FS-excluded plus fast-spiking units, so the two share most of their data. Per-animal
+   sign consistency is only 4/7, 6/11, 3/5 for those three pairs; the animal-consistent flows
+   are **RSC→SUB (6/7)** and **V1→RSC (7/9)**.
+   ⚠ **CA1-SUB reads CA1→SUB here (5/7 animals), contradicting finding 3's SUB→CA1.** Methods
+   differ (subspace refit at a fixed lag vs IFI integrated from one session-level fit) — to be
+   reconciled, not ignored.
 5. **Very-early trials: no first-trials jump.** Trials 1/4/7/10 and first-5/7/10 blocks —
    strength flat (FS-robust); the de-sparsification is gradual / largely post-trial-10. The
    fast early-then-plateau effects are *cortical* and FS-fragile (CA1-RSC IFI, participation-

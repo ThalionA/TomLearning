@@ -43,3 +43,36 @@ LAG SUBSPACES | bin=10ms smooth=2.5ms K=30 | 21 lags, tau=5 bins | FS=incl
 DONE session-incl Wed Jul 29 01:09:48 BST 2026
 LAG SUBSPACES | bin=10ms smooth=2.5ms K=30 | 21 lags, tau=5 bins | FS=excl
 
+  animal 28 (L): 252 rows total
+  animal 34 (L): 378 rows total
+  animal 36 (L): 441 rows total
+  animal 41 (L): 567 rows total
+  animal 52 (L): 945 rows total
+  animal 61 (L): 1323 rows total
+  animal 63 (L): 1386 rows total
+  animal 66 (L): 1764 rows total
+  animal 68 (L): 2016 rows total
+  animal 73 (L): 2394 rows total
+  animal 75 (L): 2772 rows total
+  animal 77 (L): 3150 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_subspaces_bin10_epochs.csv
+DONE epochs-excl Wed Jul 29 01:39:28 BST 2026
+LAG SUBSPACES | bin=10ms smooth=2.5ms K=30 | 21 lags, tau=5 bins | FS=incl
+
+  animal 28 (L): 252 rows total
+  animal 34 (L): 378 rows total
+  animal 36 (L): 504 rows total
+  animal 41 (L): 630 rows total
+  animal 52 (L): 1008 rows total
+  animal 61 (L): 1386 rows total
+  animal 63 (L): 1449 rows total
+  animal 66 (L): 1827 rows total
+  animal 68 (L): 2079 rows total
+  animal 73 (L): 2457 rows total
+  animal 75 (L): 2835 rows total
+  animal 77 (L): 3213 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_subspaces_bin10_epochs_fsincl.csv
+DONE epochs-incl Wed Jul 29 02:06:20 BST 2026
+ALL DONE Wed Jul 29 02:06:20 BST 2026

@@ -118,3 +118,20 @@ Positive `Δcc₁` = the first-named area leading is more strongly coupled. `Δg
 | RSC-SUB | 7 | 0.075 | 0.062 | +0.013 | 0.116 | +0.012 | 0.266 | -11.3° | 0.0622 |
 | V1-RSC | 9 | 0.188 | 0.158 | +0.030 | 0.0554 | +0.008 | 0.195 | -5.0° | 0.693 |
 
+
+### FS-included — item 2/4: does the FF/FB picture change with learning?
+
+Expert − naive, animals-as-n paired *t*, learners only. FF = +50 ms (first area leads), FB = −50 ms. `asym` = cc₁(FF) − cc₁(FB), the directional asymmetry.
+
+> Read against the session-level gate: if FF and FB are not separable > subspaces, a change in `asym` is a change *within one* subspace, not a > shift between two streams.
+
+| pair | n | Δ cc₁ FF | p | Δ cc₁ FB | p | Δ asym | p | Δ FF/FB angle | p |
+|---|---|---|---|---|---|---|---|---|---|
+| CA1-RSC | 8 | -0.012 | 0.375 | +0.001 | 0.918 | -0.013 | 0.422 | +1.7° | 0.814 |
+| CA1-CA3 | 7 | +0.020 | 0.556 | +0.031 | 0.29 | -0.012 | 0.365 | +4.9° | 0.656 |
+| CA1-DG | 8 | +0.017 | 0.243 | -0.004 | 0.644 | +0.021 | 0.235 | +4.2° | 0.142 |
+| CA1-V1 | 10 | +0.002 | 0.874 | -0.015 | 0.39 | +0.017 | 0.358 | +5.3° | 0.403 |
+| CA3-DG | 4 | +0.053 | 0.0745 | -0.005 | 0.787 | +0.058 | 0.0682 | -2.4° | 0.8 |
+| CA1-SUB | 4 | +0.004 | 0.619 | +0.005 | 0.835 | -0.001 | 0.967 | +6.7° | 0.0881 |
+| RSC-SUB | 4 | -0.008 | 0.625 | -0.001 | 0.956 | -0.007 | 0.778 | +6.6° | 0.639 |
+| V1-RSC | 6 | -0.064 | 0.0988 | -0.053 | 0.0556 | -0.011 | 0.607 | -12.9° | 0.455 |

@@ -64,6 +64,14 @@ def stability(df: pd.DataFrame, dims: int = 1) -> pd.DataFrame:
     stable. At d=1 the floor is ~53 deg and there is real headroom. CC1 is therefore the
     primary readout and d=3 is reported only to document the power failure — hence the
     `estimable` column, which must be checked before any verdict is read off `p_bonf`.
+
+    **The floor is CONSERVATIVE, and by a known amount.** It is measured from two
+    half-data fits, whereas the lag-0-vs-lagged comparison uses the full window — fewer
+    samples per fit means a noisier subspace and a larger angle, so the floor sits above
+    the true noise level of the comparison it gates. The same asymmetry is visible in the
+    report's existing reorientation table (§G of `bin10_tables.md`), where cross-window
+    rotations come out significantly *below* their floors. Consequence here: "at floor"
+    excludes a LARGE rotation with lag, but the test can miss a modest one.
     """
     ax, ay, fx, fy = (("angle_x_cc1", "angle_y_cc1", "floor_cc1", "floor_cc1")
                       if dims == 1 else
