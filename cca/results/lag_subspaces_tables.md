@@ -52,6 +52,23 @@ Positive `Δcc₁` = the first-named area leading is more strongly coupled. `Δg
 | V1-RSC | 9 | 0.141 | 0.122 | +0.019 | 0.193 | +0.008 | 0.246 | -4.3° | 0.707 |
 
 
+### FS-excluded — item 2/4: does the FF/FB picture change with learning?
+
+Expert − naive, animals-as-n paired *t*, learners only. FF = +50 ms (first area leads), FB = −50 ms. `asym` = cc₁(FF) − cc₁(FB), the directional asymmetry.
+
+> Read against the session-level gate: if FF and FB are not separable > subspaces, a change in `asym` is a change *within one* subspace, not a > shift between two streams.
+
+| pair | n | Δ cc₁ FF | p | Δ cc₁ FB | p | Δ asym | p | Δ FF/FB angle | p |
+|---|---|---|---|---|---|---|---|---|---|
+| CA1-RSC | 8 | -0.011 | 0.399 | +0.008 | 0.337 | -0.020 | 0.352 | -3.1° | 0.605 |
+| CA1-CA3 | 6 | +0.000 | 0.996 | +0.023 | 0.392 | -0.023 | 0.236 | +0.6° | 0.939 |
+| CA1-DG | 8 | +0.022 | 0.104 | +0.004 | 0.741 | +0.017 | 0.387 | +1.2° | 0.861 |
+| CA1-V1 | 10 | -0.007 | 0.655 | -0.016 | 0.295 | +0.009 | 0.715 | -5.6° | 0.482 |
+| CA3-DG | 4 | +0.018 | 0.469 | -0.022 | 0.391 | +0.040 | 0.1 | +8.4° | 0.608 |
+| CA1-SUB | 4 | +0.001 | 0.889 | +0.010 | 0.352 | -0.009 | 0.609 | +3.2° | 0.79 |
+| RSC-SUB | 4 | -0.004 | 0.863 | -0.008 | 0.706 | +0.004 | 0.835 | +15.8° | 0.122 |
+| V1-RSC | 6 | -0.027 | 0.226 | -0.021 | 0.068 | -0.006 | 0.775 | -18.9° | 0.274 |
+
 ### FS-included — item 3: subspace stability across lag (CC₁ only)
 
 `angle − floor` is the principal angle between the lag-0 and lagged subspace minus that pair's own split-half floor, averaged over the two areas; animals-as-n, Bonferroni across |lag| within a pair.
