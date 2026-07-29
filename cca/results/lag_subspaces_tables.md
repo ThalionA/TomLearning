@@ -51,3 +51,53 @@ Positive `Δcc₁` = the first-named area leading is more strongly coupled. `Δg
 | RSC-SUB | 7 | 0.065 | 0.053 | +0.012 | 0.0447 | +0.011 | 0.3 | -9.1° | 0.245 |
 | V1-RSC | 9 | 0.141 | 0.122 | +0.019 | 0.193 | +0.008 | 0.246 | -4.3° | 0.707 |
 
+
+### FS-included — item 3: subspace stability across lag (CC₁ only)
+
+`angle − floor` is the principal angle between the lag-0 and lagged subspace minus that pair's own split-half floor, averaged over the two areas; animals-as-n, Bonferroni across |lag| within a pair.
+
+| pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
+|---|---|---|---|---|---|---|
+| CA1-CA3 | yes | ≥ 250 ms (censored) | 50.6° | 44.5° | +6.2° | 1 |
+| CA1-DG | yes | ≥ 250 ms (censored) | 61.9° | 52.9° | +9.0° | 1 |
+| CA1-RSC | yes | ≥ 250 ms (censored) | 62.8° | 57.5° | +5.3° | 1 |
+| CA1-SUB | yes | ≥ 250 ms (censored) | 74.6° | 62.9° | +11.7° | 1 |
+| CA1-V1 | yes | ≥ 250 ms (censored) | 51.3° | 68.4° | -17.1° | 0.384 |
+| CA3-DG | yes | ≥ 250 ms (censored) | 51.9° | 37.0° | +14.8° | 1 |
+| RSC-SUB | yes | ≥ 250 ms (censored) | 56.6° | 57.5° | -1.0° | 1 |
+| V1-RSC | yes | ≥ 250 ms (censored) | 41.5° | 40.8° | +0.7° | 1 |
+
+
+### FS-included — item 3: subspace stability across lag (3 canonical dims)
+
+`angle − floor` is the principal angle between the lag-0 and lagged subspace minus that pair's own split-half floor, averaged over the two areas; animals-as-n, Bonferroni across |lag| within a pair.
+
+> **⚠ This table is a power check, not a result.** The split-half floor at 3 dims is ~78°, i.e. two halves of the *same* data at the *same* lag are nearly orthogonal — the 3-dim subspace is not estimable at this N. A lagged angle that fails to exceed that floor means UNMEASURABLE, not stable. Read the CC₁ table instead.
+
+| pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
+|---|---|---|---|---|---|---|
+| CA1-CA3 | **NO** | n/a — not estimable | 69.8° | 73.0° | -3.2° | 1 |
+| CA1-DG | **NO** | n/a — not estimable | 79.2° | 77.1° | +2.1° | 1 |
+| CA1-RSC | **NO** | n/a — not estimable | 77.7° | 80.6° | -2.8° | 1 |
+| CA1-SUB | **NO** | n/a — not estimable | 80.8° | 84.2° | -3.3° | 0.613 |
+| CA1-V1 | **NO** | n/a — not estimable | 72.9° | 83.0° | -10.1° | 0.0484 |
+| CA3-DG | yes | ≥ 250 ms (censored) | 68.0° | 51.1° | +16.8° | 1 |
+| RSC-SUB | **NO** | n/a — not estimable | 72.1° | 80.1° | -8.0° | 0.53 |
+| V1-RSC | yes | ≥ 250 ms (censored) | 60.8° | 66.9° | -6.1° | 1 |
+
+
+### FS-included — items 2/4: feedforward (+50 ms) vs feedback (−50 ms)
+
+Positive `Δcc₁` = the first-named area leading is more strongly coupled. `Δgini_conn` uses the CONNECTION-SPECIFIC Gini. `FF/FB angle − floor` is the gate: at or below 0 the two are one subspace read at two delays.
+
+| pair | n | cc₁ FF | cc₁ FB | Δcc₁ | p | Δgini_conn | p | FF/FB angle − floor | p |
+|---|---|---|---|---|---|---|---|---|---|
+| CA1-RSC | 12 | 0.072 | 0.049 | +0.023 | 0.0154 | -0.002 | 0.836 | +9.1° | 0.075 |
+| CA1-CA3 | 9 | 0.182 | 0.215 | -0.033 | 0.143 | +0.022 | 0.359 | +2.5° | 0.848 |
+| CA1-DG | 11 | 0.096 | 0.107 | -0.012 | 0.426 | -0.012 | 0.406 | -7.6° | 0.414 |
+| CA1-V1 | 13 | 0.041 | 0.046 | -0.005 | 0.374 | +0.031 | 0.121 | -11.6° | 0.196 |
+| CA3-DG | 5 | 0.134 | 0.157 | -0.022 | 0.149 | -0.032 | 0.188 | +13.2° | 0.143 |
+| CA1-SUB | 7 | 0.028 | 0.022 | +0.005 | 0.588 | +0.010 | 0.515 | +3.9° | 0.664 |
+| RSC-SUB | 7 | 0.075 | 0.062 | +0.013 | 0.116 | +0.012 | 0.266 | -11.3° | 0.0622 |
+| V1-RSC | 9 | 0.188 | 0.158 | +0.030 | 0.0554 | +0.008 | 0.195 | -5.0° | 0.693 |
+
