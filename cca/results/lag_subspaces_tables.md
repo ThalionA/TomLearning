@@ -8,14 +8,30 @@ Animals-as-n throughout; 8 pairs, no cross-pair correction (per-pair family, STA
 
 | pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
 |---|---|---|---|---|---|---|
-| CA1-CA3 | yes | ≥ 250 ms (censored) | 54.6° | 45.5° | +9.1° | 1 |
-| CA1-DG | yes | 70 ms | 59.8° | 49.0° | +10.8° | 0.402 |
-| CA1-RSC | yes | ≥ 250 ms (censored) | 66.5° | 63.9° | +2.6° | 1 |
-| CA1-SUB | yes | ≥ 250 ms (censored) | 72.2° | 59.1° | +13.0° | 1 |
-| CA1-V1 | yes | ≥ 250 ms (censored) | 55.4° | 65.8° | -10.5° | 0.712 |
-| CA3-DG | yes | ≥ 250 ms (censored) | 47.5° | 42.8° | +4.7° | 1 |
-| RSC-SUB | yes | ≥ 250 ms (censored) | 59.3° | 61.9° | -2.6° | 1 |
-| V1-RSC | yes | ≥ 250 ms (censored) | 43.3° | 41.9° | +1.4° | 1 |
+| CA1-CA3 | yes | 30 ms | 47.8° | 33.8° | +14.1° | 0.248 |
+| CA1-DG | yes | 20 ms | 57.2° | 35.1° | +22.4° | 0.0011 |
+| CA1-RSC | yes | ≥ 250 ms (censored) | 64.4° | 52.3° | +12.1° | 0.263 |
+| CA1-SUB | yes | 150 ms | 71.7° | 42.9° | +27.0° | 0.16 |
+| CA1-V1 | yes | ≥ 250 ms (censored) | 48.3° | 48.2° | +3.1° | 1 |
+| CA3-DG | yes | ≥ 250 ms (censored) | 48.0° | 37.9° | +12.1° | 1 |
+| RSC-SUB | yes | ≥ 250 ms (censored) | 52.0° | 51.0° | +1.0° | 1 |
+| V1-RSC | yes | ≥ 250 ms (censored) | 45.6° | 39.3° | +7.5° | 1 |
+
+
+#### FS-excluded — item 3 depends on the estimability threshold
+
+The gate is an analyst choice with no principled value, and **both directions are biased**: across area-lags corr(floor, angle−floor) is Spearman ρ = −0.57, so no gate drags toward the null (unmeasurable areas contribute large negative deltas) while a tight gate selects low-floor areas and drags toward rotation.
+
+| gate | rotating lags | pairs |
+|---|---|---|
+| 50° | 15 | CA1-CA3, CA1-DG, CA1-RSC, CA3-DG, RSC-SUB |
+| 60° | 14 | CA1-CA3, CA1-DG, CA1-SUB, CA3-DG |
+| 70° | 10 | CA1-CA3, CA1-DG, CA1-SUB |
+| 80° | 9 | CA1-DG |
+| 90° | 1 | CA1-DG |
+| no gate | 1 | CA1-DG |
+
+**Robust to every gate, including none: CA1-DG.** That is the only claim this test supports; the lag COUNT is not interpretable.
 
 
 ### FS-excluded — item 3: subspace stability across lag (3 canonical dims)
@@ -26,14 +42,14 @@ Animals-as-n throughout; 8 pairs, no cross-pair correction (per-pair family, STA
 
 | pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
 |---|---|---|---|---|---|---|
-| CA1-CA3 | **NO** | n/a — not estimable | 78.0° | 80.5° | -2.6° | 1 |
-| CA1-DG | **NO** | n/a — not estimable | 78.6° | 77.7° | +0.9° | 1 |
-| CA1-RSC | **NO** | n/a — not estimable | 81.1° | 81.9° | -0.8° | 1 |
-| CA1-SUB | **NO** | n/a — not estimable | 81.0° | 83.6° | -2.7° | 1 |
-| CA1-V1 | **NO** | n/a — not estimable | 73.2° | 82.4° | -9.2° | 0.205 |
-| CA3-DG | yes | ≥ 250 ms (censored) | 68.3° | 61.3° | +7.0° | 0.549 |
-| RSC-SUB | **NO** | n/a — not estimable | 74.0° | 77.9° | -3.8° | 1 |
-| V1-RSC | **NO** | n/a — not estimable | 70.4° | 71.9° | -1.5° | 1 |
+| CA1-CA3 | yes | ≥ 250 ms (censored) | 85.9° | 67.7° | +17.9° | 0.24 |
+| CA1-DG | yes | ≥ 250 ms (censored) | 84.4° | 57.3° | +24.3° | 0.626 |
+| CA1-RSC | yes | ≥ 250 ms (censored) | 84.7° | 57.5° | +27.2° | 1 |
+| CA1-SUB | **NO** | n/a — not estimable | nan° | nan° | +nan° | nan |
+| CA1-V1 | **NO** | n/a — not estimable | nan° | nan° | +nan° | nan |
+| CA3-DG | yes | ≥ 250 ms (censored) | 60.2° | 49.7° | +12.0° | 0.21 |
+| RSC-SUB | yes | ≥ 250 ms (censored) | 62.0° | 49.5° | +19.4° | 1 |
+| V1-RSC | yes | ≥ 250 ms (censored) | 67.1° | 57.9° | +7.0° | 1 |
 
 
 ### FS-excluded — items 2/4: feedforward (+50 ms) vs feedback (−50 ms)
@@ -75,14 +91,30 @@ Expert − naive, animals-as-n paired *t*, learners only. FF = +50 ms (first are
 
 | pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
 |---|---|---|---|---|---|---|
-| CA1-CA3 | yes | 30 ms | 50.6° | 35.4° | +15.2° | 0.234 |
-| CA1-DG | yes | 70 ms | 61.9° | 47.8° | +14.1° | 0.174 |
-| CA1-RSC | yes | ≥ 250 ms (censored) | 62.8° | 58.5° | +4.3° | 1 |
-| CA1-SUB | yes | ≥ 250 ms (censored) | 74.6° | 60.6° | +14.0° | 1 |
-| CA1-V1 | yes | ≥ 250 ms (censored) | 51.3° | 67.2° | -15.9° | 0.258 |
+| CA1-CA3 | yes | 200 ms | 51.6° | 30.8° | +20.8° | 0.0709 |
+| CA1-DG | yes | 20 ms | 56.7° | 35.0° | +20.2° | 0.00755 |
+| CA1-RSC | yes | 70 ms | 62.0° | 52.8° | +9.3° | 0.272 |
+| CA1-SUB | yes | ≥ 250 ms (censored) | 74.6° | 48.6° | +23.0° | 0.829 |
+| CA1-V1 | yes | ≥ 250 ms (censored) | 43.8° | 47.8° | -3.3° | 1 |
 | CA3-DG | yes | ≥ 250 ms (censored) | 51.9° | 33.1° | +18.8° | 0.872 |
-| RSC-SUB | yes | ≥ 250 ms (censored) | 56.6° | 54.1° | +2.4° | 1 |
-| V1-RSC | yes | ≥ 250 ms (censored) | 41.5° | 40.0° | +1.6° | 1 |
+| RSC-SUB | yes | ≥ 250 ms (censored) | 56.3° | 51.1° | +3.6° | 1 |
+| V1-RSC | yes | ≥ 250 ms (censored) | 44.6° | 34.9° | +9.7° | 1 |
+
+
+#### FS-included — item 3 depends on the estimability threshold
+
+The gate is an analyst choice with no principled value, and **both directions are biased**: across area-lags corr(floor, angle−floor) is Spearman ρ = −0.57, so no gate drags toward the null (unmeasurable areas contribute large negative deltas) while a tight gate selects low-floor areas and drags toward rotation.
+
+| gate | rotating lags | pairs |
+|---|---|---|
+| 50° | 20 | CA1-CA3, CA1-DG, CA1-RSC, CA3-DG |
+| 60° | 20 | CA1-CA3, CA1-DG, CA1-RSC, CA1-SUB |
+| 70° | 16 | CA1-CA3, CA1-DG, CA1-RSC |
+| 80° | 10 | CA1-CA3, CA1-DG |
+| 90° | 4 | CA1-CA3, CA1-DG |
+| no gate | 4 | CA1-CA3, CA1-DG |
+
+**Robust to every gate, including none: CA1-CA3, CA1-DG.** That is the only claim this test supports; the lag COUNT is not interpretable.
 
 
 ### FS-included — item 3: subspace stability across lag (3 canonical dims)
@@ -93,14 +125,14 @@ Expert − naive, animals-as-n paired *t*, learners only. FF = +50 ms (first are
 
 | pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
 |---|---|---|---|---|---|---|
-| CA1-CA3 | **NO** | n/a — not estimable | 69.8° | 73.0° | -3.2° | 1 |
-| CA1-DG | **NO** | n/a — not estimable | 79.2° | 77.1° | +2.1° | 1 |
-| CA1-RSC | **NO** | n/a — not estimable | 77.7° | 80.6° | -2.8° | 1 |
-| CA1-SUB | **NO** | n/a — not estimable | 80.8° | 84.2° | -3.3° | 0.613 |
-| CA1-V1 | **NO** | n/a — not estimable | 72.9° | 83.0° | -10.1° | 0.0484 |
-| CA3-DG | yes | ≥ 250 ms (censored) | 68.0° | 51.1° | +16.8° | 1 |
-| RSC-SUB | **NO** | n/a — not estimable | 72.1° | 80.1° | -8.0° | 0.53 |
-| V1-RSC | yes | ≥ 250 ms (censored) | 60.8° | 66.9° | -6.1° | 1 |
+| CA1-CA3 | yes | ≥ 250 ms (censored) | 68.8° | 57.4° | +7.7° | 1 |
+| CA1-DG | yes | ≥ 250 ms (censored) | 78.8° | 49.5° | +27.0° | 0.647 |
+| CA1-RSC | yes | ≥ 250 ms (censored) | 80.9° | 59.2° | +21.7° | 0.495 |
+| CA1-SUB | **NO** | n/a — not estimable | nan° | nan° | +nan° | nan |
+| CA1-V1 | **NO** | n/a — not estimable | nan° | nan° | +nan° | nan |
+| CA3-DG | yes | ≥ 250 ms (censored) | 67.0° | 45.7° | +18.1° | 1 |
+| RSC-SUB | yes | ≥ 250 ms (censored) | 53.5° | 62.8° | -11.4° | 1 |
+| V1-RSC | yes | 200 ms | 57.9° | 54.6° | +2.0° | 1 |
 
 
 ### FS-included — items 2/4: feedforward (+50 ms) vs feedback (−50 ms)

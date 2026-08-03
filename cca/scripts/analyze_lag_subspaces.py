@@ -85,22 +85,93 @@ def stability(df: pd.DataFrame, dims: int = 1) -> pd.DataFrame:
         n_tests = len({abs(x) for x in lags})
         for lag in lags:
             at = sub[sub["lag_ms"] == lag]
-            per_animal = []
+            per_animal, kept_angles, kept_floors, n_areas = [], [], [], 0
             for _, g in at.groupby("animal"):
-                per_animal.append(np.nanmean([
-                    float(g[ax].iloc[0]) - float(g[fx].iloc[0]),
-                    float(g[ay].iloc[0]) - float(g[fy].iloc[0])]))
+                # GATE PER AREA, then average — not average, then gate. An area whose OWN
+                # floor exceeds the threshold has no usable subspace estimate, and its
+                # (angle - floor) term is large and negative, so averaging it in drags the
+                # animal toward "at floor". That biases TOWARD the null this test reports,
+                # i.e. it is not a conservative error. The animal drops out entirely when
+                # neither area is estimable.
+                terms = []
+                for a_col, f_col in ((ax, fx), (ay, fy)):
+                    a_v, f_v = float(g[a_col].iloc[0]), float(g[f_col].iloc[0])
+                    if np.isfinite(f_v) and f_v < NOT_ESTIMABLE_DEG and np.isfinite(a_v):
+                        terms.append(a_v - f_v)
+                        kept_angles.append(a_v); kept_floors.append(f_v)
+                if terms:
+                    per_animal.append(float(np.mean(terms)))
+                    n_areas += len(terms)
             n, mean, t, p = _paired(per_animal)
-            floor = float(np.nanmean([at[fx].mean(), at[fy].mean()]))
             rows.append({
                 "pair": pair, "dims": dims, "lag_ms": lag, "n_animals": n,
+                "n_areas_used": n_areas,
                 "angle_minus_floor": mean, "t": t, "p": p,
                 "p_bonf": min(1.0, p * n_tests) if np.isfinite(p) else np.nan,
-                "mean_angle": float(np.nanmean([at[ax].mean(), at[ay].mean()])),
-                "mean_floor": floor,
-                "estimable": bool(np.isfinite(floor) and floor < NOT_ESTIMABLE_DEG),
+                "mean_angle": float(np.mean(kept_angles)) if kept_angles else np.nan,
+                "mean_floor": float(np.mean(kept_floors)) if kept_floors else np.nan,
+                "estimable": bool(n_areas > 0),
             })
     return pd.DataFrame(rows)
+
+
+GATE_SWEEP = [50.0, 60.0, 70.0, 80.0, 90.0, float("inf")]
+
+
+def gate_sensitivity(df: pd.DataFrame, dims: int = 1) -> pd.DataFrame:
+    """How much of item 3's answer is the analyst's choice of estimability threshold?
+
+    **Both directions of this choice are biased, and by a measurable amount.** Across
+    area-lags, corr(floor, angle - floor) is Spearman rho = -0.57 (p ~ 1e-242): a high
+    floor mechanically produces a negative delta, because the floor is built from
+    half-data fits while the comparison uses the full window. So
+
+      * NO gate  -> unmeasurable areas (floor near 90 deg) contribute strongly negative
+                    deltas and drag every pair toward "at floor": biased toward the NULL.
+      * TIGHT gate -> selects low-floor areas, whose deltas are positive by the same
+                    correlation: biased toward finding ROTATION.
+
+    There is no threshold-free answer, so the honest output is the whole sweep. A pair
+    that appears at EVERY gate, including no gate, is the only kind of claim this test
+    supports.
+    """
+    out = []
+    global NOT_ESTIMABLE_DEG
+    original = NOT_ESTIMABLE_DEG
+    try:
+        for thr in GATE_SWEEP:
+            NOT_ESTIMABLE_DEG = thr
+            s = stability(df, dims=dims)
+            up = s[(s["p_bonf"] < 0.05) & (s["angle_minus_floor"] > 0)]
+            out.append({
+                "gate_deg": thr, "n_rotating_lags": int(len(up)),
+                "pairs": ", ".join(sorted(up["pair"].unique())) or "—",
+                "n_pairs": int(up["pair"].nunique()),
+            })
+    finally:
+        NOT_ESTIMABLE_DEG = original
+    return pd.DataFrame(out)
+
+
+def _md_gate(sens: pd.DataFrame, fs: str) -> str:
+    robust = None
+    sets = [set(r["pairs"].split(", ")) - {"—"} for _, r in sens.iterrows()]
+    if sets:
+        inter = set.intersection(*sets) if all(sets) else set()
+        robust = ", ".join(sorted(inter)) if inter else "none"
+    lines = [f"#### {fs} — item 3 depends on the estimability threshold", "",
+             "The gate is an analyst choice with no principled value, and **both "
+             "directions are biased**: across area-lags corr(floor, angle−floor) is "
+             "Spearman ρ = −0.57, so no gate drags toward the null (unmeasurable areas "
+             "contribute large negative deltas) while a tight gate selects low-floor "
+             "areas and drags toward rotation.", "",
+             "| gate | rotating lags | pairs |", "|---|---|---|"]
+    for _, r in sens.iterrows():
+        g = "no gate" if not np.isfinite(r["gate_deg"]) else f"{r['gate_deg']:.0f}°"
+        lines.append(f"| {g} | {r['n_rotating_lags']:.0f} | {r['pairs']} |")
+    lines += ["", f"**Robust to every gate, including none: {robust}.** That is the only "
+              "claim this test supports; the lag COUNT is not interpretable."]
+    return "\n".join(lines) + "\n"
 
 
 def stability_width(stab: pd.DataFrame) -> pd.DataFrame:
@@ -309,7 +380,10 @@ def main():
         tab.to_csv(RES / f"lag_subspaces_fffb_bin10{suf}.csv", index=False,
                    lineterminator="\n")
         tau_ms = TAU_BINS * int(df["bin_ms"].iloc[0])
-        md += [_md_stability(stab1, w1, fs, 1), "",
+        sens = gate_sensitivity(df, dims=1)
+        sens.to_csv(RES / f"lag_subspaces_gate_sensitivity_bin10{suf}.csv", index=False,
+                    lineterminator="\n")
+        md += [_md_stability(stab1, w1, fs, 1), "", _md_gate(sens, fs), "",
                _md_stability(stab3, w3, fs, 3), "", _md_fffb(tab, fs, tau_ms), ""]
         print(f"\n{fs}: {df['animal'].nunique()} animals, {len(df)} rows")
         print(f"  split-half floor: CC₁ {stab1['mean_floor'].mean():.1f}° | "
@@ -317,6 +391,11 @@ def main():
               f"  (>{NOT_ESTIMABLE_DEG:.0f}° = subspace not estimable)")
         n_est = stab1.groupby('pair')['estimable'].all().sum()
         print(f"  pairs with an estimable CC₁ subspace: {n_est}/{len(PAIRS)}")
+        sets = [set(r["pairs"].split(", ")) - {"—"}
+                for _, r in gate_sensitivity(df, dims=1).iterrows()]
+        rob = set.intersection(*sets) if sets and all(sets) else set()
+        print(f"  rotating at EVERY estimability gate (the only robust claim): "
+              f"{', '.join(sorted(rob)) if rob else 'none'}")
         sep = tab[tab["p_angle"] < 0.05]
         print(f"  FF/FB separable from floor: "
               f"{len(sep)}/{len(tab)} pairs" +

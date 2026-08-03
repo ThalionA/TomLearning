@@ -1,0 +1,7 @@
+gate_deg,n_rotating_lags,pairs,n_pairs
+50.0,20,"CA1-CA3, CA1-DG, CA1-RSC, CA3-DG",4
+60.0,20,"CA1-CA3, CA1-DG, CA1-RSC, CA1-SUB",4
+70.0,16,"CA1-CA3, CA1-DG, CA1-RSC",3
+80.0,10,"CA1-CA3, CA1-DG",2
+90.0,4,"CA1-CA3, CA1-DG",2
+inf,4,"CA1-CA3, CA1-DG",2
