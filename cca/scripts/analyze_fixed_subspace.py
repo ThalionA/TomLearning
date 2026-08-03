@@ -112,6 +112,71 @@ def _md(stats: pd.DataFrame, fs: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def censoring_report(tab: pd.DataFrame, swept_ms: float = 500.0) -> dict:
+    """How censored is `width_ms`, and does any significant contrast survive dropping the
+    censored animals?
+
+    The half-max width is bounded at BOTH ends: 0 ms when only the peak bin clears
+    half-max, and the full swept range when the curve never drops below it. Both bounds
+    are hit often enough here (~10% each) that a paired t on the raw metric is doing
+    something questionable, and a contrast can rest on a single bounded point. Any width
+    result quoted without this check is over-stated.
+    """
+    w = tab["width_ms"].dropna()
+    return {
+        "n": int(len(w)),
+        "frac_floor": float((w == 0).mean()) if len(w) else np.nan,
+        "frac_ceiling": float((w >= swept_ms).mean()) if len(w) else np.nan,
+        "frac_interior": float(((w > 0) & (w < swept_ms)).mean()) if len(w) else np.nan,
+    }
+
+
+def width_robustness(tab: pd.DataFrame, swept_ms: float = 500.0) -> pd.DataFrame:
+    """Per pair, the expert-vs-naive width contrast with and without censored animals."""
+    out = []
+    for pair in PAIRS:
+        s = tab[(tab["pair"] == pair) & tab["epoch"].isin(["naive", "expert"])]
+        p = s.pivot_table(index="animal", columns="epoch", values="width_ms").dropna()
+        if len(p) < 2 or not {"naive", "expert"} <= set(p.columns):
+            continue
+        cens = ((p == 0) | (p >= swept_ms)).any(axis=1)
+        d_all = (p["expert"] - p["naive"]).to_numpy(float)
+        n_a, _, _, p_a = paired_stats.paired_t(d_all)
+        row = {"pair": pair, "n_all": n_a, "d_all": float(np.mean(d_all)), "p_all": p_a,
+               "n_censored": int(cens.sum())}
+        d_un = (p["expert"] - p["naive"])[~cens].to_numpy(float)
+        if d_un.size >= 2:
+            n_u, _, _, p_u = paired_stats.paired_t(d_un)
+            row |= {"n_uncensored": n_u, "d_uncensored": float(np.mean(d_un)),
+                    "p_uncensored": p_u}
+        else:
+            row |= {"n_uncensored": int(d_un.size), "d_uncensored": np.nan,
+                    "p_uncensored": np.nan}
+        out.append(row)
+    return pd.DataFrame(out)
+
+
+def _md_censoring(tab: pd.DataFrame, fs: str) -> str:
+    c = censoring_report(tab)
+    rob = width_robustness(tab)
+    lines = [f"#### {fs} — how censored is the integration window?", "",
+             f"`width_ms` is bounded at both ends. Of {c['n']} (animal, pair, epoch) "
+             f"values, **{c['frac_floor']:.0%} sit at the 0 ms floor** (only the peak bin "
+             f"clears half-max) and **{c['frac_ceiling']:.0%} at the 500 ms ceiling** "
+             f"(the curve never drops below half-max); only {c['frac_interior']:.0%} are "
+             "interior. A paired *t* on this metric is therefore fragile, and any "
+             "contrast should be re-run without the bounded animals before it is "
+             "believed.", "",
+             "| pair | n | Δ width | p | censored animals | n uncens. | Δ uncens. | "
+             "p uncens. |", "|---|---|---|---|---|---|---|---|"]
+    for _, r in rob.iterrows():
+        lines.append(
+            f"| {r['pair']} | {r['n_all']:.0f} | {r['d_all']:+.0f} ms | "
+            f"{r['p_all']:.3g} | {r['n_censored']:.0f} | {r['n_uncensored']:.0f} | "
+            f"{r['d_uncensored']:+.0f} ms | {r['p_uncensored']:.3g} |")
+    return "\n".join(lines) + "\n"
+
+
 def _md_ringing(tab: pd.DataFrame, fs: str) -> str:
     """How to read the integration window, per pair — decaying or ringing?"""
     lines = [f"#### {fs} — is the lag curve decaying or RINGING?", "",
@@ -165,8 +230,19 @@ def main():
                      lineterminator="\n")
         md.append(_md(stats, fs))
         md.append(_md_ringing(tab, fs))
+        md.append(_md_censoring(tab, fs))
         print(f"\n{fs}: {tab['animal'].nunique()} animals, {len(tab)} "
               f"(animal,pair,epoch) curves")
+        c = censoring_report(tab)
+        print(f"  width_ms censoring: {c['frac_floor']:.0%} at the 0 ms floor, "
+              f"{c['frac_ceiling']:.0%} at the 500 ms ceiling "
+              f"({c['frac_interior']:.0%} interior)")
+        rob = width_robustness(tab)
+        flip = rob[(rob["p_all"] < 0.05) & ~(rob["p_uncensored"] < 0.05)]
+        for _, r in flip.iterrows():
+            print(f"    ⚠ {r['pair']} width contrast p={r['p_all']:.3g} with all "
+                  f"{r['n_all']:.0f} animals but p={r['p_uncensored']:.3g} with the "
+                  f"{r['n_censored']:.0f} censored dropped — do not quote the former alone")
         ring = tab.dropna(subset=["side_peak_ms"])
         ring = ring[ring["side_peak_ratio"] > 0.5]
         if len(ring):

@@ -102,13 +102,18 @@ have widths readable as integration windows. `fixed_subspace.side_peak` detects 
 `fixed_subspace_tables.md` prints the ringing fraction beside every width, so the number
 cannot be quoted without its caveat.
 
-**One candidate worth powering up (NOT established).** CA1-RSC's integration window
-narrows naive→expert: Δ = −79 ms (p = 0.255) FS-excluded, Δ = −205 ms (p = 0.029)
-FS-included. Same sign in both, significant in one, out of 64 tests. Checked against the
-obvious artefact — a low peak lowers the half-max threshold and inflates width — but
-corr(peak, width) = **+0.78 / +0.80**, so the wide naive curves have *higher* peaks, not
-lower. Naive CA1-RSC = stronger, broader, slower-ringing; expert = weaker, narrower,
-faster-ringing.
+**One candidate, and it is WEAKER than first written (2026-08-03 correction).** CA1-RSC's
+integration window narrows naive→expert: Δ = −79 ms (p = 0.255) FS-excluded, Δ = −205 ms
+(p = 0.029) FS-included. Same sign in both, significant in one, out of 64 tests.
+- First check (passed): a low peak would lower the half-max threshold and inflate width,
+  but corr(peak, width) = **+0.78 / +0.80** — the wide naive curves have *higher* peaks.
+- **Second check (fails): `width_ms` is doubly CENSORED and the result rests on it.**
+  ~10 % of values sit at the 0 ms floor (only the peak bin clears half-max) and ~10 % at
+  the 500 ms ceiling (the curve never drops below half-max) — only ~78 % are interior.
+  Dropping the single ceiling-censored animal takes CA1-RSC from **p = 0.029 (n = 8) to
+  p = 0.068 (n = 7)**. **Do not quote the significant version alone.** Now enforced in
+  code: `analyze_fixed_subspace.censoring_report` / `width_robustness` print the warning
+  automatically and write a censoring table into `fixed_subspace_tables.md`.
 
 **Items 2 + 3 — FS-EXCLUDED ANSWERED (16 animals, commit `705213b`).**
 

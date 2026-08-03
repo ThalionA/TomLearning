@@ -34,6 +34,21 @@ A secondary peak above half the central peak means the curve oscillates rather t
 | RSC-SUB | 5/12 (42%) | 132 ms | 7.6 Hz | 220 ms | mixed — mostly integration window |
 | V1-RSC | 6/18 (33%) | 140 ms | 7.1 Hz | 256 ms | mixed — mostly integration window |
 
+#### FS-excluded — how censored is the integration window?
+
+`width_ms` is bounded at both ends. Of 150 (animal, pair, epoch) values, **10% sit at the 0 ms floor** (only the peak bin clears half-max) and **10% at the 500 ms ceiling** (the curve never drops below half-max); only 80% are interior. A paired *t* on this metric is therefore fragile, and any contrast should be re-run without the bounded animals before it is believed.
+
+| pair | n | Δ width | p | censored animals | n uncens. | Δ uncens. | p uncens. |
+|---|---|---|---|---|---|---|---|
+| CA1-RSC | 8 | -79 ms | 0.255 | 1 | 7 | -24 ms | 0.542 |
+| CA1-CA3 | 6 | +0 ms | 1 | 1 | 5 | -2 ms | 0.621 |
+| CA1-DG | 8 | -2 ms | 0.351 | 2 | 6 | -3 ms | 0.175 |
+| CA1-V1 | 10 | +22 ms | 0.749 | 7 | 3 | +27 ms | 0.502 |
+| CA3-DG | 4 | -2 ms | 0.638 | 0 | 4 | -2 ms | 0.638 |
+| CA1-SUB | 4 | +22 ms | 0.117 | 2 | 2 | +5 ms | 0.5 |
+| RSC-SUB | 4 | +95 ms | 0.535 | 2 | 2 | -55 ms | 0.597 |
+| V1-RSC | 6 | +0 ms | 1 | 3 | 3 | -60 ms | 0.0351 |
+
 ### FS-included — expert vs naive through a FROZEN subspace
 
 Subspace identified once on trials balanced across epochs, then both epochs projected through the identical weights; animals-as-n paired *t*. `peak r` is in-sample by construction — read the Δ, not the level.
@@ -63,3 +78,18 @@ A secondary peak above half the central peak means the curve oscillates rather t
 | CA3-DG | 9/12 (75%) | 186 ms | 5.4 Hz | 23 ms | **half-period of a rhythm** |
 | RSC-SUB | 4/12 (33%) | 132 ms | 7.5 Hz | 228 ms | mixed — mostly integration window |
 | V1-RSC | 8/18 (44%) | 130 ms | 7.7 Hz | 236 ms | mixed — mostly integration window |
+
+#### FS-included — how censored is the integration window?
+
+`width_ms` is bounded at both ends. Of 153 (animal, pair, epoch) values, **12% sit at the 0 ms floor** (only the peak bin clears half-max) and **11% at the 500 ms ceiling** (the curve never drops below half-max); only 76% are interior. A paired *t* on this metric is therefore fragile, and any contrast should be re-run without the bounded animals before it is believed.
+
+| pair | n | Δ width | p | censored animals | n uncens. | Δ uncens. | p uncens. |
+|---|---|---|---|---|---|---|---|
+| CA1-RSC | 8 | -205 ms | 0.0294 | 1 | 7 | -169 ms | 0.068 |
+| CA1-CA3 | 7 | -7 ms | 0.14 | 0 | 7 | -7 ms | 0.14 |
+| CA1-DG | 8 | +1 ms | 0.763 | 1 | 7 | +1 ms | 0.766 |
+| CA1-V1 | 10 | +33 ms | 0.508 | 7 | 3 | +160 ms | 0.387 |
+| CA3-DG | 4 | -5 ms | 0.391 | 1 | 3 | +0 ms | nan |
+| CA1-SUB | 4 | +15 ms | 0.103 | 4 | 0 | +nan ms | nan |
+| RSC-SUB | 4 | +92 ms | 0.515 | 2 | 2 | -45 ms | 0.614 |
+| V1-RSC | 6 | -65 ms | 0.11 | 2 | 4 | -105 ms | 0.0539 |
