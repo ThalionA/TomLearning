@@ -248,3 +248,28 @@ def test_floor_is_nan_with_too_few_trials():
     X = np.zeros((100, 3)); Y = np.zeros((100, 3))
     fx, fy = lag_subspace.split_half_floor(X, Y, groups, k=2)
     assert np.isnan(fx) and np.isnan(fy)
+
+
+def test_floor_returns_x_area_first_not_y():
+    """Pins the RETURN ORDER by argument swap. A silent swap here would reintroduce the
+    2026-08-03 bug (X's floor subtracted from Y's angle) while every other floor test
+    still passed — the earlier tests only asserted the two values differ, not which is
+    which.
+
+    Asserted by SWAPPING THE ARGUMENTS rather than by assuming which area should have the
+    lower floor. That assumption is false: the floor is not a monotone measure of data
+    quality. A near-rank-1 area (few units, little noise) has degenerate residual PC
+    directions, which INFLATES its d=1 split-half angle — here the clean 4-unit X scores
+    34.7 deg against the noisy 30-unit Y's 11.3 deg. Anything that gates on the floor as
+    if it meant "well estimated" inherits that.
+    """
+    rng = np.random.default_rng(0)
+    groups = _trials(n_trials=12, n_bins=120)
+    s = rng.standard_normal(groups.size)
+    X = np.outer(s, rng.standard_normal(4)) + 0.05 * rng.standard_normal((groups.size, 4))
+    Y = np.outer(s, rng.standard_normal(30)) + 3.0 * rng.standard_normal((groups.size, 30))
+    fx, fy = lag_subspace.split_half_floor(X, Y, groups, k=4, d_use=1, seed=0)
+    gy, gx = lag_subspace.split_half_floor(Y, X, groups, k=4, d_use=1, seed=0)
+    assert gx == pytest.approx(fx, abs=1e-6), "first return must track the FIRST argument"
+    assert gy == pytest.approx(fy, abs=1e-6)
+    assert fx != fy

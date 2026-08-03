@@ -11,7 +11,47 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-03) — verification found 2 real bugs; the one positive result was an artefact
+## CURRENT STATE (2026-08-03, evening) — item 3 REVERSES: CA1-DG does rotate with lag
+
+**A second verification pass (6 agents) found that the morning's fix was incomplete, and
+correcting it flips item 3 from a null to the only positive result in the seven items.**
+
+**The residual bug: fixed the SUBTRACTION, not the AGGREGATION.** `stability()` averaged the
+X and Y `angle − floor` terms within an animal and gated estimability on the **pooled mean**
+of the two floors — so an area with no usable subspace estimate was averaged in rather than
+excluded. 20/71 animal-pairs (FS-excl) have **both** d=1 floors above 70°, yet the pooled
+gate called 48/71 estimable.
+
+**Not a conservative error.** Across 2840 area-lags, **corr(floor, angle − floor) = Spearman
+ρ = −0.57 (p ≈ 10⁻²⁴²)** — a high floor mechanically yields a negative delta, because the
+floor is built from half-data fits while the comparison uses the full window. Unmeasurable
+areas therefore drag every pair toward "at floor", i.e. toward the null that was reported.
+
+**ITEM 3, corrected: CA1-DG's communication subspace genuinely rotates with lag.** 8 of 20
+lags FS-excluded and 12 of 20 FS-included at the 70° gate, Δ = 20–35°, p(Bonf) to 0.0003,
+**in both FS conditions**. CA1-CA3 additionally survives FS-included.
+
+**⚠ The lag COUNT is an analyst choice and is NOT interpretable.** The gate has no principled
+value and **both directions are biased** — a tight gate selects low-floor areas (toward
+rotation), no gate includes unmeasurable ones (toward the null). `gate_sensitivity()` now
+sweeps it: rotating lags go 15 → 14 → 10 → 9 → 1 → 1 across gates 50/60/70/80/90/none.
+**Only a pair surviving EVERY setting is claimable — that is CA1-DG (both FS) and CA1-CA3
+(FS-incl).**
+
+**⚠ And the gate's premise is itself shaky.** A high floor does not reliably mean "badly
+estimated": a near-rank-1 area has degenerate residual PC directions that INFLATE its d=1
+split-half angle. Demonstrated in `test_floor_returns_x_area_first_not_y` — a clean 4-unit
+population scores 34.7° against a noisy 30-unit one at 11.3°.
+
+**Test coverage added where the bugs actually lived.** Both 2026-08-03 bugs were in the
+analysis/driver wiring, which had **zero** tests while `lag_subspace`'s 24 unit tests passed
+throughout. New `tests/test_analyze_lag_subspaces.py` pins per-area floor pairing, exclusion
+of unestimable areas, animal drop-out, gate-sweep global restoration and the Bonferroni
+family; `split_half_floor`'s return order is now pinned by argument swap. **350 tests pass.**
+
+---
+
+## ✓ DONE (2026-08-03, earlier) — verification found 2 real bugs; one positive result was an artefact
 
 **A 14-agent adversarial verification pass over the seven meeting items found two genuine
 bugs in code written on 2026-07-28/29, and both mattered.** Fixed, all six affected drivers

@@ -109,3 +109,20 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   The residualisation is part of the map and must travel with it. This one manufactured the
   only significant result in the arm (CA1-RSC integration-window narrowing, p = 0.029), which
   vanished on fixing it. Found 2026-08-03 by adversarial verification, not by testing.
+
+- **Gating a per-area statistic on the POOLED mean of two areas silently readmits the thing
+  you gated out.** `analyze_lag_subspaces.stability` averaged the X and Y `angle − floor`
+  terms per animal and tested estimability on the mean of the two floors, so an area with no
+  usable subspace estimate still contributed. 20/71 animal-pairs had BOTH d=1 floors over the
+  70° gate while the pooled test called 48/71 estimable. Direction of the bias is knowable:
+  corr(floor, angle − floor) = ρ −0.57 (p ~ 1e-242), so unmeasurable areas contribute large
+  negative deltas and pull toward the null. **Gate per area, then aggregate.** This one
+  converted a real effect (CA1-DG cross-lag rotation) into a reported null. Found 2026-08-03.
+
+- **A split-half floor is NOT a monotone measure of how well an area is estimated.** A
+  near-rank-1 population has degenerate residual PC directions, which INFLATES its d=1
+  split-half angle: a clean 4-unit area scores 34.7° while a noisy 30-unit one scores 11.3°
+  (`test_floor_returns_x_area_first_not_y`). So a floor-based "estimability" gate excludes
+  some well-conditioned areas and keeps some poor ones, and any count derived from such a
+  gate is an analyst choice. Report the whole gate sweep and claim only what survives all of
+  it. Found 2026-08-03.
