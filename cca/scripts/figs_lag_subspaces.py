@@ -69,8 +69,9 @@ def fig_stability(df: pd.DataFrame, fs: str):
             piv = sub.pivot_table(index="animal", columns="lag_ms", values=col)
             mean, _ = _mean_sem(piv, lags)
             ax.plot(lags, mean, ":", color=colour, lw=1.0, alpha=0.5, zorder=2)
-        fl = float(sub["floor_cc1"].mean())
-        fl_sd = float(sub["floor_cc1"].std(ddof=1))
+        fl = float(pd.concat([sub["floor_x_cc1"], sub["floor_y_cc1"]]).mean())
+        fl_sd = float(pd.concat([sub["floor_x_cc1"],
+                                 sub["floor_y_cc1"]]).std(ddof=1))
         ax.axhspan(fl - fl_sd, fl + fl_sd, color=C_FLOOR, alpha=0.30, zorder=0)
         ax.axhline(fl, color=C_FLOOR, lw=1.2, ls="--", zorder=1)
         fl3 = np.nanmean([sub["floor_x"].mean(), sub["floor_y"].mean()])
@@ -111,7 +112,7 @@ def fig_fffb(df: pd.DataFrame, fs: str):
                             f"FB (−{TAU_MS} ms)"], fontsize=7)
         ax.set_ylabel("held-out CC₁", fontsize=8)
         ang = float(ff.loc[common, "angle_ff_fb_cc1"].mean())
-        flr = float(ff.loc[common, "floor_cc1"].mean())
+        flr = float(ff.loc[common, "floor_x_cc1"].mean())
         ax.set_title(f"{pair}  (n={len(common)})\n"
                      f"FF/FB angle {ang:.0f}° vs floor {flr:.0f}°", fontsize=8.5)
     fig.suptitle(f"Feedforward vs feedback subspace — {fs}, 10 ms smoothed | "
@@ -130,7 +131,8 @@ def main():
         sys.exit(f"{src} not found — run scripts/run_lag_subspaces.py first")
     df = pd.read_csv(src)
     for c in ("cc1", "angle_x", "angle_y", "angle_x_cc1", "angle_y_cc1", "floor_x",
-              "floor_y", "floor_cc1", "angle_ff_fb_x", "angle_ff_fb_y",
+              "floor_y", "floor_x_cc1", "floor_y_cc1", "angle_ff_fb_x",
+              "angle_ff_fb_y",
               "angle_ff_fb_cc1", "gini_x_conn", "gini_y_conn"):
         df[c] = pd.to_numeric(df[c], errors="coerce")
     fig_stability(df, fs)

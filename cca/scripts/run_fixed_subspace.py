@@ -125,14 +125,26 @@ def main():
             X, Y = present[ax], present[ay]
             others = [present[z] for z in present if z not in (ax, ay)]
             Z = np.concatenate(others, axis=1) if others else None
-            fit = fixed_subspace.fit_fixed(X, Y, trial_ids, Z=Z, k=K,
+            # Residualise ONCE, with coefficients estimated on the balanced fit trials
+            # only, and apply them to every row. Then fit and project in that SAME space
+            # (Z=None below).
+            #
+            # Until 2026-08-03 this was inconsistent: fit_fixed residualised internally
+            # using fit-trial coefficients while the projection used all-trial
+            # coefficients, so the frozen weights were applied in a different residual
+            # space from the one they were fitted in. The residualisation is part of the
+            # frozen map and has to travel with it — otherwise "identical weights across
+            # epochs" is not actually an identical transform.
+            if Z is not None:
+                train = np.isin(trial_ids, fit_trials)
+                Xr = partial.partial_out_cv(X, Z, train)
+                Yr = partial.partial_out_cv(Y, Z, train)
+            else:
+                Xr, Yr = X, Y
+            fit = fixed_subspace.fit_fixed(Xr, Yr, trial_ids, Z=None, k=K,
                                            trials=fit_trials)
             if fit is None:
                 print(f"  fit fail {a.animal_id} {ax}-{ay}"); continue
-            # project through the FROZEN weights; residualise once, in-sample, so every
-            # epoch sees the identical map (the whole point of this arm)
-            Xr = partial.partial_out(X, Z) if Z is not None else X
-            Yr = partial.partial_out(Y, Z) if Z is not None else Y
             n_dims = int(min(N_DIMS, fit.wx.shape[1], fit.wy.shape[1]))
             for epoch in EPOCHS:
                 trials = [t for t, e in epoch_of_trial.items() if e == epoch]

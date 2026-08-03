@@ -57,7 +57,8 @@ EPOCHS = ["naive", "intermediate", "expert"]
 FIELDS = ["animal", "learner", "pair", "epoch", "bin_ms", "lag_bins", "lag_ms",
           "n_samples",
           "cc1", "cc_mean3", "n_sig", "angle_x", "angle_y", "angle_x_cc1",
-          "angle_y_cc1", "floor_x", "floor_y", "floor_cc1", "gini_x_conn",
+          "angle_y_cc1", "floor_x", "floor_y", "floor_x_cc1", "floor_y_cc1",
+          "gini_x_conn",
           "gini_y_conn", "angle_ff_fb_x", "angle_ff_fb_y", "angle_ff_fb_cc1"]
 
 
@@ -138,6 +139,9 @@ def main():
             if np.unique(trial_ids).size < N_FOLDS + 1:
                 continue
             present = {k: v[sel] for k, v in area_full.items()}
+            n_tr = int(np.unique(trial_ids).size)
+            print(f"    {a.animal_id} [{epoch}]: {sel.size} bins from {n_tr} trials "
+                  f"(ids {int(trial_ids.min())}-{int(trial_ids.max())})")
             _do_pairs(rows, a, is_learner, epoch, present, trial_ids, args)
         _flush()
         print(f"  animal {a.animal_id} ({'L' if is_learner else 'n'}): "
@@ -149,10 +153,16 @@ def main():
 def _segments(a, trial_ids_full, entries, cfg, by_epoch: bool):
     """``[(label, index_into_running_bins)]`` — one entry per analysis segment.
 
-    Session mode gives a single capped segment. Epoch mode gives one per learning
-    epoch, and the sample cap is applied WITHIN each epoch rather than to the session:
-    capping first would spend the whole budget on the earliest trials and leave the
-    expert epoch empty.
+    ⚠ "session" IS A MISNOMER FOR WHAT THIS RETURNS. `_capped_index` stops once
+    MAX_SAMPLES = 12000 bins have accumulated at <= 600 bins/trial, so the "session"
+    segment is the FIRST ~20 TRIALS, not the whole session — for an animal whose learning
+    point is at trial 69 that is entirely pre-learning. Any statement derived from it is
+    about early behaviour, not about the session as a whole. The label is kept for
+    file-format stability; the driver prints the retained trial count so this is visible.
+
+    Epoch mode gives one segment per learning epoch, with the cap applied WITHIN each
+    epoch rather than to the session — capping first would spend the whole budget on the
+    earliest trials and leave the expert epoch empty.
     """
     if not by_epoch:
         return [("session", _capped_index(trial_ids_full))]
@@ -199,7 +209,11 @@ def _do_pairs(rows, a, is_learner, epoch, present, trial_ids, args):
             n_sig = 0
         floor_x, floor_y = lag_subspace.split_half_floor(
             X, Y, trial_ids, Z=Z, lag=0, k=K, d_use=ANGLE_DIMS)
-        floor1_x, _ = lag_subspace.split_half_floor(
+        # BOTH d=1 floors. Exporting only the X floor and subtracting it from both
+        # areas' angles (as this driver did until 2026-08-03) reintroduces exactly the
+        # shared-floor flaw that split_half_floor returns two values to avoid: the floor
+        # rises as an area has fewer units, and these pairs are lopsided (CA1 vs SUB).
+        floor1_x, floor1_y = lag_subspace.split_half_floor(
             X, Y, trial_ids, Z=Z, lag=0, k=K, d_use=1)
         # items 2/4: is the FEEDFORWARD subspace (+tau, X leads) the same set of
         # neurons as the FEEDBACK one (-tau)? Compared against the same lag-0
@@ -237,7 +251,8 @@ def _do_pairs(rows, a, is_learner, epoch, present, trial_ids, args):
                 "angle_y_cc1": round(lag_subspace.subspace_angle(ref.wy, f.wy, 1), 2),
                 "floor_x": round(floor_x, 2) if np.isfinite(floor_x) else "",
                 "floor_y": round(floor_y, 2) if np.isfinite(floor_y) else "",
-                "floor_cc1": round(floor1_x, 2) if np.isfinite(floor1_x) else "",
+                "floor_x_cc1": round(floor1_x, 2) if np.isfinite(floor1_x) else "",
+                "floor_y_cc1": round(floor1_y, 2) if np.isfinite(floor1_y) else "",
                 "gini_x_conn": round(float(gx), 4),
                 "gini_y_conn": round(float(gy), 4),
                 "angle_ff_fb_x": round(a_ffx, 2) if np.isfinite(a_ffx) else "",

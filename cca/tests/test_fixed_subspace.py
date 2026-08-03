@@ -218,3 +218,32 @@ def test_side_peak_ignores_the_central_peak_itself():
 def test_side_peak_is_nan_for_a_non_positive_curve():
     lags = np.arange(-30, 31, 10, dtype=float)
     assert np.isnan(fixed_subspace.side_peak(lags, np.full(lags.size, -0.3))[0])
+
+
+# ---------------------------------------------------------------------------
+# side_peak_null — the ringing detector needs a calibrated null
+# ---------------------------------------------------------------------------
+def test_side_peak_fires_on_almost_all_noise_so_the_fraction_is_uninformative():
+    """The reason the RATE of ringing must never be quoted as evidence."""
+    lags = np.arange(-250, 251, 10, dtype=float)
+    null = fixed_subspace.side_peak_null(lags, n_draws=300, seed=1)
+    assert null.size > 0.9 * 300
+
+
+def test_noise_side_peaks_are_broadly_spread_not_band_limited():
+    lags = np.arange(-250, 251, 10, dtype=float)
+    null = fixed_subspace.side_peak_null(lags, n_draws=800, seed=2)
+    assert fixed_subspace.band_occupancy(null) < 0.6
+
+
+def test_band_occupancy_of_a_true_oscillation_is_high():
+    offsets = np.full(50, 140.0)              # 7.1 Hz, squarely in theta
+    assert fixed_subspace.band_occupancy(offsets) == pytest.approx(1.0)
+
+
+def test_band_occupancy_excludes_out_of_band_offsets():
+    assert fixed_subspace.band_occupancy(np.array([500.0, 500.0])) == pytest.approx(0.0)
+
+
+def test_band_occupancy_is_nan_without_usable_offsets():
+    assert np.isnan(fixed_subspace.band_occupancy(np.array([np.nan, -5.0])))

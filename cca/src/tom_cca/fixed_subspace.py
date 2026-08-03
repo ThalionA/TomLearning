@@ -221,3 +221,35 @@ def side_peak(lags, r):
     if best_i < 0 or best_v <= 0:
         return float("nan"), float("nan")
     return float(abs(lags[best_i] - lags[pk])), float(best_v / r[pk])
+
+
+def side_peak_null(lags, n_draws: int = 3000, ratio_gate: float = 0.5,
+                   seed: int = 0) -> np.ndarray:
+    """Side-peak offsets produced by NOISE alone, on the same lag grid.
+
+    :func:`side_peak` fires on essentially every noisy curve — on a curve whose central
+    peak sits near the noise floor almost any bin qualifies as a secondary maximum — so
+    the FRACTION of curves with a side peak carries no information and must never be
+    quoted as evidence of rhythmicity. What does carry information is WHERE the side
+    peaks land: a real oscillation concentrates them at its period, whereas noise spreads
+    them broadly across the grid. Compare an observed offset distribution against this
+    null with a KS test and/or a band-occupancy contrast.
+    """
+    rng = np.random.default_rng(seed)
+    lags = np.asarray(lags, dtype=float)
+    out = []
+    for _ in range(int(n_draws)):
+        r = rng.standard_normal(lags.size) * 0.02 + 0.05
+        ms, ratio = side_peak(lags, r)
+        if np.isfinite(ms) and ratio > ratio_gate:
+            out.append(ms)
+    return np.asarray(out, dtype=float)
+
+
+def band_occupancy(offsets_ms, lo_hz: float = 5.0, hi_hz: float = 12.0) -> float:
+    """Fraction of side-peak offsets whose implied frequency falls in ``[lo_hz, hi_hz]``."""
+    o = np.asarray(offsets_ms, dtype=float)
+    o = o[np.isfinite(o) & (o > 0)]
+    if o.size == 0:
+        return float("nan")
+    return float(np.mean((o >= 1000.0 / hi_hz) & (o <= 1000.0 / lo_hz)))

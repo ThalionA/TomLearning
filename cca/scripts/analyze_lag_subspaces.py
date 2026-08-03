@@ -73,7 +73,7 @@ def stability(df: pd.DataFrame, dims: int = 1) -> pd.DataFrame:
     rotations come out significantly *below* their floors. Consequence here: "at floor"
     excludes a LARGE rotation with lag, but the test can miss a modest one.
     """
-    ax, ay, fx, fy = (("angle_x_cc1", "angle_y_cc1", "floor_cc1", "floor_cc1")
+    ax, ay, fx, fy = (("angle_x_cc1", "angle_y_cc1", "floor_x_cc1", "floor_y_cc1")
                       if dims == 1 else
                       ("angle_x", "angle_y", "floor_x", "floor_y"))
     rows = []
@@ -155,7 +155,7 @@ def ff_fb(df: pd.DataFrame) -> pd.DataFrame:
             # CC1, not 3 dims: the 3-dim split-half floor is ~78 deg (the subspace is
             # not estimable there), so an FF/FB angle measured at 3 dims has no
             # headroom and the comparison would be vacuous. Both terms are x-area.
-            ang_d.append(float(ff["angle_ff_fb_cc1"]) - float(ff["floor_cc1"]))
+            ang_d.append(float(ff["angle_ff_fb_cc1"]) - float(ff["floor_x_cc1"]))
         n_cc, m_cc, t_cc, p_cc = _paired(cc_d)
         n_g, m_g, t_g, p_g = _paired(gini_d)
         n_a, m_a, t_a, p_a = _paired(ang_d)
@@ -295,9 +295,9 @@ def main():
             print(f"skip {fs}: {src.name} not found"); continue
         df = pd.read_csv(src)
         for c in ("cc1", "cc_mean3", "angle_x", "angle_y", "angle_x_cc1",
-                  "angle_y_cc1", "floor_x", "floor_y", "floor_cc1", "gini_x_conn",
-                  "gini_y_conn", "angle_ff_fb_x", "angle_ff_fb_y",
-                  "angle_ff_fb_cc1"):
+                  "angle_y_cc1", "floor_x", "floor_y", "floor_x_cc1",
+                  "floor_y_cc1", "gini_x_conn", "gini_y_conn", "angle_ff_fb_x",
+                  "angle_ff_fb_y", "angle_ff_fb_cc1"):
             df[c] = pd.to_numeric(df[c], errors="coerce")
         stab1 = stability(df, dims=1)
         stab3 = stability(df, dims=3)
@@ -333,8 +333,8 @@ def main():
         ep_src = RES / f"lag_subspaces_bin10_epochs{suf}.csv"
         if ep_src.exists():
             ep = pd.read_csv(ep_src)
-            for c in ("cc1", "angle_ff_fb_cc1", "floor_cc1", "gini_x_conn",
-                      "gini_y_conn"):
+            for c in ("cc1", "angle_ff_fb_cc1", "floor_x_cc1", "floor_y_cc1",
+                      "gini_x_conn", "gini_y_conn"):
                 ep[c] = pd.to_numeric(ep[c], errors="coerce")
             evo = ff_fb_evolution(ep)
             evo.to_csv(RES / f"lag_subspaces_evolution_bin10{suf}.csv", index=False,
