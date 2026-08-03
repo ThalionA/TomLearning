@@ -8,14 +8,14 @@ Animals-as-n throughout; 8 pairs, no cross-pair correction (per-pair family, STA
 
 | pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
 |---|---|---|---|---|---|---|
-| CA1-CA3 | yes | ≥ 250 ms (censored) | 54.6° | 48.7° | +5.8° | 1 |
-| CA1-DG | yes | ≥ 250 ms (censored) | 59.8° | 55.6° | +4.3° | 1 |
-| CA1-RSC | yes | ≥ 250 ms (censored) | 66.5° | 63.6° | +2.8° | 1 |
-| CA1-SUB | yes | ≥ 250 ms (censored) | 72.2° | 62.0° | +10.2° | 1 |
-| CA1-V1 | yes | ≥ 250 ms (censored) | 55.4° | 64.6° | -9.2° | 1 |
-| CA3-DG | yes | ≥ 250 ms (censored) | 47.5° | 50.3° | -2.7° | 1 |
-| RSC-SUB | yes | ≥ 250 ms (censored) | 59.3° | 63.6° | -4.3° | 1 |
-| V1-RSC | yes | ≥ 250 ms (censored) | 43.3° | 42.6° | +0.7° | 1 |
+| CA1-CA3 | yes | ≥ 250 ms (censored) | 54.6° | 45.5° | +9.1° | 1 |
+| CA1-DG | yes | 70 ms | 59.8° | 49.0° | +10.8° | 0.402 |
+| CA1-RSC | yes | ≥ 250 ms (censored) | 66.5° | 63.9° | +2.6° | 1 |
+| CA1-SUB | yes | ≥ 250 ms (censored) | 72.2° | 59.1° | +13.0° | 1 |
+| CA1-V1 | yes | ≥ 250 ms (censored) | 55.4° | 65.8° | -10.5° | 0.712 |
+| CA3-DG | yes | ≥ 250 ms (censored) | 47.5° | 42.8° | +4.7° | 1 |
+| RSC-SUB | yes | ≥ 250 ms (censored) | 59.3° | 61.9° | -2.6° | 1 |
+| V1-RSC | yes | ≥ 250 ms (censored) | 43.3° | 41.9° | +1.4° | 1 |
 
 
 ### FS-excluded — item 3: subspace stability across lag (3 canonical dims)
@@ -75,14 +75,14 @@ Expert − naive, animals-as-n paired *t*, learners only. FF = +50 ms (first are
 
 | pair | estimable? | stability width | mean angle @ ±50 ms | floor | Δ | p (Bonf) |
 |---|---|---|---|---|---|---|
-| CA1-CA3 | yes | ≥ 250 ms (censored) | 50.6° | 44.5° | +6.2° | 1 |
-| CA1-DG | yes | ≥ 250 ms (censored) | 61.9° | 52.9° | +9.0° | 1 |
-| CA1-RSC | yes | ≥ 250 ms (censored) | 62.8° | 57.5° | +5.3° | 1 |
-| CA1-SUB | yes | ≥ 250 ms (censored) | 74.6° | 62.9° | +11.7° | 1 |
-| CA1-V1 | yes | ≥ 250 ms (censored) | 51.3° | 68.4° | -17.1° | 0.384 |
-| CA3-DG | yes | ≥ 250 ms (censored) | 51.9° | 37.0° | +14.8° | 1 |
-| RSC-SUB | yes | ≥ 250 ms (censored) | 56.6° | 57.5° | -1.0° | 1 |
-| V1-RSC | yes | ≥ 250 ms (censored) | 41.5° | 40.8° | +0.7° | 1 |
+| CA1-CA3 | yes | 30 ms | 50.6° | 35.4° | +15.2° | 0.234 |
+| CA1-DG | yes | 70 ms | 61.9° | 47.8° | +14.1° | 0.174 |
+| CA1-RSC | yes | ≥ 250 ms (censored) | 62.8° | 58.5° | +4.3° | 1 |
+| CA1-SUB | yes | ≥ 250 ms (censored) | 74.6° | 60.6° | +14.0° | 1 |
+| CA1-V1 | yes | ≥ 250 ms (censored) | 51.3° | 67.2° | -15.9° | 0.258 |
+| CA3-DG | yes | ≥ 250 ms (censored) | 51.9° | 33.1° | +18.8° | 0.872 |
+| RSC-SUB | yes | ≥ 250 ms (censored) | 56.6° | 54.1° | +2.4° | 1 |
+| V1-RSC | yes | ≥ 250 ms (censored) | 41.5° | 40.0° | +1.6° | 1 |
 
 
 ### FS-included — item 3: subspace stability across lag (3 canonical dims)

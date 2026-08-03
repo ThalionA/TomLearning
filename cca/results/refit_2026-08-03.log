@@ -1,0 +1,215 @@
+START Mon Aug  3 15:39:10 BST 2026
+FIXED SUBSPACE | bin=10ms smooth=2.5ms K=30 | lags +/-25 bins | FS=excl
+
+  animal 28: 1836 rows total
+  animal 34: 2754 rows total
+  animal 36: 3213 rows total
+  animal 41: 4131 rows total
+  animal 52: 6885 rows total
+  animal 61: 9639 rows total
+  animal 63: 10098 rows total
+  animal 66: 12852 rows total
+  animal 68: 14688 rows total
+  animal 73: 17442 rows total
+  animal 75: 20196 rows total
+  animal 77: 22950 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/fixed_subspace_bin10.csv
+DONE fixed-excl Mon Aug  3 15:43:48 BST 2026
+FIXED SUBSPACE | bin=10ms smooth=2.5ms K=30 | lags +/-25 bins | FS=incl
+
+  animal 28: 1836 rows total
+  animal 34: 2754 rows total
+  animal 36: 3672 rows total
+  animal 41: 4590 rows total
+  animal 52: 7344 rows total
+  animal 61: 10098 rows total
+  animal 63: 10557 rows total
+  animal 66: 13311 rows total
+  animal 68: 15147 rows total
+  animal 73: 17901 rows total
+  animal 75: 20655 rows total
+  animal 77: 23409 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/fixed_subspace_bin10_fsincl.csv
+DONE fixed-incl Mon Aug  3 15:48:32 BST 2026
+LAG SUBSPACES | bin=10ms smooth=2.5ms K=30 | 21 lags, tau=5 bins | FS=excl
+
+    28 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 28 (L): 84 rows total
+    34 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 34 (L): 126 rows total
+    36 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 36 (L): 147 rows total
+    41 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 41 (L): 189 rows total
+    52 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 52 (L): 315 rows total
+    61 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 61 (L): 441 rows total
+    63 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 63 (L): 462 rows total
+    66 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 66 (L): 588 rows total
+    68 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 68 (L): 672 rows total
+    70 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 70 (n): 798 rows total
+    71 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 71 (n): 966 rows total
+    73 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 73 (L): 1092 rows total
+    75 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 75 (L): 1218 rows total
+    77 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 77 (L): 1344 rows total
+    98 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 98 (n): 1365 rows total
+    100 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 100 (n): 1491 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_subspaces_bin10.csv
+DONE lag-excl Mon Aug  3 16:13:56 BST 2026
+LAG SUBSPACES | bin=10ms smooth=2.5ms K=30 | 21 lags, tau=5 bins | FS=incl
+
+    28 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 28 (L): 84 rows total
+    34 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 34 (L): 126 rows total
+    36 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 36 (L): 168 rows total
+    41 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 41 (L): 210 rows total
+    52 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 52 (L): 336 rows total
+    61 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 61 (L): 462 rows total
+    63 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 63 (L): 483 rows total
+    66 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 66 (L): 609 rows total
+    68 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 68 (L): 693 rows total
+    70 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 70 (n): 819 rows total
+    71 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 71 (n): 987 rows total
+    73 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 73 (L): 1113 rows total
+    75 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 75 (L): 1239 rows total
+    77 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 77 (L): 1365 rows total
+    98 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 98 (n): 1407 rows total
+    100 [session]: 12000 bins from 20 trials (ids 1-20)
+  animal 100 (n): 1533 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_subspaces_bin10_fsincl.csv
+DONE lag-incl Mon Aug  3 16:40:42 BST 2026
+LAG SUBSPACES | bin=10ms smooth=2.5ms K=30 | 21 lags, tau=5 bins | FS=excl
+
+    28 [naive]: 6000 bins from 10 trials (ids 1-10)
+    28 [intermediate]: 6000 bins from 10 trials (ids 60-69)
+    28 [expert]: 6000 bins from 10 trials (ids 70-79)
+  animal 28 (L): 252 rows total
+    34 [naive]: 6000 bins from 10 trials (ids 1-10)
+    34 [intermediate]: 6000 bins from 10 trials (ids 39-48)
+    34 [expert]: 6000 bins from 10 trials (ids 49-58)
+  animal 34 (L): 378 rows total
+    36 [naive]: 6000 bins from 10 trials (ids 1-10)
+    36 [intermediate]: 6000 bins from 10 trials (ids 19-28)
+    36 [expert]: 6000 bins from 10 trials (ids 29-38)
+  animal 36 (L): 441 rows total
+    41 [naive]: 6000 bins from 10 trials (ids 1-10)
+    41 [intermediate]: 6000 bins from 10 trials (ids 20-29)
+    41 [expert]: 6000 bins from 10 trials (ids 30-39)
+  animal 41 (L): 567 rows total
+    52 [naive]: 6000 bins from 10 trials (ids 1-10)
+    52 [intermediate]: 6000 bins from 10 trials (ids 27-36)
+    52 [expert]: 6000 bins from 10 trials (ids 37-46)
+  animal 52 (L): 945 rows total
+    61 [naive]: 6000 bins from 10 trials (ids 1-10)
+    61 [intermediate]: 6000 bins from 10 trials (ids 79-88)
+    61 [expert]: 6000 bins from 10 trials (ids 89-98)
+  animal 61 (L): 1323 rows total
+    63 [naive]: 6000 bins from 10 trials (ids 1-10)
+    63 [intermediate]: 6000 bins from 10 trials (ids 98-107)
+    63 [expert]: 6000 bins from 10 trials (ids 108-117)
+  animal 63 (L): 1386 rows total
+    66 [naive]: 6000 bins from 10 trials (ids 1-10)
+    66 [intermediate]: 6000 bins from 10 trials (ids 19-28)
+    66 [expert]: 6000 bins from 10 trials (ids 29-38)
+  animal 66 (L): 1764 rows total
+    68 [naive]: 6000 bins from 10 trials (ids 1-10)
+    68 [intermediate]: 6000 bins from 10 trials (ids 33-42)
+    68 [expert]: 6000 bins from 10 trials (ids 43-52)
+  animal 68 (L): 2016 rows total
+    73 [naive]: 6000 bins from 10 trials (ids 1-10)
+    73 [intermediate]: 6000 bins from 10 trials (ids 50-59)
+    73 [expert]: 6000 bins from 10 trials (ids 60-69)
+  animal 73 (L): 2394 rows total
+    75 [naive]: 6000 bins from 10 trials (ids 1-10)
+    75 [intermediate]: 6000 bins from 10 trials (ids 22-31)
+    75 [expert]: 6000 bins from 10 trials (ids 32-41)
+  animal 75 (L): 2772 rows total
+    77 [naive]: 6000 bins from 10 trials (ids 1-10)
+    77 [intermediate]: 6000 bins from 10 trials (ids 40-49)
+    77 [expert]: 6000 bins from 10 trials (ids 50-59)
+  animal 77 (L): 3150 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_subspaces_bin10_epochs.csv
+DONE lagep-excl Mon Aug  3 17:06:11 BST 2026
+LAG SUBSPACES | bin=10ms smooth=2.5ms K=30 | 21 lags, tau=5 bins | FS=incl
+
+    28 [naive]: 6000 bins from 10 trials (ids 1-10)
+    28 [intermediate]: 6000 bins from 10 trials (ids 60-69)
+    28 [expert]: 6000 bins from 10 trials (ids 70-79)
+  animal 28 (L): 252 rows total
+    34 [naive]: 6000 bins from 10 trials (ids 1-10)
+    34 [intermediate]: 6000 bins from 10 trials (ids 39-48)
+    34 [expert]: 6000 bins from 10 trials (ids 49-58)
+  animal 34 (L): 378 rows total
+    36 [naive]: 6000 bins from 10 trials (ids 1-10)
+    36 [intermediate]: 6000 bins from 10 trials (ids 19-28)
+    36 [expert]: 6000 bins from 10 trials (ids 29-38)
+  animal 36 (L): 504 rows total
+    41 [naive]: 6000 bins from 10 trials (ids 1-10)
+    41 [intermediate]: 6000 bins from 10 trials (ids 20-29)
+    41 [expert]: 6000 bins from 10 trials (ids 30-39)
+  animal 41 (L): 630 rows total
+    52 [naive]: 6000 bins from 10 trials (ids 1-10)
+    52 [intermediate]: 6000 bins from 10 trials (ids 27-36)
+    52 [expert]: 6000 bins from 10 trials (ids 37-46)
+  animal 52 (L): 1008 rows total
+    61 [naive]: 6000 bins from 10 trials (ids 1-10)
+    61 [intermediate]: 6000 bins from 10 trials (ids 79-88)
+    61 [expert]: 6000 bins from 10 trials (ids 89-98)
+  animal 61 (L): 1386 rows total
+    63 [naive]: 6000 bins from 10 trials (ids 1-10)
+    63 [intermediate]: 6000 bins from 10 trials (ids 98-107)
+    63 [expert]: 6000 bins from 10 trials (ids 108-117)
+  animal 63 (L): 1449 rows total
+    66 [naive]: 6000 bins from 10 trials (ids 1-10)
+    66 [intermediate]: 6000 bins from 10 trials (ids 19-28)
+    66 [expert]: 6000 bins from 10 trials (ids 29-38)
+  animal 66 (L): 1827 rows total
+    68 [naive]: 6000 bins from 10 trials (ids 1-10)
+    68 [intermediate]: 6000 bins from 10 trials (ids 33-42)
+    68 [expert]: 6000 bins from 10 trials (ids 43-52)
+  animal 68 (L): 2079 rows total
+    73 [naive]: 6000 bins from 10 trials (ids 1-10)
+    73 [intermediate]: 6000 bins from 10 trials (ids 50-59)
+    73 [expert]: 6000 bins from 10 trials (ids 60-69)
+  animal 73 (L): 2457 rows total
+    75 [naive]: 6000 bins from 10 trials (ids 1-10)
+    75 [intermediate]: 6000 bins from 10 trials (ids 22-31)
+    75 [expert]: 6000 bins from 10 trials (ids 32-41)
+  animal 75 (L): 2835 rows total
+    77 [naive]: 6000 bins from 10 trials (ids 1-10)
+    77 [intermediate]: 6000 bins from 10 trials (ids 40-49)
+    77 [expert]: 6000 bins from 10 trials (ids 50-59)
+  animal 77 (L): 3213 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_subspaces_bin10_epochs_fsincl.csv
+ALL DONE Mon Aug  3 17:34:04 BST 2026
