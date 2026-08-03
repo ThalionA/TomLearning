@@ -111,7 +111,20 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    fits while the comparison uses full windows, so the floor sits above the comparison's true
    noise level and the test is conservative — it excludes a *large* rotation, not a modest one.
 
-7. **Feedforward vs feedback: NOT separable subspaces (2026-07-29).** Fitting the subspace at
+> **⚠ 2026-08-03 — two bugs found by adversarial verification; findings 4 and 7 below are
+> the CORRECTED versions.** (a) `run_lag_subspaces` exported only the X-area d=1 floor and
+> subtracted it from both areas' angles — the shared-floor flaw `split_half_floor` exists to
+> avoid (mean |X−Y| floor difference 12.8°, misplacing the estimability gate in 9/71 cells).
+> (b) The fixed-subspace arm fitted weights in one residual space and applied them in another,
+> so "identical weights across epochs" was not an identical transform. **Consequence: the
+> CA1-RSC integration-window narrowing was an ARTEFACT of (b) and is gone — items 5/6/7 are
+> now 0/32 in BOTH FS conditions.** Verdicts elsewhere survived, but per-cell values moved a
+> lot (`peak_lag_ms` old-vs-new correlation only 0.35), so no pre-2026-08-03 per-cell number
+> should be quoted. Also corrected: the epoch contrast is **32/32 null FS-excluded**, not
+> 31/32.
+
+7. **Feedforward vs feedback: NOT separable subspaces (2026-07-29, re-verified 2026-08-03).**
+   Fitting the subspace at
    +50 ms (X leads) and at −50 ms (Y leads) gives two subspaces whose principal angle never
    clears the noise floor — **0/8 pairs, both FS**. Connection-specific Gini does not differ
    between them in any pair, and the FF/FB asymmetry does not change with learning (0/8 pairs,

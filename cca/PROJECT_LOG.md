@@ -11,7 +11,74 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-07-29) — ALL SEVEN MEETING ITEMS ANSWERED; nothing running
+## CURRENT STATE (2026-08-03) — verification found 2 real bugs; the one positive result was an artefact
+
+**A 14-agent adversarial verification pass over the seven meeting items found two genuine
+bugs in code written on 2026-07-28/29, and both mattered.** Fixed, all six affected drivers
+re-run, commit `a49fe16`.
+
+**BUG 1 — shared noise floor at the primary dimensionality.** `run_lag_subspaces.py`
+exported only the **X-area** d=1 floor as `floor_cc1`, and `analyze_lag_subspaces.stability`
+subtracted it from **both** areas' angles. This is exactly the flaw `split_half_floor`
+returns two values to avoid — fixed at d=3 during the same session and then reintroduced in
+the d=1 path that later became primary. Materially wrong: mean |X−Y| floor difference
+**12.8°** (max 74.8°), misplacing the 70° estimability gate in **9/71** cells. Now exports
+`floor_x_cc1` / `floor_y_cc1`.
+
+**BUG 2 — fit/projection space mismatch in the fixed-subspace arm.** `fit_fixed`
+residualised the third areas with coefficients from the balanced fit trials; the driver then
+projected data residualised with **all-trial** coefficients. So the frozen weights were
+applied in a different residual space from the one they were fitted in, and "identical
+weights across epochs" was not an identical transform. The residualisation now happens once
+with fit-trial coefficients and travels with the frozen map.
+
+**⚠ CONSEQUENCE — the one candidate finding was an artefact of bug 2 and is GONE.** The
+CA1-RSC integration-window narrowing (logged 2026-07-29 as "worth powering up", then
+corrected to "weaker than logged") does not survive the fix. **Items 5/6/7 are now 0/32
+significant in BOTH FS conditions.** Verdicts elsewhere held, but per-cell values moved a
+lot — `peak_r` changed in 144/150 cells (old-vs-new r = 0.82), `ifi` 144/150 (r = 0.75),
+`peak_lag_ms` **r = 0.35**. **Do not quote any pre-2026-08-03 per-cell number.**
+
+**⚠ The theta result was argued from the wrong statistic.** The claim rested on the
+*fraction* of curves that ring (33–92 %). `side_peak` fires on **~100 % of pure-noise
+curves**, so that fraction is worthless. New `fixed_subspace.side_peak_null` /
+`band_occupancy` supply a calibrated null, and the finding survives on the right evidence:
+real side-peak offsets sit at a **median 140 ms (7.1 Hz, IQR 120–148)** against a noise
+median of 170 ms (IQR 90–270), **KS p = 2.7×10⁻¹¹**, with **85 % of real offsets in the
+5–12 Hz band vs 37 % of noise**.
+
+**⚠ "Session" mode is the FIRST ~20 TRIALS, not the session.** `_capped_index` stops at
+12 000 bins / 600 bins-per-trial = 20 trials. For an animal with a learning point at trial
+69 that window is entirely pre-learning, so items 2 and 3 describe *early behaviour*. The
+driver now prints the retained trial range. Documented, not fixed — widening it is a
+deliberate decision, not a side effect.
+
+**Corrected counts.** Items 5/6/7 are **32/32 null FS-excluded** (previously logged 31/32).
+
+**Post-fix answers — the qualitative conclusions all held:**
+- Item 2: FF/FB still **not separable, 0/8 pairs, both FS**.
+- Item 3: **no interpretable rotation** across ±250 ms. Nominally 7/8 (FS-excl) and 6/8
+  (FS-incl) rather than 8/8, but the exceptions are noise: CA1-DG's angle-vs-lag profile is
+  non-monotonic with several 15–19° values that do not cross, and ~0.4 pairs are expected to
+  hit by chance across 8 pairs. **The more informative tail is the other one** — 3 pairs
+  (FS-excl) sit significantly *below* their floor, measured confirmation that the half-data
+  floor is inflated relative to the full-window comparison it gates.
+- Item 4: **0/8, min p = 0.068** FS-excluded, unchanged by the fix.
+
+**Verifier observations worth raising at the meeting, beyond the bugs:** the `sig` flag's
+effective per-dimension false-positive rate is **~14 %**, not 5 %; `floor_cc1` exceeds the
+70° gate in **27/71** individual animal-pairs even where pair means pass; and two random
+directions in the shared 30-dim PCA basis average **81.5°**, not 90°, so that is the real
+ceiling for these angle comparisons.
+
+**Standing lesson.** Two bugs, both mine, both found by adversarial verification rather than
+by me, and one of them manufactured the only positive result in the set. What is robust here
+is the nulls: every item null before the fix was null after, across a change that moved most
+per-cell values.
+
+---
+
+## ✓ DONE (2026-07-29) — ALL SEVEN MEETING ITEMS ANSWERED (numbers superseded 2026-08-03)
 
 **Every item from the 2026-07-28 meeting now has an answer, both FS conditions.** Six of
 seven are null; the substantive output of the session is three methodological traps found

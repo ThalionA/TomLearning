@@ -331,10 +331,11 @@ def main():
 
         # items 2/4 — the FF/FB evolution, if the --epochs run has landed
         ep_src = RES / f"lag_subspaces_bin10_epochs{suf}.csv"
-        if ep_src.exists():
+        needed = {"cc1", "angle_ff_fb_cc1", "floor_x_cc1", "floor_y_cc1",
+                  "gini_x_conn", "gini_y_conn"}
+        if ep_src.exists() and needed <= set(pd.read_csv(ep_src, nrows=0).columns):
             ep = pd.read_csv(ep_src)
-            for c in ("cc1", "angle_ff_fb_cc1", "floor_x_cc1", "floor_y_cc1",
-                      "gini_x_conn", "gini_y_conn"):
+            for c in needed:
                 ep[c] = pd.to_numeric(ep[c], errors="coerce")
             evo = ff_fb_evolution(ep)
             evo.to_csv(RES / f"lag_subspaces_evolution_bin10{suf}.csv", index=False,
@@ -343,6 +344,9 @@ def main():
             hits = evo[evo["p_asym"] < 0.05]
             print(f"  FF/FB asymmetry changes with learning: {len(hits)}/{len(evo)} "
                   f"pairs" + (" — " + ", ".join(hits["pair"]) if len(hits) else ""))
+        elif ep_src.exists():
+            print(f"  (skipping {ep_src.name}: written before the per-area d=1 floor "
+                  "fix — re-run run_lag_subspaces.py --epochs)")
         else:
             print(f"  (epoch run pending — {ep_src.name} not found)")
     (RES / "lag_subspaces_tables.md").write_text("\n".join(md))

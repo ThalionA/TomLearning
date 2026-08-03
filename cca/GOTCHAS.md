@@ -92,3 +92,20 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   STALE cached array — a smoothing validation silently showed "no effect" (identical CC) until the
   key was fixed (2026-06-13). Any new cfg field that alters `spikes_50ms` (smoothing, rebin mode,
   unit selection) must be added to the cache key in `dataio._load_temporal_streams`.
+
+- **A "ringing" detector with no calibrated null measures nothing.** `fixed_subspace.side_peak`
+  fires on **~100 % of pure-noise curves** at the `ratio > 0.5` gate — on a curve whose central
+  peak is near the noise floor almost any bin qualifies as a secondary maximum. So the FRACTION
+  of curves showing a side peak is uninformative and must never be quoted as evidence of
+  rhythmicity (it was, on 2026-07-29). What carries information is WHERE the side peaks land:
+  a real oscillation concentrates them at its period, noise spreads them across the grid. Use
+  `side_peak_null` + `band_occupancy` and compare distributions (real median 140 ms, IQR
+  120–148 vs noise median 170 ms, IQR 90–270; KS p = 2.7×10⁻¹¹). Found 2026-08-03.
+
+- **Weights fitted in one residual space and applied in another silently break a "frozen"
+  projection.** `run_fixed_subspace.py` fitted the subspace on data residualised with
+  *fit-trial* confound coefficients, then projected data residualised with *all-trial*
+  coefficients — so "the identical weights for every epoch" was not an identical transform.
+  The residualisation is part of the map and must travel with it. This one manufactured the
+  only significant result in the arm (CA1-RSC integration-window narrowing, p = 0.029), which
+  vanished on fixing it. Found 2026-08-03 by adversarial verification, not by testing.
