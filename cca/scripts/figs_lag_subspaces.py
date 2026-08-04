@@ -36,8 +36,6 @@ PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
          "RSC-SUB", "V1-RSC"]
 C_X, C_Y, C_FLOOR = "#c0392b", "#2c6fbb", "#95a5a6"
 TAU_MS = 50
-EPOCHS = ["naive", "intermediate", "expert"]
-EPOCH_X = {"naive": 0, "intermediate": 1, "expert": 2}
 
 
 def _mean_sem(piv, lags):
@@ -124,50 +122,6 @@ def fig_fffb(df: pd.DataFrame, fs: str):
     print(f"wrote HCV1_lagsubspace_fffb_{fs}_bin10.png")
 
 
-def fig_evolution(ep: pd.DataFrame, evo: pd.DataFrame, fs: str):
-    """Item 4: does the FF/FB picture change with learning?
-
-    Per pair, the held-out CC₁ of the feedforward fit (+TAU, first area leads) and the
-    feedback fit (−TAU), as a function of learning epoch, mean ± SEM across learners.
-    Two flat, overlapping lines = no evolution. Each title carries the expert-vs-naive
-    paired-t p on the FF−FB asymmetry (from analyze_lag_subspaces.ff_fb_evolution).
-    """
-    fig, axes = figstyle.grid(len(PAIRS), ncols=4)
-    for ax, pair in zip(axes, PAIRS):
-        sub = ep[ep["pair"] == pair]
-        if sub.empty:
-            ax.set_title(f"{pair}\n(no data)", fontsize=9); ax.axis("off"); continue
-        x_lead = pair.split("-")[0]
-        for lag, colour, label in [(TAU_MS, C_X, f"FF (+{TAU_MS} ms, {x_lead} leads)"),
-                                   (-TAU_MS, C_Y, f"FB (−{TAU_MS} ms)")]:
-            xs, ms, es = [], [], []
-            for epoch in EPOCHS:
-                v = sub[(sub["epoch"] == epoch) &
-                        (sub["lag_ms"] == lag)]["cc1"].to_numpy(float)
-                v = v[np.isfinite(v)]
-                if v.size == 0:
-                    continue
-                xs.append(EPOCH_X[epoch]); ms.append(float(v.mean()))
-                es.append(float(v.std(ddof=1) / np.sqrt(v.size)) if v.size > 1
-                          else np.nan)
-            ax.errorbar(xs, ms, yerr=es, fmt="-o", color=colour, lw=1.8, ms=5,
-                        capsize=3, zorder=3, label=label)
-        n = sub["animal"].nunique()
-        row = evo[evo["pair"] == pair]
-        p_asym = float(row["p_asym"].iloc[0]) if len(row) else np.nan
-        ax.set_xlim(-0.3, 2.3)
-        ax.set_xticks([0, 1, 2]); ax.set_xticklabels(["naive", "int", "exp"],
-                                                     fontsize=8)
-        ax.set_title(f"{pair}  (n={n})   FF−FB Δ: p={p_asym:.2g}", fontsize=9)
-        ax.set_ylabel("held-out CC₁", fontsize=8)
-        ax.legend(fontsize=6, loc="best", framealpha=0.6)
-    fig.suptitle(f"Feedforward vs feedback across learning — {fs}, 10 ms smoothed | "
-                 "expert−naive paired t on the FF−FB asymmetry, learners only",
-                 fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_lagsubspace_evolution_{fs}_bin10.png")
-    print(f"wrote HCV1_lagsubspace_evolution_{fs}_bin10.png")
-
-
 def main():
     fsincl = "fsincl" in sys.argv[1:]
     suf = "_fsincl" if fsincl else ""
@@ -183,14 +137,6 @@ def main():
         df[c] = pd.to_numeric(df[c], errors="coerce")
     fig_stability(df, fs)
     fig_fffb(df, fs)
-    ep_src = RES / f"lag_subspaces_bin10_epochs{suf}.csv"
-    evo_src = RES / f"lag_subspaces_evolution_bin10{suf}.csv"
-    if ep_src.exists() and evo_src.exists():
-        ep = pd.read_csv(ep_src)
-        ep["cc1"] = pd.to_numeric(ep["cc1"], errors="coerce")
-        fig_evolution(ep, pd.read_csv(evo_src), fs)
-    else:
-        print(f"skip evolution figure — {ep_src.name} / {evo_src.name} not found")
 
 
 if __name__ == "__main__":

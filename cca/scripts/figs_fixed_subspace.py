@@ -93,23 +93,9 @@ def fig_windows(tab: pd.DataFrame, fs: str):
         ax.set_xlim(-0.35, 1.35)
         ax.set_xticks([0, 1]); ax.set_xticklabels(["naive", "expert"], fontsize=8)
         ax.set_ylabel("integration window (ms, half-max)", fontsize=8)
-        # Flag ringing pairs: on a theta-oscillating curve this width is a half-period,
-        # NOT an integration window (see analyze_fixed_subspace + GOTCHAS 2026-07-29).
-        ringing = sub.dropna(subset=["side_peak_ms"])
-        ringing = ringing[ringing["side_peak_ratio"] > 0.5]
-        frac = len(ringing) / len(sub) if len(sub) else 0.0
-        if frac >= 0.5:
-            ax.set_title(f"{pair}  (n={len(common)})", fontsize=10, color="#c0392b")
-            ax.text(0.5, 0.94, "θ-ringing: width = ½-period, NOT integration",
-                    transform=ax.transAxes, ha="center", va="top", fontsize=6.5,
-                    color="#c0392b",
-                    bbox=dict(boxstyle="round,pad=0.2", fc="#fdecea", ec="#c0392b",
-                              lw=0.6))
-        else:
-            ax.set_title(f"{pair}  (n={len(common)})  [readable window]", fontsize=9)
+        ax.set_title(f"{pair}  (n={len(common)})", fontsize=10)
     fig.suptitle(f"Integration window of the frozen component, naive vs expert — {fs}, "
-                 "10 ms smoothed | red = theta-ringing (width is a half-period, not an "
-                 "integration window)", fontsize=11)
+                 "10 ms smoothed | one line per animal", fontsize=12)
     figstyle.save(fig, ATT / f"HCV1_fixedsubspace_windows_{fs}_bin10.png")
     print(f"wrote HCV1_fixedsubspace_windows_{fs}_bin10.png")
 
