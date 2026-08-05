@@ -111,3 +111,54 @@ def rank_split(ifi: np.ndarray, sig: np.ndarray) -> tuple[float, float]:
     tail = ifi[1:][(sig[1:] == 1) & np.isfinite(ifi[1:])]
     rest = float(np.mean(tail)) if tail.size else float("nan")
     return cc1, rest
+
+
+def ifi_windows_by_dim(lag, cc, dim, max_window: int | None = None):
+    """IFI of EACH canonical dimension as a function of integration window.
+
+    Meeting item 1 as asked: *"calculate IFI at different lags for each CC, for each
+    area, and then look at them — are there CCs that have different signs?"*
+
+    ``lag`` must be in BIN units (not ms): the window grid is one entry per integer
+    ``w = 1 .. max|lag|``, and entry ``w`` integrates only lags with ``|lag| <= w``
+    (:func:`lagged.ifi_by_window`). Passing ms would create one window per millisecond,
+    almost all of them duplicates.
+
+    Returns ``(dims, windows, ifi, degenerate)``:
+      * ``dims``       ascending canonical ranks present
+      * ``windows``    ``1 .. max_window`` in BINS
+      * ``ifi``        ``(n_dims, n_windows)``
+      * ``degenerate`` ``(n_dims, n_windows)`` bool — True where the IFI is 0.0 only
+        because BOTH sides clipped to zero. :func:`lagged.information_flow_index`
+        returns 0.0 for "no coupling either way" and for "genuinely balanced", and those
+        must not be pooled: a held-out CC that is negative at every lag is noise, not a
+        symmetric flow. High canonical ranks sit at the CC floor, so this is common.
+    """
+    lag = np.asarray(lag, dtype=float)
+    cc = np.asarray(cc, dtype=float)
+    dim = np.asarray(dim)
+    finite_dim = np.asarray(dim, dtype=float)
+    dims = np.unique(dim[np.isfinite(finite_dim)])
+    max_w = int(max_window if max_window is not None
+                else (np.nanmax(np.abs(lag)) if lag.size else 0))
+    windows = np.arange(1, max_w + 1)
+    ifi = np.full((dims.size, windows.size), np.nan)
+    degen = np.zeros((dims.size, windows.size), dtype=bool)
+    for i, d in enumerate(dims):
+        m = (dim == d) & np.isfinite(lag) & np.isfinite(cc)
+        if not np.any(m):
+            continue
+        lg, c = lag[m], cc[m]
+        order = np.argsort(lg, kind="stable")
+        lg, c = lg[order], c[order]
+        for j, w in enumerate(windows):
+            sel = np.abs(lg) <= w
+            if not (np.any(lg[sel] > 0) and np.any(lg[sel] < 0)):
+                continue
+            ifi[i, j] = lagged.information_flow_index(lg[sel], c[sel])
+            pos = np.clip(c[sel][lg[sel] > 0], 0.0, None)
+            neg = np.clip(c[sel][lg[sel] < 0], 0.0, None)
+            pm = np.nanmean(pos) if np.any(np.isfinite(pos)) else 0.0
+            nm = np.nanmean(neg) if np.any(np.isfinite(neg)) else 0.0
+            degen[i, j] = (pm + nm) <= 0
+    return dims, windows, ifi, degen

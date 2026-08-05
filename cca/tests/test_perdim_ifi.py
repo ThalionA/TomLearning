@@ -178,3 +178,69 @@ def test_rank_split_requires_cc1_regardless_of_its_own_flag():
     cc1, rest = perdim_ifi.rank_split(ifi, sig)
     assert cc1 == pytest.approx(0.6)
     assert rest == pytest.approx(0.2)
+
+
+# ---------------------------------------------------------------------------
+# ifi_windows_by_dim — IFI of each CC as a function of integration window
+# (meeting item 1: "calculate IFI at different lags for each CC ... do CCs
+#  have different signs?")
+# ---------------------------------------------------------------------------
+LAGB = np.arange(-5, 6)
+
+
+def _two_dim_opposite():
+    """dim 1 leads at POSITIVE lag, dim 2 at NEGATIVE lag — opposite signs."""
+    lag = np.concatenate([LAGB, LAGB])
+    dim = np.concatenate([np.ones(LAGB.size), 2 * np.ones(LAGB.size)])
+    cc = np.concatenate([np.where(LAGB > 0, 0.5, 0.0),
+                         np.where(LAGB < 0, 0.5, 0.0)])
+    return lag, cc, dim
+
+
+def test_windows_recover_opposite_signs_per_dim():
+    lag, cc, dim = _two_dim_opposite()
+    dims, wins, ifi, _ = perdim_ifi.ifi_windows_by_dim(lag, cc, dim)
+    assert np.array_equal(dims, [1, 2])
+    assert np.array_equal(wins, np.arange(1, 6))
+    assert ifi[0, -1] == pytest.approx(1.0)      # dim 1 positive at widest window
+    assert ifi[1, -1] == pytest.approx(-1.0)     # dim 2 negative
+
+
+def test_windows_are_cumulative_in_lag():
+    """Entry w-1 uses only |lag| <= w, so widening can change the value."""
+    lag = np.arange(-3, 4)
+    cc = np.zeros(lag.size)
+    cc[lag == 3] = 1.0                            # mass only at the widest lag
+    dim = np.ones(lag.size)
+    _, wins, ifi, _ = perdim_ifi.ifi_windows_by_dim(lag, cc, dim)
+    assert wins.tolist() == [1, 2, 3]
+    assert ifi[0, 0] == pytest.approx(0.0)        # window 1 sees no mass
+    assert ifi[0, 2] == pytest.approx(1.0)        # window 3 sees it
+
+
+def test_degenerate_flag_marks_zero_from_no_signal_not_balance():
+    """information_flow_index returns 0.0 when BOTH sides clip to zero. That is
+    'no coupling', not 'balanced' — the flag keeps the two distinguishable."""
+    lag = np.arange(-3, 4)
+    cc = np.full(lag.size, -0.2)                  # all negative -> clips to 0
+    dim = np.ones(lag.size)
+    _, _, ifi, degen = perdim_ifi.ifi_windows_by_dim(lag, cc, dim)
+    assert np.all(ifi[0] == 0.0)
+    assert np.all(degen[0])
+
+
+def test_genuinely_balanced_curve_is_zero_but_not_degenerate():
+    lag = np.arange(-3, 4)
+    cc = np.full(lag.size, 0.4)                   # symmetric, real signal
+    dim = np.ones(lag.size)
+    _, _, ifi, degen = perdim_ifi.ifi_windows_by_dim(lag, cc, dim)
+    assert ifi[0, -1] == pytest.approx(0.0)
+    assert not np.any(degen[0])
+
+
+def test_windows_row_order_invariant():
+    lag, cc, dim = _two_dim_opposite()
+    order = np.random.default_rng(0).permutation(lag.size)
+    a = perdim_ifi.ifi_windows_by_dim(lag, cc, dim)[2]
+    b = perdim_ifi.ifi_windows_by_dim(lag[order], cc[order], dim[order])[2]
+    assert a == pytest.approx(b, nan_ok=True)
