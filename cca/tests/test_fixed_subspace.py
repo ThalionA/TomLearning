@@ -268,3 +268,110 @@ def test_pca_bases_are_orthonormal():
     X, Y, groups = _paired_pops()
     fit = fixed_subspace.fit_fixed(X, Y, groups, k=4)
     assert fit.cx.T @ fit.cx == pytest.approx(np.eye(fit.cx.shape[1]), abs=1e-8)
+
+
+# ---------------------------------------------------------------------------
+# frozen_perm_null — significance of the FROZEN fit's own canonical correlations
+# ---------------------------------------------------------------------------
+def test_perm_null_matches_cca_fit_on_the_observed_data():
+    """The observed statistic must be the frozen fit's own canonical correlations.
+
+    Canonical correlations are the singular values of Qx^T Qy for orthonormal bases of
+    the centred scores, so this must agree with core.cca_fit to numerical precision.
+    """
+    from tom_cca import core
+    X, Y, groups = _paired_pops(n_units=5)
+    r_ref = core.cca_fit(X - X.mean(0), Y - Y.mean(0)).r
+    obs = fixed_subspace.observed_canonical_r(X, Y)
+    d = min(len(r_ref), len(obs))
+    assert obs[:d] == pytest.approx(np.asarray(r_ref)[:d], abs=1e-8)
+
+
+def test_perm_null_flags_a_real_shared_latent():
+    X, Y, groups = _paired_pops(noise=0.2, n_units=5)
+    res = fixed_subspace.frozen_perm_null(X, Y, n_shuffles=100, seed=0, correct=None)
+    assert res.mask[0]
+    assert res.p[0] < 0.05
+
+
+def test_perm_null_is_sparse_on_pure_noise():
+    rng = np.random.default_rng(11)
+    X = rng.standard_normal((1200, 5))
+    Y = rng.standard_normal((1200, 5))
+    res = fixed_subspace.frozen_perm_null(X, Y, n_shuffles=100, seed=0, correct=None)
+    assert res.mask.sum() <= 1              # alpha = 0.05 over 5 dims
+
+
+def test_perm_null_compares_rank_k_to_rank_k():
+    """No cross-fit alignment exists to get wrong: the null for dim k is the shuffled
+    distribution of dim k, so the thresholds fall with rank like the observed spectrum.
+
+    This is the structural fix for the bug where per-fold refit statistics were attached
+    by bare index to a frozen fit's dimensions.
+    """
+    X, Y, groups = _paired_pops(n_units=6, noise=0.4)
+    res = fixed_subspace.frozen_perm_null(X, Y, n_shuffles=60, seed=0)
+    thr = res.threshold[np.isfinite(res.threshold)]
+    assert thr[0] >= thr[-1]
+
+
+def test_perm_null_p_has_the_permutation_floor():
+    X, Y, groups = _paired_pops(noise=0.05, n_units=4)
+    res = fixed_subspace.frozen_perm_null(X, Y, n_shuffles=50, seed=0, correct=None)
+    assert res.p.min() >= 1 / 51 - 1e-12
+
+
+def test_perm_null_is_deterministic_for_a_seed():
+    X, Y, groups = _paired_pops()
+    a = fixed_subspace.frozen_perm_null(X, Y, n_shuffles=40, seed=3)
+    b = fixed_subspace.frozen_perm_null(X, Y, n_shuffles=40, seed=3)
+    assert a.p == pytest.approx(b.p)
+
+
+# ---------------------------------------------------------------------------
+# trial_lag_moments / curve_from_moments — same answer, computed once
+# ---------------------------------------------------------------------------
+def test_moments_reproduce_variate_lag_curve_exactly():
+    u, v, groups = _shifted(lag_true=3, noise=0.3)
+    lags = np.arange(-8, 9)
+    direct = fixed_subspace.variate_lag_curve(u, v, groups, lags)
+    _, M = fixed_subspace.trial_lag_moments(u, v, groups, lags)
+    pooled = fixed_subspace.curve_from_moments(M)
+    ok = np.isfinite(direct) & np.isfinite(pooled)
+    assert ok.sum() > 10
+    assert pooled[ok] == pytest.approx(direct[ok], abs=1e-9)
+
+
+def test_moments_subset_matches_direct_curve_on_that_subset():
+    """An epoch curve from a trial mask must equal the direct computation on those
+    trials — this is what licenses deriving every epoch and leave-one-out curve from
+    one pass."""
+    u, v, groups = _shifted(n_trials=12, lag_true=2, noise=0.3)
+    lags = np.arange(-6, 7)
+    trials, M = fixed_subspace.trial_lag_moments(u, v, groups, lags)
+    sel = np.isin(trials, [0, 1, 2, 3])
+    pooled = fixed_subspace.curve_from_moments(M, sel)
+    m = np.isin(groups, [0, 1, 2, 3])
+    direct = fixed_subspace.variate_lag_curve(u[m], v[m], groups[m], lags)
+    ok = np.isfinite(direct) & np.isfinite(pooled)
+    assert ok.sum() > 5
+    assert pooled[ok] == pytest.approx(direct[ok], abs=1e-9)
+
+
+def test_moments_complement_is_the_leave_epoch_out_curve():
+    u, v, groups = _shifted(n_trials=12, noise=0.3)
+    lags = np.arange(-5, 6)
+    trials, M = fixed_subspace.trial_lag_moments(u, v, groups, lags)
+    sel = np.isin(trials, [0, 1, 2])
+    pooled = fixed_subspace.curve_from_moments(M, ~sel)
+    m = ~np.isin(groups, [0, 1, 2])
+    direct = fixed_subspace.variate_lag_curve(u[m], v[m], groups[m], lags)
+    ok = np.isfinite(direct) & np.isfinite(pooled)
+    assert pooled[ok] == pytest.approx(direct[ok], abs=1e-9)
+
+
+def test_moments_are_additive_over_trials():
+    u, v, groups = _shifted(n_trials=8)
+    lags = np.arange(-4, 5)
+    _, M = fixed_subspace.trial_lag_moments(u, v, groups, lags)
+    assert M.sum(axis=0) == pytest.approx(M[:4].sum(0) + M[4:].sum(0))

@@ -259,3 +259,152 @@ def band_occupancy(offsets_ms, lo_hz: float = 5.0, hi_hz: float = 12.0) -> float
     if o.size == 0:
         return float("nan")
     return float(np.mean((o >= 1000.0 / hi_hz) & (o <= 1000.0 / lo_hz)))
+
+
+@dataclass
+class FrozenSignificance:
+    """Per-dimension significance of a FROZEN fit's canonical correlations."""
+
+    mask: np.ndarray        # (d,) bool
+    p: np.ndarray           # (d,) empirical p-values
+    threshold: np.ndarray   # (d,) null quantile at alpha, per rank
+    r_obs: np.ndarray       # (d,) observed canonical correlations
+
+
+def _orth_basis(M):
+    """Orthonormal basis for the column space of centred ``M`` (thin QR)."""
+    M = np.asarray(M, dtype=float)
+    q, _ = np.linalg.qr(M - M.mean(0))
+    return q
+
+
+def observed_canonical_r(X, Y) -> np.ndarray:
+    """Canonical correlations of ``X`` vs ``Y`` = singular values of ``Qx.T @ Qy``."""
+    qx, qy = _orth_basis(X), _orth_basis(Y)
+    return np.clip(np.linalg.svd(qx.T @ qy, compute_uv=False), 0.0, 1.0)
+
+
+def frozen_perm_null(X, Y, n_shuffles: int = 200, alpha: float = 0.05, seed: int = 0,
+                     correct: str | None = "fdr",
+                     fdr_dims: int | None = None) -> FrozenSignificance:
+    """Circular-shift permutation test on a FROZEN fit's own canonical correlations.
+
+    Dimension *k*'s observed canonical correlation is compared to the shuffled
+    distribution of dimension *k*. Observed and null are the SAME estimator — the rank-k
+    canonical correlation of a CCA fit to (real / shifted) data — so there is no
+    cross-fit correspondence to get wrong.
+
+    That matters here specifically. Gating a frozen fit with statistics taken from
+    per-fold CCA refits (which average across fits BY RANK) mis-attributes them: on this
+    data the fold ordering matched the frozen ordering in only 68-92 % of instances at
+    ranks 2-5, producing both false admits and false excludes. This test cannot have that
+    failure because it never mixes two fits.
+
+    Fast because a circular shift is a PERMUTATION: for orthonormal bases, canonical
+    correlations are the singular values of ``Qx.T @ Qy``, and ``QR(P @ Y) = P @ Qy`` for
+    a permutation ``P`` — so the bases are computed ONCE and each surrogate costs one
+    ``(d x n) @ (n x d)`` matmul instead of a full refit. ~20x cheaper, and exact.
+
+    ``fdr_dims`` restricts the BH family to the leading dims; the permutation p floor is
+    ``1/(n_shuffles+1)`` and BH needs ``alpha/d``, so the family must be small enough for
+    the floor to clear it.
+    """
+    qx, qy = _orth_basis(X), _orth_basis(Y)
+    r_obs = np.clip(np.linalg.svd(qx.T @ qy, compute_uv=False), 0.0, 1.0)
+    d = r_obs.size
+    n = qy.shape[0]
+    if n_shuffles < 1 or d == 0:
+        return FrozenSignificance(np.zeros(d, dtype=bool), np.ones(d),
+                                  np.full(d, np.nan), r_obs)
+    rng = np.random.default_rng(seed + 7)
+    null = np.empty((n_shuffles, d))
+    for s in range(n_shuffles):
+        shift = int(rng.integers(1, max(2, n)))
+        m = qx.T @ np.roll(qy, shift, axis=0)
+        sv = np.linalg.svd(m, compute_uv=False)
+        null[s, :sv.size] = np.clip(sv, 0.0, 1.0)
+        if sv.size < d:
+            null[s, sv.size:] = 0.0
+    p = (1.0 + np.sum(null >= r_obs[None, :], axis=0)) / (1.0 + n_shuffles)
+    thr = np.quantile(null, 1 - alpha, axis=0)
+    if correct == "fdr":
+        fam = np.zeros(d, dtype=bool)
+        fam[: (d if fdr_dims is None else min(d, fdr_dims))] = True
+        mask = np.zeros(d, dtype=bool)
+        mask[fam] = _fdr_bh(p[fam], alpha)
+    else:
+        mask = p < alpha
+    return FrozenSignificance(mask, p, thr, r_obs)
+
+
+def _fdr_bh(pvals, q: float = 0.05) -> np.ndarray:
+    p = np.asarray(pvals, dtype=float)
+    finite = np.isfinite(p)
+    if not np.any(finite):
+        return np.zeros_like(p, dtype=bool)
+    pf = p[finite]
+    n = pf.size
+    ranked = np.sort(pf)
+    passed = ranked <= q * np.arange(1, n + 1) / n
+    k = np.max(np.flatnonzero(passed)) + 1 if np.any(passed) else 0
+    cut = ranked[k - 1] if k else -np.inf
+    out = np.zeros_like(p, dtype=bool)
+    out[finite] = pf <= cut
+    return out
+
+
+def trial_lag_moments(u, v, groups, lags):
+    """Per-(trial, lag) sufficient statistics for the pooled within-trial correlation.
+
+    Returns ``(trials, M)`` with ``M`` of shape ``(n_trials, n_lags, 6)`` holding
+    ``[n, sum_u, sum_v, sum_uv, sum_uu, sum_vv]`` over the segment-aware pairs of that
+    trial at that lag.
+
+    These are ADDITIVE over trials, so any subset's pooled Pearson correlation follows
+    from summing rows — see :func:`curve_from_moments`. Computing them once turns the
+    whole-session curve, each epoch's curve and each leave-one-epoch-out curve into cheap
+    aggregations instead of a fresh O(n_lags x n_trials) pass apiece. That is what makes
+    the uncapped (full-trial) analysis tractable: the pairing work is done once.
+    """
+    u = np.asarray(u, dtype=float)
+    v = np.asarray(v, dtype=float)
+    groups = np.asarray(groups)
+    lags = np.asarray(list(lags), dtype=int)
+    trials = np.unique(groups)
+    M = np.zeros((trials.size, lags.size, 6))
+    idx_by_trial = [np.where(groups == t)[0] for t in trials]
+    for ti, idx in enumerate(idx_by_trial):
+        n = idx.size
+        ut, vt = u[idx], v[idx]
+        for li, lag in enumerate(lags):
+            lag = int(lag)
+            if n <= abs(lag) + 2:
+                continue
+            a = ut[: n - lag] if lag >= 0 else ut[-lag:]
+            b = vt[lag:] if lag >= 0 else vt[: n + lag]
+            ok = np.isfinite(a) & np.isfinite(b)
+            if ok.sum() < 1:
+                continue
+            a, b = a[ok], b[ok]
+            M[ti, li] = (a.size, a.sum(), b.sum(), float(a @ b),
+                         float(a @ a), float(b @ b))
+    return trials, M
+
+
+def curve_from_moments(M, trial_mask=None) -> np.ndarray:
+    """Pooled within-trial Pearson correlation per lag from :func:`trial_lag_moments`.
+
+    ``trial_mask`` selects which trials contribute (default all), so an epoch curve and a
+    leave-that-epoch-out curve are two different masks over the same moments. Exactly
+    reproduces :func:`variate_lag_curve` on the same trials.
+    """
+    M = np.asarray(M, dtype=float)
+    S = M.sum(axis=0) if trial_mask is None else M[np.asarray(trial_mask, bool)].sum(0)
+    n, su, sv, suv, suu, svv = (S[:, i] for i in range(6))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        cov = suv - su * sv / n
+        vu = suu - su * su / n
+        vv = svv - sv * sv / n
+        r = cov / np.sqrt(vu * vv)
+    r = np.where((n >= 3) & (vu > 0) & (vv > 0), r, np.nan)
+    return np.clip(r, -1.0, 1.0)
