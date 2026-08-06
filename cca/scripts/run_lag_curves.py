@@ -18,8 +18,14 @@ Writes one row per (animal, pair, lag, dim):
 
 Usage: PYTHONPATH=src python scripts/run_lag_curves.py --bin-ms 10 --max-lag 25 \
        --smooth-ms 2.5 [--include-fs]
-Moderately expensive (refits CCA at every lag x fold on the whole session, plus the
-surrogate for n_sig) — launch detached alongside the other smoothed-10 ms runs.
+Significance uses a PER-DIM null computed HELD-OUT: dimension j's observed held-out CC
+is compared to the shuffled distribution of dimension j, evaluated through the same
+fold structure. The earlier dominant-dim null compared a held-out observed value to an
+IN-SAMPLE shuffled one and gated every dim on the top dim's null -- doubly conservative,
+leaving 0.7 significant dims per cell.
+
+Expensive: the null costs n_shuffles x n_folds CCA fits per pair on top of the 51-lag
+curve (~70 min per FS condition at 200 shuffles). Launch detached.
 """
 from __future__ import annotations
 
@@ -40,8 +46,9 @@ MAX_SAMPLES = 12000          # cap per pair — these sessions run to ~370k enga
 MAX_BINS_PER_TRIAL = 600     # <= 6 s/trial kept; consecutive, so lag adjacency survives
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
          ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
+FDR_DIMS = 10                # BH family = leading dims; see lagged.perdim_significance
 FIELDS = ["animal", "learner", "pair", "bin_ms", "lag_bins", "lag_ms",
-          "dim", "cc", "sig", "n_sig"]
+          "dim", "cc", "sig", "sig_uncorr", "p_perdim", "n_sig"]
 
 
 def parse_args():
@@ -52,6 +59,10 @@ def parse_args():
                    help="widest lag (bins); curve spans -max_lag..+max_lag")
     p.add_argument("--smooth-ms", type=float, default=0.0,
                    help="Gaussian s.d. (ms) for spike-train smoothing (Buzsáki = 2.5)")
+    p.add_argument("--n-shuffles", type=int, default=200,
+                   help="circular-shift surrogates for the per-dim null. The empirical "
+                        "p floor is 1/(n+1); BH over FDR_DIMS needs it below "
+                        "alpha/FDR_DIMS, i.e. >199 for 10 dims at alpha=0.05.")
     p.add_argument("--out", default="", help="output CSV stem override")
     return p.parse_args()
 
@@ -145,13 +156,16 @@ def main():
             # dominant-dim null as before — only the alignment is fixed.
             zero = int(np.flatnonzero(lags == 0)[0])
             try:
-                sig_mask = lagged.perdim_significance(
-                    Sx, Sy, cc[zero, :], n_shuffles=config.SURROGATE_SHUFFLES,
-                    seed=0)
+                res = lagged.perdim_significance(
+                    Sx, Sy, cc[zero, :], groups=trial_ids,
+                    n_shuffles=args.n_shuffles, n_folds=N_FOLDS, seed=0,
+                    null_mode="perdim", correct="fdr", fdr_dims=FDR_DIMS)
+                sig_mask, pvals = res.mask, res.p
                 n_sig = int(sig_mask.sum())
             except Exception as e:
                 print(f"  sig fail {a.animal_id} {ax}-{ay}: {e}")
-                sig_mask, n_sig = np.zeros(d, dtype=bool), 0
+                sig_mask = np.zeros(d, dtype=bool)
+                pvals, n_sig = np.ones(d), 0
             for li, lag in enumerate(lags):
                 for dim in range(d):
                     c = cc[li, dim]
@@ -162,6 +176,10 @@ def main():
                         "dim": dim + 1,
                         "cc": round(float(c), 4) if np.isfinite(c) else "",
                         "sig": int(sig_mask[dim]) if dim < sig_mask.size else 0,
+                        "sig_uncorr": int(pvals[dim] < 0.05)
+                                      if dim < pvals.size else 0,
+                        "p_perdim": round(float(pvals[dim]), 5)
+                                    if dim < pvals.size else "",
                         "n_sig": n_sig})
         _flush()
         print(f"  animal {a.animal_id} ({'L' if is_learner else 'n'}): done "

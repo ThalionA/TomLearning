@@ -218,41 +218,124 @@ def heldout_lag_curve_flat(Sx, Sy, groups, max_lag, n_folds=5, seed=0):
     return lags, cc[:, 0]
 
 
-def perdim_significance(Sx, Sy, cc_heldout, n_shuffles: int = 100,
-                        alpha: float = 0.05, seed: int = 0) -> np.ndarray:
-    """Per-dimension significance for the flat continuous-regime scores.
+@dataclass
+class PerDimSignificance:
+    """Per-dimension significance of a held-out canonical spectrum."""
 
-    Same test of record as ``subspace_window._significance``: each dimension's
-    **held-out** CC is compared against the circular-shift null of the **dominant**
-    canonical correlation (the hardest bar), so an in-sample per-dim test cannot
-    overcount.
+    mask: np.ndarray        # (d,) bool — significant after correction
+    p: np.ndarray           # (d,) empirical p-values
+    threshold: np.ndarray   # (d,) null quantile at alpha, per dim
+    null_mode: str          # "perdim" | "dominant"
 
-    It exists separately because it must be applied to **the same scores, and hence the
-    same canonical dimensions, that produced the lag curve**. `run_lag_curves` used to
-    take its mask from a `window_subspace` call, which residualises, runs its own PCA and
-    picks its own folds — a different fit, whose dimension *k* is not this fit's
-    dimension *k*. Attaching that mask by bare index put 19 % of "significant" dims on a
-    negative held-out CC and left the single largest CC in the dataset flagged
-    non-significant.
 
-    Because the threshold is one scalar, the returned mask is **monotone in
-    ``cc_heldout``** — that invariant is the regression test.
+def _heldout_perdim_at_zero(Sx, Sy, groups, n_dims, n_folds, seed):
+    """Held-out per-dim CC at lag 0 only — the observed statistic's null counterpart."""
+    _, cc = heldout_lag_curve_flat_perdim(Sx, Sy, groups, max_lag=0, n_dims=n_dims,
+                                          n_folds=n_folds, seed=seed)
+    return np.asarray(cc[0], dtype=float)
+
+
+def perdim_significance(Sx, Sy, cc_heldout, groups=None, n_shuffles: int = 100,
+                        alpha: float = 0.05, seed: int = 0, n_folds: int = 5,
+                        null_mode: str = "perdim", correct: str = "fdr",
+                        fdr_dims: int | None = None) -> PerDimSignificance:
+    """Significance of each canonical dimension against a circular-shift null.
+
+    Computed on **the scores that produced the lag curve**, thresholding **that curve's
+    own lag-0 held-out CC**, so the flag and the curve describe the same dimension.
+    `run_lag_curves` used to import this mask from a separate `window_subspace` fit and
+    attach it by bare index (fixed 2026-08-06).
+
+    ``null_mode``:
+      * ``"perdim"`` (default) — dimension *j* is compared to the shuffled distribution
+        of **dimension j**, computed HELD-OUT with the same fold structure as the
+        observed value. Like-for-like.
+      * ``"dominant"`` — every dimension is compared to the shuffled distribution of the
+        **dominant** dimension, evaluated IN-SAMPLE. The original test of record. It is
+        doubly conservative: the dominant dim is the hardest bar, and an in-sample
+        shuffled r is inflated relative to the held-out observed r it gates. On this
+        data it left a mean of 0.7 significant dims per cell.
+
+    Testing many dimensions per cell needs a correction, which the dominant-dim null
+    supplied implicitly by being a max-statistic; ``correct="fdr"`` (Benjamini-Hochberg)
+    supplies it explicitly for the per-dim null. Pass ``correct=None`` for uncorrected.
+
+    ⚠ **The empirical p-value floor limits what FDR can reject.** A permutation p cannot
+    go below ``1/(n_shuffles+1)``, while BH needs the best of ``d`` tests to reach
+    ``alpha/d``. With d = 30 that demands **more than 599 shuffles before any dimension
+    can pass at all** — otherwise the corrected mask is empty for arithmetic reasons and
+    not for scientific ones. ``fdr_dims`` therefore restricts the BH family to the
+    leading dimensions (the tail sits at the held-out CC floor and only burns power):
+    with ``fdr_dims=10`` and 200 shuffles the floor is 0.00498 against a rank-1
+    threshold of 0.005, which is feasible.
+
+    ⚠ Under ``"perdim"`` the mask is **not** monotone in ``cc_heldout`` — each dimension
+    has its own threshold, and shuffled correlations fall with rank, so a smaller CC at
+    high rank can legitimately pass where a larger one at low rank does not. Only the
+    ``"dominant"`` mode (one scalar threshold) is monotone.
     """
     cc = np.asarray(cc_heldout, dtype=float)
     d = cc.size
     if n_shuffles < 1 or d == 0 or Sx.shape[0] == 0:
-        return np.zeros(d, dtype=bool)
+        return PerDimSignificance(np.zeros(d, dtype=bool), np.ones(d),
+                                  np.full(d, np.nan), null_mode)
     rng = np.random.default_rng(seed + 7)
     n = Sx.shape[0]
-    null_top = np.empty(n_shuffles)
+    null = np.full((n_shuffles, d), np.nan)
     for s in range(n_shuffles):
         shift = int(rng.integers(1, max(2, n)))
         Ys = np.roll(Sy, shift, axis=0)
         try:
-            model = core.cca_fit(Sx, Ys)
-            rs = np.asarray(core.cca_score(Sx, Ys, model), dtype=float)
+            if null_mode == "perdim":
+                if groups is None:
+                    raise ValueError("perdim null needs `groups` for held-out folds")
+                rs = _heldout_perdim_at_zero(Sx, Ys, groups, d, n_folds, seed)
+            else:
+                model = core.cca_fit(Sx, Ys)
+                rs = np.asarray(core.cca_score(Sx, Ys, model), dtype=float)
         except Exception:                                   # noqa: BLE001
             rs = np.array([])
-        null_top[s] = rs[0] if rs.size and np.isfinite(rs[0]) else 0.0
-    thr = float(np.quantile(null_top, 1 - alpha))
-    return np.nan_to_num(cc, nan=-1.0) > thr
+        if rs.size:
+            m = min(d, rs.size)
+            null[s, :m] = rs[:m]
+    if null_mode == "dominant":
+        top = np.nan_to_num(null[:, 0], nan=0.0)
+        null = np.repeat(top[:, None], d, axis=1)
+    obs = np.nan_to_num(cc, nan=-np.inf)
+    # +1 correction so an empirical p is never exactly zero
+    ge = np.nansum(null >= obs[None, :], axis=0)
+    valid = np.sum(np.isfinite(null), axis=0)
+    p = (1.0 + ge) / (1.0 + np.maximum(valid, 1))
+    p = np.where(np.isfinite(cc), p, 1.0)
+    thr = np.array([np.nanquantile(null[:, j], 1 - alpha)
+                    if np.any(np.isfinite(null[:, j])) else np.nan for j in range(d)])
+    if correct == "fdr":
+        fam = np.zeros(d, dtype=bool)
+        fam[: (d if fdr_dims is None else min(d, fdr_dims))] = True
+        mask = np.zeros(d, dtype=bool)
+        mask[fam] = fdr_bh(p[fam], alpha)
+    else:
+        mask = p < alpha
+    mask = mask & np.isfinite(cc)
+    return PerDimSignificance(np.asarray(mask, dtype=bool), p, thr, null_mode)
+
+
+def fdr_bh(pvals, q: float = 0.05) -> np.ndarray:
+    """Benjamini-Hochberg mask over the finite p-values (local copy: importing
+    ``paired_stats`` here would not cycle, but keeping ``lagged`` dependency-light
+    matters more than deduplicating nine lines)."""
+    p = np.asarray(pvals, dtype=float)
+    finite = np.isfinite(p)
+    if not np.any(finite):
+        return np.zeros_like(p, dtype=bool)
+    pf = p[finite]
+    n = pf.size
+    order = np.argsort(pf)
+    ranked = pf[order]
+    thresh = q * np.arange(1, n + 1) / n
+    passed = ranked <= thresh
+    k = np.max(np.flatnonzero(passed)) + 1 if np.any(passed) else 0
+    cut = ranked[k - 1] if k else -np.inf
+    out = np.zeros_like(p, dtype=bool)
+    out[finite] = pf <= cut
+    return out
