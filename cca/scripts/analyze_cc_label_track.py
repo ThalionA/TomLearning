@@ -46,6 +46,7 @@ PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
          "RSC-SUB", "V1-RSC"]
 EPOCHS = ["naive", "intermediate", "expert"]
 LABEL_W = 5           # bins; must match run_cc_label_track.LABEL_W
+EXPECTED_ANIMALS = 12  # learners with a learning point
 METRICS = [("peak_r", "peak r"), ("ifi", "IFI"), ("peak_lag_ms", "peak lag (ms)")]
 
 
@@ -64,6 +65,8 @@ def reduce_curves(df: pd.DataFrame, sig_only: bool = True) -> pd.DataFrame:
         rows.append({
             "animal": animal, "pair": pair, "dim": int(dim), "epoch": epoch,
             "label": g["label"].iloc[0],
+            "label_loo": (g["label_loo"].iloc[0] if "label_loo" in g.columns
+                          else g["label"].iloc[0]),
             "ifi_fit": float(g["ifi_fit"].iloc[0]),
             "cc_heldout": pd.to_numeric(g["cc_heldout"], errors="coerce").iloc[0],
             "peak_r": float(np.nanmax(r)),
@@ -136,27 +139,40 @@ def epoch_tests(tab: pd.DataFrame) -> pd.DataFrame:
 def sign_persistence(tab: pd.DataFrame) -> dict:
     """Q3: does a CC keep the direction it was labelled with?
 
-    For each labelled CC, the fraction of epochs whose own IFI sign matches the label.
-    A label assigned once from the whole session should persist if it reflects something
-    stable; chance is 0.5.
+    Uses the LEAVE-EPOCH-OUT label (`label_loo`), recomputed on the fit trials excluding
+    the epoch being scored. The whole-session label shares data with every epoch, so an
+    epoch's own IFI sign agrees with it far above half by construction — the analytic
+    floor is 0.5 + arcsin(sqrt(n_epoch/n_total))/pi, about 0.60 here, and Monte-Carlo of
+    this exact design reproduces it. Scoring against 0.5 with the shared label made a
+    pure-noise result look like p ~ 1e-11. Excluding the scored epoch removes the sample
+    sharing, so 0.5 is genuine chance.
+
+    Animals-as-n: an animal contributes many CCs, and the per-CC version of this test was
+    pseudoreplicated in exactly the way this module's own docstring warns against (one
+    animal supplied 29 of 45 CCs).
     """
-    keep = []
-    for _, g in tab.groupby(["animal", "pair", "dim"]):
-        lab = g["label"].iloc[0]
-        if lab not in ("FF", "FB"):
+    per_cc = []
+    for (animal, pair, dim), g in tab.groupby(["animal", "pair", "dim"]):
+        gg = g[g["label_loo"].isin(["FF", "FB"])]
+        if gg.empty:
             continue
-        want = 1 if lab == "FF" else -1
-        v = g["ifi"].to_numpy(float)
-        v = v[np.isfinite(v) & (v != 0)]
-        if v.size == 0:
+        want = np.where(gg["label_loo"].to_numpy() == "FF", 1, -1)
+        v = gg["ifi"].to_numpy(float)
+        ok = np.isfinite(v) & (v != 0)
+        if not ok.any():
             continue
-        keep.append(float(np.mean(np.sign(v) == want)))
-    if not keep:
+        per_cc.append({"animal": animal,
+                       "match": float(np.mean(np.sign(v[ok]) == want[ok]))})
+    if not per_cc:
         return {}
-    arr = np.array(keep)
-    n, mean, t, p = paired_stats.paired_t(arr - 0.5)
-    return {"n_ccs": arr.size, "mean_persistence": float(arr.mean()),
-            "p_vs_chance": p}
+    df = pd.DataFrame(per_cc)
+    by_animal = df.groupby("animal")["match"].mean().to_numpy(float)
+    if by_animal.size < 2:
+        return {"n_ccs": len(df), "n_animals": by_animal.size,
+                "mean_persistence": float(by_animal.mean()), "p_vs_chance": np.nan}
+    n, mean, t, p = paired_stats.paired_t(by_animal - 0.5)
+    return {"n_ccs": len(df), "n_animals": int(n),
+            "mean_persistence": float(by_animal.mean()), "p_vs_chance": p}
 
 
 def _md(stats: pd.DataFrame, persist: dict, tab: pd.DataFrame, fs: str) -> str:
@@ -179,11 +195,14 @@ def _md(stats: pd.DataFrame, persist: dict, tab: pd.DataFrame, fs: str) -> str:
                 f"{r[f'd_FB_{metric}']:+.3g} | {r[f'p_FB_{metric}']:.3g} | "
                 f"{r[f'd_int_{metric}']:+.3g} | {r[f'p_int_{metric}']:.3g} |")
     if persist:
-        lines += ["", f"**Label persistence.** Across {persist['n_ccs']} labelled CCs, "
-                  f"an epoch's own IFI sign matches the CC's label "
-                  f"{persist['mean_persistence']:.0%} of the time "
-                  f"(chance 50 %, p = {persist['p_vs_chance']:.3g}). A label that does "
-                  f"not persist is not a property of the CC.", ""]
+        lines += ["", f"**Label persistence (leave-epoch-out).** Across "
+                  f"{persist['n_ccs']} labelled CCs in {persist.get('n_animals', 0)} "
+                  f"animals, an epoch's own IFI sign matches the label computed WITHOUT "
+                  f"that epoch {persist['mean_persistence']:.0%} of the time "
+                  f"(chance 50 %, p = {persist['p_vs_chance']:.3g}; animals-as-n). "
+                  f"Excluding the scored epoch is what makes 50 % the right baseline — "
+                  f"against the whole-session label the construction floor is ~60 %.",
+                  ""]
     return "\n".join(lines) + "\n"
 
 
@@ -200,6 +219,13 @@ def main():
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue
         raw = pd.read_csv(src)
+        # completeness gate — the driver rewrites its CSV per animal, so an analysis run
+        # mid-run silently reports a partial cohort as if it were the result
+        n_an = raw["animal"].nunique()
+        if n_an < EXPECTED_ANIMALS:
+            print(f"  ⚠ {fs}: only {n_an}/{EXPECTED_ANIMALS} animals present — the "
+                  f"driver is probably still running. Results below are PARTIAL.")
+            md.append(f"> ⚠ **PARTIAL: {n_an}/{EXPECTED_ANIMALS} animals.**\n")
         tab = reduce_curves(raw)
         if tab.empty:
             print(f"skip {fs}: no significant CCs"); continue

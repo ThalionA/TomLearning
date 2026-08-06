@@ -1,0 +1,36 @@
+START Thu Aug  6 18:31:43 BST 2026
+CC LABEL+TRACK | bin=10ms smooth=2.5ms K=30 | label at ±50 ms | 200 shuffles | FS=excl
+
+  animal 28: 6120 rows total
+  animal 34: 8874 rows total
+  animal 36: 10404 rows total
+  animal 41: 13464 rows total
+  animal 52: 21726 rows total
+  animal 61: 30906 rows total
+  animal 63: 32436 rows total
+  animal 66: 41616 rows total
+  animal 68: 47736 rows total
+  animal 73: 56916 rows total
+  animal 75: 66096 rows total
+  animal 77: 72675 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/cc_label_track_bin10.csv
+DONE excl Thu Aug  6 18:49:43 BST 2026
+CC LABEL+TRACK | bin=10ms smooth=2.5ms K=30 | label at ±50 ms | 200 shuffles | FS=incl
+
+  animal 28: 6120 rows total
+  animal 34: 9180 rows total
+  animal 36: 12240 rows total
+  animal 41: 15300 rows total
+  animal 52: 24480 rows total
+  animal 61: 33660 rows total
+  animal 63: 35190 rows total
+  animal 66: 44370 rows total
+  animal 68: 50490 rows total
+  animal 73: 59670 rows total
+  animal 75: 68850 rows total
+  animal 77: 75735 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/cc_label_track_bin10_fsincl.csv
+DONE incl Thu Aug  6 19:09:03 BST 2026
+ALL DONE Thu Aug  6 19:09:03 BST 2026
