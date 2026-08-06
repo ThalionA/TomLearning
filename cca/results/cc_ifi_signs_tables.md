@@ -4,14 +4,16 @@ Lag curves are the existing **CCA-refit-at-every-lag** held-out, segment-aware p
 
 > Positive IFI ⇒ the **first-named area leads**. A dimension whose held-out > CC is negative at every lag clips to zero on both sides and returns IFI = 0 > for *no coupling* rather than *balanced*; those are flagged `degenerate` > and excluded from the sign counts.
 
+> **`sig` consistency check (FS-excluded):** OK — 0/238 flagged dims with non-positive lag-0 CC.
+
 #### FS-excluded — sign-mixing vs chance (significant CCs only)
 
 Each animal contributes only the CCs that beat the circular-shift null. Chance is computed **per animal** from its own count *k* of significant CCs: P(mixed) = 1 − 2·0.5^k.
 
-- animal-pairs with ≥2 significant CCs: **43**
-- observed mixed: **33 (77%)**
-- expected by chance: **34.4 (80%)**
-- binomial test: **p = 0.569**
+- animal-pairs with ≥2 significant CCs: **49**
+- observed mixed: **39 (80%)**
+- expected by chance: **40.3 (82%)**
+- binomial test: **p = 0.579**
 
 **Verdict: sign-mixing is indistinguishable from a coin flip.**
 
@@ -72,14 +74,16 @@ One-sample *t* of each dimension's IFI across animals (±50 ms window), BH-FDR a
 
 - **CA3-DG** at ±230 ms: CC2 +0.126 (p=0.042), CC3 -0.109 (p=0.025)
 
+> **`sig` consistency check (FS-included):** OK — 0/65 flagged dims with non-positive lag-0 CC.
+
 #### FS-included — sign-mixing vs chance (significant CCs only)
 
 Each animal contributes only the CCs that beat the circular-shift null. Chance is computed **per animal** from its own count *k* of significant CCs: P(mixed) = 1 − 2·0.5^k.
 
-- animal-pairs with ≥2 significant CCs: **49**
-- observed mixed: **35 (71%)**
-- expected by chance: **37.7 (77%)**
-- binomial test: **p = 0.395**
+- animal-pairs with ≥2 significant CCs: **18**
+- observed mixed: **8 (44%)**
+- expected by chance: **10.2 (57%)**
+- binomial test: **p = 0.345**
 
 **Verdict: sign-mixing is indistinguishable from a coin flip.**
 
@@ -91,20 +95,20 @@ Leading 5 canonical dims, integration window ±50 ms. `mixed` = that animal has 
 
 | pair | animals | mixed-sign animals | mean CCs leading | mean CCs lagging | mean frac. positive |
 |---|---|---|---|---|---|
-| CA1-RSC | 12 | **10/12** (83%) | 3.2 | 1.8 | 0.65 |
-| CA1-CA3 | 9 | **9/9** (100%) | 2.2 | 2.8 | 0.44 |
-| CA1-DG | 11 | **9/11** (82%) | 2.0 | 3.0 | 0.40 |
-| CA1-V1 | 13 | **11/13** (85%) | 1.7 | 3.3 | 0.34 |
+| CA1-RSC | 10 | **8/10** (80%) | 3.2 | 1.8 | 0.64 |
+| CA1-CA3 | 8 | **8/8** (100%) | 2.2 | 2.8 | 0.45 |
+| CA1-DG | 10 | **8/10** (80%) | 1.9 | 3.1 | 0.38 |
+| CA1-V1 | 12 | **10/12** (83%) | 1.8 | 3.2 | 0.35 |
 | CA3-DG | 5 | **2/5** (40%) | 2.2 | 2.8 | 0.44 |
-| CA1-SUB | 7 | **6/7** (86%) | 1.7 | 3.3 | 0.34 |
-| RSC-SUB | 7 | **7/7** (100%) | 2.1 | 2.9 | 0.43 |
-| V1-RSC | 9 | **6/9** (67%) | 3.7 | 1.3 | 0.73 |
+| CA1-SUB | 6 | **5/6** (83%) | 1.8 | 3.2 | 0.37 |
+| RSC-SUB | 6 | **6/6** (100%) | 2.2 | 2.8 | 0.43 |
+| V1-RSC | 8 | **5/8** (62%) | 3.9 | 1.1 | 0.78 |
 
 **Mixed-sign rate vs integration window** (leading 5 dims, pooled over pairs):
 
 | window (ms) | 10 | 20 | 50 | 100 | 150 | 200 | 250 |
 |---|---|---|---|---|---|---|---|
-| mixed-sign animal-pairs | 89% | 88% | 82% | 86% | 79% | 81% | 79% |
+| mixed-sign animal-pairs | 88% | 89% | 80% | 86% | 78% | 82% | 80% |
 
 #### FS-included — which CCs have a RELIABLE direction across animals?
 
@@ -127,14 +131,14 @@ One-sample *t* of each dimension's IFI across animals (±50 ms window), BH-FDR a
 
 | pair | CC | window | n | mean IFI | p (uncorrected) |
 |---|---|---|---|---|---|
-| V1-RSC | CC1 | ±10 ms | 9 | +0.118 | 0.0009 |
-| CA1-DG | CC6 | ±10 ms | 10 | -0.635 | 0.0009 |
-| CA1-V1 | CC5 | ±210 ms | 13 | -0.104 | 0.0020 |
-| V1-RSC | CC1 | ±20 ms | 9 | +0.155 | 0.0021 |
-| CA1-V1 | CC5 | ±220 ms | 13 | -0.093 | 0.0040 |
-| V1-RSC | CC1 | ±80 ms | 9 | +0.097 | 0.0055 |
-| V1-RSC | CC1 | ±90 ms | 9 | +0.090 | 0.0057 |
-| CA1-V1 | CC5 | ±230 ms | 13 | -0.091 | 0.0061 |
+| CA1-DG | CC6 | ±10 ms | 9 | -0.646 | 0.0022 |
+| V1-RSC | CC1 | ±10 ms | 8 | +0.118 | 0.0026 |
+| CA1-V1 | CC5 | ±210 ms | 12 | -0.108 | 0.0032 |
+| V1-RSC | CC1 | ±20 ms | 8 | +0.164 | 0.0034 |
+| V1-RSC | CC2 | ±240 ms | 8 | +0.094 | 0.0036 |
+| V1-RSC | CC2 | ±230 ms | 8 | +0.093 | 0.0041 |
+| V1-RSC | CC2 | ±170 ms | 8 | +0.095 | 0.0043 |
+| V1-RSC | CC2 | ±220 ms | 8 | +0.091 | 0.0045 |
 
 **Pairs where two CCs of OPPOSITE sign are both nominally significant at the same window:**
 

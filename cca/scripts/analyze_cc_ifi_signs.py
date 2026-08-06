@@ -56,16 +56,18 @@ def check_sig_consistency(df: pd.DataFrame) -> dict:
     z["cc"] = pd.to_numeric(z["cc"], errors="coerce")
     neg = int(((z["sig"] == 1) & (z["cc"] <= 0)).sum())
     n_sig = int((z["sig"] == 1).sum())
-    inverted = total = 0
-    for _, g in z.groupby(["animal", "pair"]):
-        g = g.dropna(subset=["cc"])
-        one, zero = g[g["sig"] == 1]["cc"], g[g["sig"] == 0]["cc"]
-        if len(one) and len(zero):
-            total += 1
-            inverted += int(zero.max() > one.min())
+    # ⚠ Monotonicity of the mask in cc is NOT checked. It holds only under the old
+    # dominant-dim null (one scalar threshold). Under the per-dim null each dimension
+    # has its own bar and shuffled correlations fall with rank, so a non-significant
+    # dim CAN legitimately outrank a significant one — testing for it here would fire
+    # a false alarm on correct data.
+    subset = np.nan
+    if "sig_uncorr" in z.columns:
+        # the FDR mask must be a subset of the uncorrected one
+        subset = int(((z["sig"] == 1) & (z["sig_uncorr"] == 0)).sum())
     return {"n_sig": n_sig, "sig_with_nonpositive_cc": neg,
-            "cells_inverted": inverted, "cells_checked": total,
-            "ok": neg == 0 and inverted == 0}
+            "fdr_not_subset_of_uncorrected": subset,
+            "ok": neg == 0 and (not np.isfinite(subset) or subset == 0)}
 
 
 def build_windows(df: pd.DataFrame) -> pd.DataFrame:
@@ -325,18 +327,17 @@ def main():
         raw = pd.read_csv(src)
         chk = check_sig_consistency(raw)
         status = "OK" if chk["ok"] else "*** INCONSISTENT ***"
-        print(f"\n[{fs}] sig-vs-cc consistency: {status} — "
+        print(f"\n[{fs}] sig consistency: {status} — "
               f"{chk['sig_with_nonpositive_cc']}/{chk['n_sig']} flagged dims with "
-              f"cc<=0 at lag 0; {chk['cells_inverted']}/{chk['cells_checked']} cells "
-              f"where a non-significant dim outranks a significant one")
+              f"cc<=0 at lag 0; FDR-not-subset-of-uncorrected: "
+              f"{chk['fdr_not_subset_of_uncorrected']}")
         if not chk["ok"]:
             print("      -> the `sig` column does not describe the `cc` in the same "
                   "row. Re-run scripts/run_lag_curves.py (see lagged."
                   "perdim_significance).")
         md.append(f"> **`sig` consistency check ({fs}):** {status} — "
                   f"{chk['sig_with_nonpositive_cc']}/{chk['n_sig']} flagged dims with "
-                  f"non-positive lag-0 CC; {chk['cells_inverted']}/"
-                  f"{chk['cells_checked']} inverted cells.\n")
+                  f"non-positive lag-0 CC.\n")
         tab = build_windows(raw)
         counts = sign_counts(tab)
         tab.to_csv(RES / f"cc_ifi_windows_bin10{suf}.csv", index=False,
