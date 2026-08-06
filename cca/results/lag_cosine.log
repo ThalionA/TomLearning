@@ -1,0 +1,44 @@
+START Thu Aug  6 23:28:56 BST 2026
+LAG COSINE | bin=10ms smooth=2.5ms K=30 | lags ±25 bins | FS=excl
+
+  animal 28 (L): 2040 rows total
+  animal 34 (L): 2958 rows total
+  animal 36 (L): 3468 rows total
+  animal 41 (L): 4488 rows total
+  animal 52 (L): 7242 rows total
+  animal 61 (L): 10302 rows total
+  animal 63 (L): 10812 rows total
+  animal 66 (L): 13872 rows total
+  animal 68 (L): 15912 rows total
+  animal 70 (n): 18972 rows total
+  animal 71 (n): 23052 rows total
+  animal 73 (L): 26112 rows total
+  animal 75 (L): 29172 rows total
+  animal 77 (L): 31365 rows total
+  animal 98 (n): 31875 rows total
+  animal 100 (n): 34935 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_cosine_bin10.csv
+DONE excl Thu Aug  6 23:40:37 BST 2026
+LAG COSINE | bin=10ms smooth=2.5ms K=30 | lags ±25 bins | FS=incl
+
+  animal 28 (L): 2040 rows total
+  animal 34 (L): 3060 rows total
+  animal 36 (L): 4080 rows total
+  animal 41 (L): 5100 rows total
+  animal 52 (L): 8160 rows total
+  animal 61 (L): 11220 rows total
+  animal 63 (L): 11730 rows total
+  animal 66 (L): 14790 rows total
+  animal 68 (L): 16830 rows total
+  animal 70 (n): 19890 rows total
+  animal 71 (n): 23970 rows total
+  animal 73 (L): 27030 rows total
+  animal 75 (L): 30090 rows total
+  animal 77 (L): 32385 rows total
+  animal 98 (n): 33150 rows total
+  animal 100 (n): 36210 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/lag_cosine_bin10_fsincl.csv
+DONE incl Thu Aug  6 23:52:43 BST 2026
+ALL DONE Thu Aug  6 23:52:43 BST 2026
