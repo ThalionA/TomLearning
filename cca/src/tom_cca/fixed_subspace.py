@@ -39,6 +39,11 @@ class FixedFit:
     y_mean: np.ndarray      # (n_units_y,)
     r_fit: np.ndarray       # (d,) IN-SAMPLE canonical correlations — not held out
     n_trials: int
+    # PCA bases the CCA was fitted through. Exposed so a caller can build the SAME
+    # PC scores the fit used — needed to compute per-dimension significance on the
+    # frozen fit without re-deriving (and possibly diverging from) the fit's own maths.
+    cx: np.ndarray | None = None
+    cy: np.ndarray | None = None
 
 
 def balanced_trials(epoch_of_trial: dict, epochs, seed: int = 0) -> list:
@@ -100,7 +105,8 @@ def fit_fixed(X, Y, groups, Z=None, k: int = 30, trials=None,
         wy=membership.canonical_weight_scores(cy, model.B, d),
         x_mean=x_mean, y_mean=y_mean,
         r_fit=np.asarray(model.r, dtype=float)[:d],
-        n_trials=int(np.unique(groups[sel]).size))
+        n_trials=int(np.unique(groups[sel]).size),
+        cx=cx, cy=cy)
 
 
 def project(X, Y, fit: FixedFit, dim: int = 0):

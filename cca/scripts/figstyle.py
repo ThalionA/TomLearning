@@ -13,12 +13,22 @@ significance-star helper that always draws above the data. Usage:
 
 from __future__ import annotations
 
+import shutil
+from pathlib import Path
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 MAX_PX = 1600          # repo rule: PNG longest side <= 1600 px
 STAR_COLOR = "#c0392b"
+# Every figure is ALSO written here, so the project folder holds its own figures
+# rather than them existing only inside the Obsidian vault. The temporal-arm scripts
+# each hardcoded the vault attachments as their only destination, which meant a
+# checkout of this repo had no temporal figures at all. Mirroring at the single
+# shared saver fixes it for every script at once. (Gitignored, like the landmark and
+# spatial figures — they regenerate from the scripts.)
+REPO_FIGURES = Path(__file__).resolve().parents[1] / "figures"
 
 
 def apply():
@@ -59,11 +69,16 @@ def grid(n, ncols=2, panel=(5.4, 3.5)):
     return fig, axes.ravel()
 
 
-def save(fig, stem, max_px: int = MAX_PX):
+def save(fig, stem, max_px: int = MAX_PX, mirror: bool = True):
     """Write ``<stem>.png`` (longest side <= ``max_px``) AND ``<stem>.svg``, then close.
 
     ``stem`` may include or omit a ``.png`` suffix; it is stripped. The PNG dpi is
-    chosen so the longest side is capped at ``max_px`` (never upscaled past 150)."""
+    chosen so the longest side is capped at ``max_px`` (never upscaled past 150).
+
+    The pair is ALSO mirrored into :data:`REPO_FIGURES` (unless ``mirror=False``) so the
+    project folder holds every figure, not just the vault. Pass ``mirror=False`` for a
+    figure that is genuinely vault-only.
+    """
     stem = str(stem)
     if stem.endswith(".png") or stem.endswith(".svg"):
         stem = stem[:-4]
@@ -71,6 +86,19 @@ def save(fig, stem, max_px: int = MAX_PX):
     dpi = min(150.0, max_px / max(w_in, h_in))
     fig.savefig(f"{stem}.png", dpi=dpi)
     fig.savefig(f"{stem}.svg")
+    if mirror:
+        try:
+            REPO_FIGURES.mkdir(parents=True, exist_ok=True)
+            name = Path(stem).name
+            if Path(stem).resolve().parent != REPO_FIGURES.resolve():
+                # COPY the rendered files rather than calling savefig again.
+                # constrained_layout re-solves on every draw, so a second render can
+                # settle sub-pixel differently and the two copies would not be
+                # byte-identical (4 of 24 were not). Copying also halves the cost.
+                for ext in ("png", "svg"):
+                    shutil.copyfile(f"{stem}.{ext}", REPO_FIGURES / f"{name}.{ext}")
+        except Exception as exc:                            # noqa: BLE001
+            print(f"  [figstyle] repo mirror failed for {stem}: {exc}")
     plt.close(fig)
 
 

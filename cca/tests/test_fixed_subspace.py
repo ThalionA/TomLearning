@@ -247,3 +247,24 @@ def test_band_occupancy_excludes_out_of_band_offsets():
 
 def test_band_occupancy_is_nan_without_usable_offsets():
     assert np.isnan(fixed_subspace.band_occupancy(np.array([np.nan, -5.0])))
+
+
+# ---------------------------------------------------------------------------
+# FixedFit exposes the PCA bases the CCA was fitted through
+# ---------------------------------------------------------------------------
+def test_fit_exposes_pca_bases_matching_the_weights():
+    X, Y, groups = _paired_pops()
+    fit = fixed_subspace.fit_fixed(X, Y, groups, k=4)
+    assert fit.cx is not None and fit.cy is not None
+    assert fit.cx.shape[0] == X.shape[1] and fit.cy.shape[0] == Y.shape[1]
+    # scores built from the exposed basis must reproduce the projection exactly
+    u_direct, _ = fixed_subspace.project(X, Y, fit, dim=0)
+    Sx = (X - fit.x_mean) @ fit.cx
+    coef = np.linalg.lstsq(fit.cx, fit.wx[:, 0], rcond=None)[0]
+    assert (Sx @ coef) == pytest.approx(u_direct, abs=1e-8)
+
+
+def test_pca_bases_are_orthonormal():
+    X, Y, groups = _paired_pops()
+    fit = fixed_subspace.fit_fixed(X, Y, groups, k=4)
+    assert fit.cx.T @ fit.cx == pytest.approx(np.eye(fit.cx.shape[1]), abs=1e-8)
