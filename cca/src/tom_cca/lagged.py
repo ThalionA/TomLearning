@@ -216,3 +216,43 @@ def heldout_lag_curve_flat(Sx, Sy, groups, max_lag, n_folds=5, seed=0):
     lags, cc = heldout_lag_curve_flat_perdim(
         Sx, Sy, groups, max_lag, n_dims=1, n_folds=n_folds, seed=seed)
     return lags, cc[:, 0]
+
+
+def perdim_significance(Sx, Sy, cc_heldout, n_shuffles: int = 100,
+                        alpha: float = 0.05, seed: int = 0) -> np.ndarray:
+    """Per-dimension significance for the flat continuous-regime scores.
+
+    Same test of record as ``subspace_window._significance``: each dimension's
+    **held-out** CC is compared against the circular-shift null of the **dominant**
+    canonical correlation (the hardest bar), so an in-sample per-dim test cannot
+    overcount.
+
+    It exists separately because it must be applied to **the same scores, and hence the
+    same canonical dimensions, that produced the lag curve**. `run_lag_curves` used to
+    take its mask from a `window_subspace` call, which residualises, runs its own PCA and
+    picks its own folds — a different fit, whose dimension *k* is not this fit's
+    dimension *k*. Attaching that mask by bare index put 19 % of "significant" dims on a
+    negative held-out CC and left the single largest CC in the dataset flagged
+    non-significant.
+
+    Because the threshold is one scalar, the returned mask is **monotone in
+    ``cc_heldout``** — that invariant is the regression test.
+    """
+    cc = np.asarray(cc_heldout, dtype=float)
+    d = cc.size
+    if n_shuffles < 1 or d == 0 or Sx.shape[0] == 0:
+        return np.zeros(d, dtype=bool)
+    rng = np.random.default_rng(seed + 7)
+    n = Sx.shape[0]
+    null_top = np.empty(n_shuffles)
+    for s in range(n_shuffles):
+        shift = int(rng.integers(1, max(2, n)))
+        Ys = np.roll(Sy, shift, axis=0)
+        try:
+            model = core.cca_fit(Sx, Ys)
+            rs = np.asarray(core.cca_score(Sx, Ys, model), dtype=float)
+        except Exception:                                   # noqa: BLE001
+            rs = np.array([])
+        null_top[s] = rs[0] if rs.size and np.isfinite(rs[0]) else 0.0
+    thr = float(np.quantile(null_top, 1 - alpha))
+    return np.nan_to_num(cc, nan=-1.0) > thr

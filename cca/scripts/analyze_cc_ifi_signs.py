@@ -41,6 +41,33 @@ LEAD_DIMS = 5          # "leading" CCs — where held-out CC is above the floor
 HEADLINE_W = 5         # bins = +/-50 ms, the report's headline IFI window
 
 
+def check_sig_consistency(df: pd.DataFrame) -> dict:
+    """Guard: is the `sig` flag consistent with the `cc` curve in the SAME row?
+
+    The flag is a single scalar threshold on the lag-0 held-out CC, so within a cell it
+    MUST be monotone in that CC — no dim with a higher lag-0 CC can be non-significant
+    while a lower one is significant, and a negative CC can never pass.
+
+    `run_lag_curves` used to violate this by importing the mask from a separate
+    `window_subspace` fit and attaching it by bare index (fixed 2026-08-06). This
+    re-checks it every run so the misalignment cannot come back silently.
+    """
+    z = df[df["lag_ms"] == 0].copy()
+    z["cc"] = pd.to_numeric(z["cc"], errors="coerce")
+    neg = int(((z["sig"] == 1) & (z["cc"] <= 0)).sum())
+    n_sig = int((z["sig"] == 1).sum())
+    inverted = total = 0
+    for _, g in z.groupby(["animal", "pair"]):
+        g = g.dropna(subset=["cc"])
+        one, zero = g[g["sig"] == 1]["cc"], g[g["sig"] == 0]["cc"]
+        if len(one) and len(zero):
+            total += 1
+            inverted += int(zero.max() > one.min())
+    return {"n_sig": n_sig, "sig_with_nonpositive_cc": neg,
+            "cells_inverted": inverted, "cells_checked": total,
+            "ok": neg == 0 and inverted == 0}
+
+
 def build_windows(df: pd.DataFrame) -> pd.DataFrame:
     """Long file -> one row per (animal, pair, dim, integration window)."""
     df = df.copy()
@@ -295,7 +322,22 @@ def main():
         src = RES / f"lag_curves_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue
-        tab = build_windows(pd.read_csv(src))
+        raw = pd.read_csv(src)
+        chk = check_sig_consistency(raw)
+        status = "OK" if chk["ok"] else "*** INCONSISTENT ***"
+        print(f"\n[{fs}] sig-vs-cc consistency: {status} — "
+              f"{chk['sig_with_nonpositive_cc']}/{chk['n_sig']} flagged dims with "
+              f"cc<=0 at lag 0; {chk['cells_inverted']}/{chk['cells_checked']} cells "
+              f"where a non-significant dim outranks a significant one")
+        if not chk["ok"]:
+            print("      -> the `sig` column does not describe the `cc` in the same "
+                  "row. Re-run scripts/run_lag_curves.py (see lagged."
+                  "perdim_significance).")
+        md.append(f"> **`sig` consistency check ({fs}):** {status} — "
+                  f"{chk['sig_with_nonpositive_cc']}/{chk['n_sig']} flagged dims with "
+                  f"non-positive lag-0 CC; {chk['cells_inverted']}/"
+                  f"{chk['cells_checked']} inverted cells.\n")
+        tab = build_windows(raw)
         counts = sign_counts(tab)
         tab.to_csv(RES / f"cc_ifi_windows_bin10{suf}.csv", index=False,
                    lineterminator="\n")

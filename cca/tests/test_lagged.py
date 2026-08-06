@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from tom_cca import config, lagged
+from tom_cca import config, core, lagged
 
 CFG = config.DEFAULT
 
@@ -195,3 +195,72 @@ def test_heldout_lag_curve_perdim_signal_dim_leads_noise_dims():
     assert int(lags[np.nanargmax(cc[:, 0])]) == 3
     assert np.nanmax(cc[:, 0]) > 0.7
     assert np.nanmax(cc[:, 1]) < np.nanmax(cc[:, 0])
+
+
+# ---------------------------------------------------------------------------
+# perdim_significance — significance from the SAME fit that made the curve
+# ---------------------------------------------------------------------------
+def _coupled_scores(n=600, k=4, noise=0.4, seed=0):
+    rng = np.random.default_rng(seed)
+    s = rng.standard_normal(n)
+    Sx = np.column_stack([s] + [rng.standard_normal(n) for _ in range(k - 1)])
+    Sy = np.column_stack([s + noise * rng.standard_normal(n)] +
+                         [rng.standard_normal(n) for _ in range(k - 1)])
+    return Sx, Sy
+
+
+def test_significance_mask_matches_cc_length():
+    Sx, Sy = _coupled_scores()
+    cc = np.array([0.8, 0.1, 0.05, 0.01])
+    sig = lagged.perdim_significance(Sx, Sy, cc, n_shuffles=20, seed=0)
+    assert sig.shape == cc.shape and sig.dtype == bool
+
+
+def test_significance_is_MONOTONE_in_the_heldout_cc():
+    """THE regression test. The flag is a single scalar threshold on cc, so a dim with
+    a higher held-out CC can never be non-significant while a lower one is significant.
+
+    The shipped `run_lag_curves` violated this because it attached a mask from a
+    DIFFERENT fit (`window_subspace`) by bare index: 19% of flagged dims had a negative
+    held-out CC, and in 57% of cells a non-significant dim outranked a significant one.
+    """
+    Sx, Sy = _coupled_scores()
+    cc = np.array([0.02, 0.9, -0.3, 0.45, 0.0])
+    sig = lagged.perdim_significance(Sx, Sy, cc, n_shuffles=20, seed=0)
+    passing = cc[sig]
+    failing = cc[~sig]
+    if passing.size and failing.size:
+        assert passing.min() > failing.max()
+
+
+def test_significance_never_flags_a_negative_cc():
+    """A negative held-out CC cannot clear a null built from positive correlations."""
+    Sx, Sy = _coupled_scores()
+    cc = np.array([-0.5, -0.2, -0.01])
+    sig = lagged.perdim_significance(Sx, Sy, cc, n_shuffles=20, seed=0)
+    assert not sig.any()
+
+
+def test_significance_detects_a_real_coupling():
+    Sx, Sy = _coupled_scores(noise=0.2)
+    model = core.cca_fit(Sx, Sy)
+    cc = core.cca_score(Sx, Sy, model)
+    sig = lagged.perdim_significance(Sx, Sy, cc, n_shuffles=30, seed=0)
+    assert sig[0]
+
+
+def test_significance_is_sparse_on_pure_noise():
+    rng = np.random.default_rng(5)
+    Sx = rng.standard_normal((600, 4))
+    Sy = rng.standard_normal((600, 4))
+    model = core.cca_fit(Sx, Sy)
+    cc = core.cca_score(Sx, Sy, model)
+    sig = lagged.perdim_significance(Sx, Sy, cc, n_shuffles=40, seed=0)
+    assert sig.sum() <= 1          # alpha=0.05 against the dominant-dim null
+
+
+def test_significance_handles_nan_cc():
+    Sx, Sy = _coupled_scores()
+    cc = np.array([0.9, np.nan, 0.01])
+    sig = lagged.perdim_significance(Sx, Sy, cc, n_shuffles=20, seed=0)
+    assert not sig[1]              # NaN must never pass

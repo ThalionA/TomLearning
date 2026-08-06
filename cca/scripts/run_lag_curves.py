@@ -5,9 +5,10 @@ For each animal x area-pair this mirrors ``run_ifi_windows`` exactly — residua
 third area, PCA->K on all running bins, then the **held-out, segment-aware** lag curve
 (CCA refit per fold at each lag; the lag never crosses a trial boundary) — but exports
 the full per-dimension curve (``lagged.heldout_lag_curve_flat_perdim``) rather than the
-IFI summary. Significance of each canonical dim is taken from ``window_subspace`` (the
-same circular-shift surrogate the rest of the report uses), so the per-dim curves can be
-pooled two ways in the figure:
+IFI summary. Significance of each canonical dim is computed on THESE scores from THIS curve's own
+lag-0 held-out CC (``lagged.perdim_significance``, the same circular-shift dominant-dim
+surrogate the rest of the report uses), so the flag and the curve describe the same
+canonical dimension. The per-dim curves can then be pooled two ways in the figure:
 
   * n = ANIMALS    -- the dominant-dim (CC1) curve, one per animal, averaged across animals
   * n = SUBSPACES  -- every SIGNIFICANT canonical dim's curve, pooled across animals & dims
@@ -31,7 +32,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, dataio, lagged, partial, subspace_window  # noqa: E402
+from tom_cca import config, dataio, lagged, partial  # noqa: E402
 
 K = 30
 N_FOLDS = 5
@@ -130,21 +131,27 @@ def main():
             Sx = _pca_scores(Xr, min(K, Xr.shape[1]))
             Sy = _pca_scores(Yr, min(K, Yr.shape[1]))
             d = int(min(Sx.shape[1], Sy.shape[1]))
-            # significance of each canonical dim (same surrogate as the rest of the report)
-            try:
-                ws = subspace_window.window_subspace(
-                    X, Y, trial_ids, Z=Z, k=K, max_lag=5,
-                    n_shuffles=config.SURROGATE_SHUFFLES, n_folds=N_FOLDS)
-                sig_mask = np.asarray(ws.sig_mask, dtype=bool)
-                n_sig = int(sig_mask.sum())
-            except Exception as e:
-                print(f"  sig fail {a.animal_id} {ax}-{ay}: {e}")
-                sig_mask, n_sig = np.zeros(d, dtype=bool), 0
             try:
                 lags, cc = lagged.heldout_lag_curve_flat_perdim(
                     Sx, Sy, trial_ids, max_lag=args.max_lag, n_dims=d, n_folds=N_FOLDS)
             except Exception as e:
                 print(f"  curve fail {a.animal_id} {ax}-{ay}: {e}"); continue
+            # Significance of each canonical dim, computed on THESE SCORES and THIS
+            # curve's own lag-0 held-out CC. It used to come from a separate
+            # window_subspace fit (own residualisation, own PCA, own folds) and was
+            # attached by bare index, so dim k of that fit was matched to dim k of this
+            # one: 19% of flagged dims had a NEGATIVE held-out CC and the largest CC in
+            # the dataset was flagged non-significant. Same circular-shift
+            # dominant-dim null as before — only the alignment is fixed.
+            zero = int(np.flatnonzero(lags == 0)[0])
+            try:
+                sig_mask = lagged.perdim_significance(
+                    Sx, Sy, cc[zero, :], n_shuffles=config.SURROGATE_SHUFFLES,
+                    seed=0)
+                n_sig = int(sig_mask.sum())
+            except Exception as e:
+                print(f"  sig fail {a.animal_id} {ax}-{ay}: {e}")
+                sig_mask, n_sig = np.zeros(d, dtype=bool), 0
             for li, lag in enumerate(lags):
                 for dim in range(d):
                     c = cc[li, dim]

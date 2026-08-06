@@ -38,53 +38,67 @@ ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
 RES = Path(__file__).resolve().parents[1] / "results"
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
          "RSC-SUB", "V1-RSC"]
-SHOW_DIMS = 6          # leading canonical dims to draw
 HEADLINE_W = 5         # bins = +/-50 ms
+REF_W = 5              # window (bins) at which CCs are labelled +IFI / -IFI
+BIN_MS = 10
 MAP_DIMS = 8
 
 
 def fig_windows(df: pd.DataFrame, fs: str):
+    """Positive-IFI and negative-IFI CCs as two groups, mean +/- SEM vs window.
+
+    Each significant CC is labelled by the SIGN of its IFI at the reference window
+    (+/-REF_W bins), then both groups are plotted across all windows.
+
+    ⚠ The split is CIRCULAR at the reference window itself — those CCs were selected
+    for being above/below zero there, so a gap at the dotted line is guaranteed and
+    means nothing. What is informative is whether the two groups stay apart at the
+    OTHER windows, where the classification did not look.
+    """
     fig, axes = figstyle.grid(len(PAIRS), ncols=4)
-    cmap = plt.get_cmap("viridis")
     for ax, pair in zip(axes, PAIRS):
         # ONLY CCs that beat the circular-shift null. Ungated, CC3-CC8 clear it in just
-        # 14-17% of cells with held-out CC at the floor, so their IFI sign is noise and
-        # plotting them manufactures apparent sign heterogeneity.
-        sub = df[(df["pair"] == pair) & (df["dim"] <= SHOW_DIMS) &
-                 (df["degenerate"] == 0) & (df["sig"] == 1)]
-        allsub = df[(df["pair"] == pair) & (df["dim"] <= SHOW_DIMS)]
+        # 14-17% of cells with held-out CC at the floor, so their IFI sign is noise.
+        sub = df[(df["pair"] == pair) & (df["degenerate"] == 0) & (df["sig"] == 1)]
         if sub.empty:
             ax.set_title(f"{pair}\n(no significant CCs)", fontsize=9)
             ax.axis("off"); continue
+        # label each (animal, CC) by its sign at the reference window
+        ref = sub[sub["window_bins"] == REF_W].set_index(["animal", "dim"])["ifi"]
+        ref = ref[np.isfinite(ref) & (ref != 0)]
+        if ref.empty:
+            ax.set_title(f"{pair}\n(no usable CCs)", fontsize=9)
+            ax.axis("off"); continue
+        keyed = sub.set_index(["animal", "dim"])
         x_lead = pair.split("-")[0]
-        n_an = sub["animal"].nunique()
-        for d in range(1, SHOW_DIMS + 1):
-            g = sub[sub["dim"] == d]
-            if g["animal"].nunique() < 3:      # need a few animals to average
+        for sign, colour, lab in [(1, "#c0392b", f"+IFI ({x_lead} leads)"),
+                                  (-1, "#2c6fbb", "−IFI")]:
+            members = ref.index[np.sign(ref.to_numpy()) == sign]
+            if len(members) < 2:
                 continue
-            rate = (allsub[allsub["dim"] == d].groupby("animal")["sig"].max().mean()
-                    if len(allsub[allsub["dim"] == d]) else np.nan)
-            piv = g.pivot_table(index="animal", columns="window_ms", values="ifi")
+            g = keyed.loc[members].reset_index()
+            piv = g.pivot_table(index=["animal", "dim"], columns="window_ms",
+                                values="ifi")
             wins = np.array(sorted(piv.columns), dtype=float)
             M = piv[sorted(piv.columns)].to_numpy(float)
             n = np.sum(np.isfinite(M), axis=0)
             mean = np.nanmean(M, axis=0)
             sd = np.nanstd(M, axis=0, ddof=1)
             sem = np.where(n > 1, sd / np.sqrt(np.maximum(n, 1)), np.nan)
-            col = cmap((d - 1) / max(1, SHOW_DIMS - 1))
-            ax.plot(wins, mean, "-", color=col, lw=1.7, zorder=3,
-                    label=f"CC{d} ({rate:.0%} sig, n={piv.shape[0]})")
-            ax.fill_between(wins, mean - sem, mean + sem, color=col, alpha=0.13,
+            ax.plot(wins, mean, "-", color=colour, lw=2.0, zorder=3,
+                    label=f"{lab} · {len(members)} CCs")
+            ax.fill_between(wins, mean - sem, mean + sem, color=colour, alpha=0.18,
                             zorder=2)
         ax.axhline(0.0, color="k", lw=1.0, ls="--", zorder=1)
-        ax.axvline(HEADLINE_W * 10, color="#888", lw=0.8, ls=":", zorder=0)
-        ax.set_title(f"{pair}  (n={n_an})", fontsize=10)
+        ax.axvline(REF_W * BIN_MS, color="#666", lw=1.0, ls=":", zorder=1)
+        ax.set_title(f"{pair}  ({sub['animal'].nunique()} animals)", fontsize=10)
         ax.set_xlabel("integration window ±w (ms)", fontsize=8)
         ax.set_ylabel(f"IFI   +: {x_lead} leads", fontsize=8)
-        ax.legend(fontsize=6, ncol=2, loc="best", framealpha=0.6)
-    fig.suptitle(f"IFI of each canonical dimension vs integration window — {fs}, "
-                 "10 ms smoothed | CCA refit at every lag | ONLY CCs beating the "
-                 "circular-shift null | +IFI = first area leads", fontsize=12)
+        ax.legend(fontsize=6.5, loc="best", framealpha=0.6)
+    fig.suptitle(f"CCs grouped by IFI sign, mean ± SEM vs integration window — {fs} | "
+                 f"significant CCs only; grouped at the dotted line "
+                 f"(±{REF_W * BIN_MS} ms), so the split there is circular by "
+                 f"construction", fontsize=11)
     figstyle.save(fig, ATT / f"HCV1_cc_ifi_windows_{fs}_bin10.png")
     print(f"wrote HCV1_cc_ifi_windows_{fs}_bin10.png")
 
