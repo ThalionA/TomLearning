@@ -4,10 +4,18 @@ Reads results/cc_label_track_epoch_bin10{,_fsincl}.csv (analyze_cc_label_track.p
 
 Figure 1  HCV1_cc_label_track_<fs>_bin10
           Per pair, the IFI of the FF-labelled and FB-labelled CCs across
-          naive/intermediate/expert, mean +/- SEM across animals. Two flat, parallel
-          lines = the labels hold their direction but do not move with learning. Each
-          title carries the expert-vs-naive interaction p (dFF - dFB), which is the
-          question item 2 asks.
+          naive/intermediate/expert, mean +/- SEM across animals. Each title carries the
+          three terms of the 2-way RM-ANOVA (epoch, FF/FB, interaction) rather than the
+          old dFF - dFB contrast, which discarded the intermediate epoch and could not
+          separate a main effect from an interaction. The label term on SIGNED IFI is
+          circular -- components are labelled BY the sign of their whole-session IFI --
+          and is marked as such.
+
+Figure 3  HCV1_cc_label_anova_<fs>_bin10
+          The ANOVA itself: one panel per dependent variable, rows = pair, columns = the
+          three terms, cells coloured by -log10(p) and annotated with p. The circular
+          label column for signed IFI is hatched out. Reading it: the EPOCH column
+          carries the effect (peak r in 6/7 pairs), the interaction column is empty.
 
 Figure 2  HCV1_cc_label_persistence_<fs>_bin10
           Does a CC keep its direction? Per animal, the fraction of epochs whose own IFI
@@ -41,7 +49,7 @@ EX = {"naive": 0, "intermediate": 1, "expert": 2}
 C_FF, C_FB = "#c0392b", "#2c6fbb"
 
 
-def fig_track(tab: pd.DataFrame, stats: pd.DataFrame, fs: str):
+def fig_track(tab: pd.DataFrame, anova: pd.DataFrame, fs: str):
     fig, axes = figstyle.grid(len(PAIRS), ncols=4)
     for ax, pair in zip(axes, PAIRS):
         sub = tab[tab["pair"] == pair]
@@ -68,17 +76,27 @@ def fig_track(tab: pd.DataFrame, stats: pd.DataFrame, fs: str):
                 ax.errorbar(xs, ms, yerr=es, fmt="-o", color=colour, lw=2.0, ms=5,
                             capsize=3, zorder=3,
                             label=f"{label} · {g['animal'].nunique()} animals")
-        row = stats[stats["pair"] == pair]
-        p_int = float(row["p_int_ifi"].iloc[0]) if len(row) else np.nan
+        # 2-way RM-ANOVA terms for the plotted DV (signed IFI), not the old
+        # difference-of-differences: that discarded the intermediate epoch and could
+        # not separate a main effect from an interaction.
+        row = anova[(anova["pair"] == pair) & (anova["dv"] == "ifi")]
+        def _p(term):
+            if row.empty or f"p_{term}" not in row:
+                return np.nan
+            return float(row[f"p_{term}"].iloc[0])
+        pe, pl, pi = _p("epoch"), _p("label"), _p("epoch:label")
         ax.axhline(0.0, color="k", lw=0.9, ls="--", zorder=1)
         ax.set_xlim(-0.3, 2.3); ax.set_xticks([0, 1, 2])
         ax.set_xticklabels(["naive", "int", "exp"], fontsize=8)
-        ax.set_title(f"{pair}   ΔFF−ΔFB p={p_int:.2g}", fontsize=9)
+        # the LABEL term is circular for signed IFI — components are labelled BY the
+        # sign of their whole-session IFI — so it is shown struck through, not as a result
+        ax.set_title(f"{pair}\nepoch p={pe:.2g} · label p={pl:.2g}(circ) · "
+                     f"int p={pi:.2g}", fontsize=8)
         ax.set_ylabel(f"IFI   +: {x_lead} leads", fontsize=8)
         ax.legend(fontsize=6.5, loc="best", framealpha=0.6)
-    fig.suptitle(f"FF/FB CCs labelled once on all trials, followed across learning — "
-                 f"{fs} | frozen axes, so a change is in the ACTIVITY not the fit",
-                 fontsize=11)
+    fig.suptitle(f"FF/FB CCs labelled once, followed across learning — {fs} | frozen "
+                 f"axes | titles carry the 2-way RM-ANOVA (epoch × label); the label "
+                 f"term on signed IFI is circular by construction", fontsize=10)
     figstyle.save(fig, ATT / f"HCV1_cc_label_track_{fs}_bin10.png")
     print(f"wrote HCV1_cc_label_track_{fs}_bin10.png")
 
@@ -131,18 +149,80 @@ def fig_persistence(tab: pd.DataFrame, fs: str):
     print(f"wrote HCV1_cc_label_persistence_{fs}_bin10.png")
 
 
+def fig_anova(anova: pd.DataFrame, fs: str):
+    """All three ANOVA terms, per DV and pair, as -log10(p).
+
+    One panel per dependent variable; rows = area pair, columns = the three terms.
+    Cell text is the p-value; the dashed contour marks p = 0.05. The LABEL column for
+    signed IFI is hatched and greyed because that term is circular by construction —
+    components are labelled BY the sign of their whole-session IFI — so it carries no
+    information and must not be read as a result.
+    """
+    from matplotlib.patches import Rectangle
+    dvs = [("peak_r", "peak r", False), ("abs_ifi", "|IFI|", False),
+           ("peak_lag_ms", "peak lag", False), ("ifi", "IFI (signed)", True)]
+    terms = [("epoch", "epoch"), ("label", "FF/FB"), ("epoch:label", "interaction")]
+    fig, axes = figstyle.grid(len(dvs), ncols=4, panel=(4.6, 4.4))
+    im = None
+    for ax, (dv, name, circ) in zip(axes, dvs):
+        sub = anova[anova["dv"] == dv]
+        pairs = [p for p in PAIRS if p in set(sub["pair"])]
+        if not pairs:
+            ax.set_title(f"{name}\n(no data)", fontsize=9); ax.axis("off"); continue
+        M = np.full((len(pairs), len(terms)), np.nan)
+        for i, pr in enumerate(pairs):
+            row = sub[sub["pair"] == pr]
+            for j, (term, _) in enumerate(terms):
+                col = f"p_{term}"
+                if not row.empty and col in row:
+                    v = row[col].iloc[0]
+                    if np.isfinite(v):
+                        M[i, j] = -np.log10(max(v, 1e-12))
+        im = ax.imshow(np.ma.masked_invalid(M), cmap="YlOrRd", vmin=0, vmax=4,
+                       aspect="auto")
+        for i in range(len(pairs)):
+            for j in range(len(terms)):
+                if not np.isfinite(M[i, j]):
+                    continue
+                pv = 10 ** (-M[i, j])
+                ax.text(j, i, f"{pv:.2g}", ha="center", va="center", fontsize=6,
+                        color="white" if M[i, j] > 2.2 else "black",
+                        fontweight="bold" if pv < 0.05 else "normal")
+        if circ:                                   # grey out the circular column
+            ax.add_patch(Rectangle((0.5, -0.5), 1, len(pairs), facecolor="#dcdcdc",
+                                   alpha=0.72, hatch="///", edgecolor="#888",
+                                   lw=0.8, zorder=5))
+            ax.text(1, len(pairs) / 2 - 0.5, "circular", rotation=90, ha="center",
+                    va="center", fontsize=7, color="#444", zorder=6)
+        ax.set_xticks(range(len(terms)))
+        ax.set_xticklabels([t[1] for t in terms], fontsize=8)
+        ax.set_yticks(range(len(pairs)))
+        ax.set_yticklabels(pairs, fontsize=7)
+        ax.set_title(name, fontsize=10)
+    if im is not None:
+        cb = fig.colorbar(im, ax=list(axes), fraction=0.014, pad=0.01)
+        cb.set_label("−log₁₀(p)   (1.3 = 0.05)", fontsize=8)
+    fig.suptitle(f"2-way RM-ANOVA per pair: epoch × FF/FB label — {fs} | bold = "
+                 f"p < 0.05 | the epoch column is where the effect lives; the "
+                 f"interaction is empty", fontsize=10.5)
+    figstyle.save(fig, ATT / f"HCV1_cc_label_anova_{fs}_bin10.png")
+    print(f"wrote HCV1_cc_label_anova_{fs}_bin10.png")
+
+
 def main():
     fsincl = "fsincl" in sys.argv[1:]
     suf = "_fsincl" if fsincl else ""
     fs = "fsincl" if fsincl else "fsexcl"
     src = RES / f"cc_label_track_epoch_bin10{suf}.csv"
-    st = RES / f"cc_label_track_stats_bin10{suf}.csv"
+    st = RES / f"cc_label_anova_bin10{suf}.csv"
     if not src.exists():
         sys.exit(f"{src} not found — run scripts/analyze_cc_label_track.py first")
     tab = pd.read_csv(src)
-    stats = pd.read_csv(st) if st.exists() else pd.DataFrame()
-    fig_track(tab, stats, fs)
+    anova = pd.read_csv(st) if st.exists() else pd.DataFrame()
+    fig_track(tab, anova, fs)
     fig_persistence(tab, fs)
+    if not anova.empty:
+        fig_anova(anova, fs)
 
 
 if __name__ == "__main__":
