@@ -1,5 +1,10 @@
 # Tom-learning CCA pipeline
 
+> **Continuing the temporal/lag analyses?** Read **`HANDOFF.md`** first — pipeline
+> map (script → CSV → figure), column dictionary, which numbers are trustworthy, and the
+> traps. Then `PROJECT_LOG.md` (state of play) and `STATE.md` (findings).
+
+
 > **Start with [`STATE.md`](STATE.md)** — it reconciles the two analysis arms
 > (spatial + landmark), names the canonical configs, and states the current findings.
 > This README is quick-start only.

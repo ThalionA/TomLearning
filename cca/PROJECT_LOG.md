@@ -4,14 +4,103 @@
 session; append a dated entry after any meaningful work. Newest entry on top. Keep entries terse
 but self-contained — a future session must be able to resume from here alone.
 
-**Doc map.** `STATE.md` = current findings + canonical configs (the verdict). `OPPORTUNITIES.md` =
+**Doc map.** **`HANDOFF.md` = how the data/results/figures are organised — read it first if
+you are picking up the temporal or lag analyses.** `STATE.md` = current findings + canonical configs (the verdict). `OPPORTUNITIES.md` =
 the two-paper reframe + plan. `GOTCHAS.md` = bugs not to reintroduce. `NOTES.md` = older dev log.
 `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` = original specs. **This file = the running
 narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-03, evening) — item 3 REVERSES: CA1-DG does rotate with lag
+## CURRENT STATE (2026-08-07) — Theo's four follow-ups done; ➜ READ `HANDOFF.md` FIRST
+
+**New doc: `HANDOFF.md`** — the pipeline map (script → CSV → figure), the column
+dictionary, which numbers are trustworthy, and the traps. A cold session should read that
+before this file. Nothing is running.
+
+**Theo redirected the meeting items** at the start of this session: the earlier pass had
+answered adjacent questions rather than the ones asked. What he actually wanted:
+
+| ask | what was built | verdict |
+|---|---|---|
+| 1. Are there CCs with **different signs** of IFI? Compute IFI at different lags per CC | `analyze_cc_ifi_signs.py` over the refit-per-lag curves | **Null** — sign-mixing is at or *below* chance |
+| 2. Label CCs FF/FB **once on all trials**, then track those CCs across epochs | `run_cc_label_track.py` (frozen axes, no cap) | **Labels persist (62–66 %)**, but FF/FB do not diverge with learning |
+| — | Cosine similarity of significant CCs to themselves across lags | `run_lag_cosine.py` | **Canonical vectors barely identifiable** |
+| 4. Integration window vs IFI curves, naive vs experienced | `analyze_ifi_windows_epochs.py` (frozen axes) | **Null** |
+
+### The one thing that changes how everything else is read
+
+`run_lag_cosine.py`: split-half |cos| of a canonical vector **at a fixed lag** is
+**CC1 0.59, CC2 0.39, CC3 0.26, CC4 0.22** against a **0.146** random-vector baseline in
+30-D. **Only CC1 has a real identity.** The best-matching dimension at another lag is a
+*different* dimension **82 %** of the time, and CC1 loses half its identity by ±250 ms
+(0.556 → 0.300, p = 1×10⁻⁴; FS-incl 0.665 → 0.362). This is the measured version of the
+bug that hit twice, and it is why every epoch contrast now uses **frozen axes**.
+
+### Item 1 — do different CCs have different IFI signs? NULL
+
+Sign-mixing among significant CCs: **39/49 cells (80 %) vs 40.3 expected (82 %),
+p = 0.579** FS-excl; 46/59 (78 %) vs 50.8 (86 %), p = 0.087 FS-incl — at or *below*
+chance. No dimension survives FDR within its pair. Two guards were needed to get there:
+gate on significance (ungated, the extreme IFIs sit on the weakest CCs, Spearman
+−0.25/−0.33) and use the right chance model (P(mixed) = 1 − 2·0.5^k, 94 % at k = 5 — the
+first "92 % mixed" figure was *below* chance). Strength-weighting the group means *shrinks*
+the FF/FB gap by 6–20 %, a third independent line of evidence for the null.
+
+### Item 2 — label once, track across learning: labels REAL, no divergence
+
+470/494 labelled CCs, 12 learners. **Persistence 62 % (p = 7×10⁻⁴) / 66 % (p = 5×10⁻⁶)**
+against a *genuine* 50 % (leave-epoch-out label), animals-as-n, 10/12 then 12/12 animals
+above chance. **Not** a theta-ringing artefact: intra-hippocampal minus other is +0.046
+(p = 0.42) then −0.032 (p = 0.54), sign flips; highest persistence is RSC-SUB 0.80 and
+CA1-SUB 0.76, lowest CA1-DG 0.54. But the interaction ΔFF−ΔFB is **null**: 2/24 tests
+FS-excl (1.2 expected, 0 survive BH) and **0/24** FS-incl, the two hits on different pairs.
+
+### Item 4 — integration window vs IFI, naive vs expert: NULL
+
+CC1 expert-vs-naive at ±50 ms: 1/8 pairs in each condition, on **different pairs**
+(V1-RSC then CA1-DG). 1/8 pairs have any of 25 windows at p < 0.05 against ~1.2 expected.
+FF- and FB-labelled groups likewise null. Curves are largely flat beyond ~50 ms.
+
+### Bugs found and fixed this session (all mine, two by adversarial verification)
+
+1. **`sig` came from a different fit than `cc`** in `run_lag_curves` — `window_subspace`'s
+   mask attached by bare index. 19 % of "significant" dims had a **negative** held-out CC;
+   the largest CC in the dataset was flagged non-significant. Fixed `d38a833`
+   (`lagged.perdim_significance`).
+2. **Then reintroduced in a new guise** in `run_cc_label_track` — per-fold refit statistics
+   averaged BY RANK, attached to the frozen fit's dims. Signature: `cc_heldout` rose with
+   rank in **38/38** cells, negative in 27/38. Fixed `1bae90e`
+   (`fixed_subspace.frozen_perm_null`, rank-for-rank on the frozen fit's own correlations,
+   ~20× cheaper via `QR(P@Y) = P@Qy`).
+3. **The sample cap was harmful, not just unnecessary** — it kept the first 0.4–1.8 s of
+   each ~30 s trial, where the naive→expert speed difference is **double** (+12.0 vs
+   +6.6 cm/s). `run_cc_label_track` now uncapped; made tractable by
+   `trial_lag_moments`/`curve_from_moments` (per-trial sufficient statistics, additive over
+   trials → every epoch and leave-one-out curve by masking). 26× more data at ~40 s/animal.
+4. **Per-dim null replaced the dominant-dim one** at Theo's call (`0887755`): the old one
+   was conservative twice over (max-statistic *and* held-out observed vs in-sample null),
+   leaving 0.7 significant dims/cell. Now 3.4 (FDR, leading 10).
+5. Minor: variable shadowing (`out = ~mask` clobbering the CSV path, caught by smoke test);
+   figures written only to the vault, now mirrored to `cca/figures/` (`figstyle.save`).
+
+### ⚠ OPEN — the one that could undercut the epoch results
+
+**Running speed rises +6.6 cm/s naive→expert** (11/12 animals, p = 0.005 on kept bins).
+Nothing controls for velocity; speed sets theta frequency and every epoch contrast here is
+a *timing* measure. Uncapping halved the confound, it did not remove it. **Theo has been
+asked twice whether this is a known feature of the cohort — still unanswered, and it
+should be settled before any epoch result is written up.**
+
+Other open threads are listed in `HANDOFF.md` §6 (rotation-floor figure still plots the
+unmeasurable 3-dim angle; two direction discrepancies vs §3.0 finding 3; the Gini
+partner-invariance re-test; `MEETING_2026-08-07.md` predates this session).
+
+**Tests: 373 pass** (`cd cca && PYTHONPATH=src python -m pytest -q`, ~50 s).
+
+---
+
+## ✓ DONE (2026-08-03, evening) — item 3 REVERSES: CA1-DG does rotate with lag
 
 **A second verification pass (6 agents) found that the morning's fix was incomplete, and
 correcting it flips item 3 from a null to the only positive result in the seven items.**

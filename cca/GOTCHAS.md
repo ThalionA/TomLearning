@@ -2,6 +2,52 @@
 
 One-line entries for non-obvious bugs, so they are not reintroduced.
 
+- **Canonical dimensions are NOT comparable across two CCA fits — 82 % of the time the
+  best match at another lag is a different dimension.** Measured (`run_lag_cosine`,
+  2026-08-07): split-half |cos| of a canonical vector at a FIXED lag is 0.59 (CC1), 0.39,
+  0.26, 0.22 by CC4, against a 0.146 random-vector baseline in 30-D. Only CC1 has real
+  identity. Consequence: never attach one fit's per-dim statistics to another fit's
+  dimensions by bare index. This caused two separate bugs — `d38a833` (significance from
+  `window_subspace` attached to `heldout_lag_curve_flat_perdim`'s dims; 19 % of "significant"
+  dims had a NEGATIVE held-out CC) and `1bae90e` (per-fold refit statistics averaged BY RANK
+  then attached to a frozen fit; `cc_heldout` rose with rank in 38/38 cells). Compute
+  significance in the same driver, on the same fit, from the same scores — or use frozen
+  axes, where no correspondence is needed.
+
+- **A permutation p cannot go below 1/(n_shuffles+1), so BH can be arithmetically
+  impossible.** BH needs the best of `d` tests to reach `alpha/d`; with d = 30 that requires
+  **> 599 shuffles before ANY dimension can pass**. Below that the corrected mask is empty
+  for arithmetic reasons and reads as a scientific null. Restrict the BH family
+  (`fdr_dims`) or raise the shuffle count, and never interpret an empty FDR mask without
+  checking the floor first.
+
+- **Mask monotonicity is a property of the NULL, not of correctness.** Under a dominant-dim
+  null (one scalar threshold) the significance mask must be monotone in the held-out CC.
+  Under a per-dim null each dimension has its own bar and shuffled correlations fall with
+  rank, so a smaller high-rank CC can legitimately pass where a larger low-rank one does
+  not. A guard asserting monotonicity will false-alarm on correct per-dim data (it did).
+
+- **A noise floor must be the SAME ESTIMATOR as the thing it gates.** Comparing a full-data
+  cross-lag statistic to a half-data split-half floor mixes two noise levels. At 3 canonical
+  dims the split-half floor is ~78 deg while the comparison angle is ~75 deg, so "not above
+  floor" meant UNMEASURABLE, not stable — reported as a null before being caught, and the
+  corrected version reversed the item-3 conclusion. For the cosine analysis both terms are
+  half-data fits so the lag-0 point already carries the sampling noise.
+
+- **Check the chance model before calling a rate a finding.** Two live examples: per-animal
+  sign-mixing of 92 % was BELOW its own chance level (1 - 2*0.5^k = 94 % at k = 5); and
+  label persistence of "70 % vs 50 %, p = 1e-11" had a construction floor of ~60 %, because
+  the label was computed on data containing the epoch being scored (analytic
+  0.5 + arcsin(sqrt(n_epoch/n_total))/pi, Monte-Carlo confirmed). Score against a
+  leave-epoch-out label, or against the construction floor.
+
+- **The 12k-bin sample cap keeps only the first ~20 trials, and the first 0.4-1.8 s of
+  each.** A trial is ~2900 bins (~30 s of running). For a late learner that window is
+  entirely pre-learning, and running speed rises **+12.0 cm/s naive->expert on those
+  trial-onset bins** versus +6.6 cm/s over whole trials — so the cap DOUBLES a speed
+  confound on any epoch contrast. The cap exists because `run_lag_curves` refits CCA 255
+  times per pair; a driver that fits once (`run_cc_label_track`) should not inherit it.
+
 - **A subspace-angle test at 3 dims is UNMEASURABLE here — check the split-half floor
   before reading any angle p-value.** The floor (two halves of the *same* data, *same*
   lag/window) is **~79°** at d=3 and **~56°** at d=1. At d=3 the comparison angle is ~75°,
