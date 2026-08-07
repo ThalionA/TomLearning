@@ -85,20 +85,34 @@ def fig_windows(df: pd.DataFrame, fs: str):
             mean = np.nanmean(M, axis=0)
             sd = np.nanstd(M, axis=0, ddof=1)
             sem = np.where(n > 1, sd / np.sqrt(np.maximum(n, 1)), np.nan)
-            ax.plot(wins, mean, "-", color=colour, lw=2.0, zorder=3,
-                    label=f"{lab} · {len(members)} CCs")
-            ax.fill_between(wins, mean - sem, mean + sem, color=colour, alpha=0.18,
+            # Strength-weighted mean alongside the plain one. |IFI| falls with coupling
+            # strength (Spearman -0.25 / -0.33, p < 1e-4), i.e. the extreme IFIs sit on
+            # the WEAKEST CCs — the signature of a noisy estimator, since a poorly
+            # estimated lag curve yields a large |IFI| by chance. Weighting by CC
+            # strength therefore SHRINKS the gap (6-20%) rather than sharpening it.
+            wt = g.pivot_table(index=["animal", "dim"], columns="window_ms",
+                               values="cc_peak")[sorted(piv.columns)].to_numpy(float)
+            wt = np.clip(np.nan_to_num(wt, nan=0.0), 0, None)
+            wsum = np.nansum(np.where(np.isfinite(M), wt, 0.0), axis=0)
+            wmean = np.divide(
+                np.nansum(np.where(np.isfinite(M), M * wt, 0.0), axis=0),
+                np.where(wsum > 0, wsum, np.nan))
+            ax.plot(wins, mean, "--", color=colour, lw=1.2, alpha=0.75, zorder=3,
+                    label=f"{lab} · {len(members)} CCs (unweighted)")
+            ax.fill_between(wins, mean - sem, mean + sem, color=colour, alpha=0.13,
                             zorder=2)
+            ax.plot(wins, wmean, "-", color=colour, lw=2.4, zorder=4,
+                    label=f"{lab} · CC-strength weighted")
         ax.axhline(0.0, color="k", lw=1.0, ls="--", zorder=1)
         ax.axvline(REF_W * BIN_MS, color="#666", lw=1.0, ls=":", zorder=1)
         ax.set_title(f"{pair}  ({sub['animal'].nunique()} animals)", fontsize=10)
         ax.set_xlabel("integration window ±w (ms)", fontsize=8)
         ax.set_ylabel(f"IFI   +: {x_lead} leads", fontsize=8)
-        ax.legend(fontsize=6.5, loc="best", framealpha=0.6)
-    fig.suptitle(f"CCs grouped by IFI sign, mean ± SEM vs integration window — {fs} | "
-                 f"significant CCs only; grouped at the dotted line "
-                 f"(±{REF_W * BIN_MS} ms), so the split there is circular by "
-                 f"construction", fontsize=11)
+        ax.legend(fontsize=5.5, loc="best", framealpha=0.6)
+    fig.suptitle(f"CCs grouped by IFI sign vs integration window — {fs} | solid = "
+                 f"CC-strength weighted, dashed = unweighted ± SEM | significant CCs "
+                 f"only, grouped at the dotted line (±{REF_W * BIN_MS} ms) so the split "
+                 f"there is circular by construction", fontsize=10.5)
     figstyle.save(fig, ATT / f"HCV1_cc_ifi_windows_{fs}_bin10.png")
     print(f"wrote HCV1_cc_ifi_windows_{fs}_bin10.png")
 
