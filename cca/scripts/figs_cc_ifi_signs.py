@@ -4,9 +4,11 @@ Reads results/cc_ifi_windows_bin10{,_fsincl}.csv (analyze_cc_ifi_signs.py).
 
 Figure 1  HCV1_cc_ifi_windows_<fs>_bin10
           "Calculate IFI at different lags for each CC and look at them." Per pair,
-          IFI vs integration window (|lag| <= w), one line per canonical dimension,
-          mean +/- SEM across animals. The zero line is the question: do different CCs
-          sit on opposite sides of it?
+          IFI vs integration window (|lag| <= w): the significant CCs split into a
+          +IFI and a -IFI group at +/-50 ms, PLUS (2026-08-07 ask 1) the ungrouped
+          mean over ALL significant CCs, with its one-sample test vs 0 at +/-50 ms
+          (ask 3) in the panel title. Every line is a per-ANIMAL-first mean +/- SEM
+          across animals (cc_aggregate) — an animal with five CCs counts once.
 
 Figure 2  HCV1_cc_ifi_signmap_<fs>_bin10
           The same thing per animal, at the headline +/-50 ms window: a diverging
@@ -32,6 +34,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import figstyle  # noqa: E402
+from tom_cca import cc_aggregate  # noqa: E402
 
 figstyle.apply()
 ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
@@ -44,16 +47,42 @@ BIN_MS = 10
 MAP_DIMS = 8
 
 
-def fig_windows(df: pd.DataFrame, fs: str):
-    """Positive-IFI and negative-IFI CCs as two groups, mean +/- SEM vs window.
+def _group_curves(g: pd.DataFrame):
+    """Per-animal-first mean, SEM and CC-strength-weighted mean of IFI vs window.
+
+    ``g`` is one row per (animal, dim, window). Each animal's CCs are collapsed to one
+    value per window first (cc_aggregate.per_animal_mean), then averaged across
+    animals — so the SEM band is animals-as-n, the same unit as the test in the
+    title. Returns ``(windows_ms, mean, sem, wmean, n_animals)``.
+    """
+    pa = cc_aggregate.per_animal_mean(g, value="ifi", by=["window_ms"],
+                                      weight="cc_peak", sig_only=False,
+                                      drop_degenerate=False)
+    piv = pa.pivot_table(index="animal", columns="window_ms", values="mean")
+    wins = np.array(sorted(piv.columns), dtype=float)
+    M = piv[sorted(piv.columns)].to_numpy(float)
+    n = np.sum(np.isfinite(M), axis=0)
+    mean = np.nanmean(M, axis=0)
+    sd = np.nanstd(M, axis=0, ddof=1)
+    sem = np.where(n > 1, sd / np.sqrt(np.maximum(n, 1)), np.nan)
+    W = pa.pivot_table(index="animal", columns="window_ms", values="wmean")
+    wmean = np.nanmean(W[sorted(W.columns)].to_numpy(float), axis=0)
+    return wins, mean, sem, wmean, int(piv.shape[0])
+
+
+def fig_windows(df: pd.DataFrame, fs: str, overall_test: pd.DataFrame | None = None):
+    """+IFI, −IFI and ALL significant CCs, per-animal-first mean +/- SEM vs window.
 
     Each significant CC is labelled by the SIGN of its IFI at the reference window
-    (+/-REF_W bins), then both groups are plotted across all windows.
+    (+/-REF_W bins), then both groups — and the ungrouped union (2026-08-07 ask 1) —
+    are plotted across all windows. The title carries the ungrouped mean's one-sample
+    test vs 0 at +/-50 ms (ask 3; `analyze_cc_ifi_signs.overall_direction`).
 
-    ⚠ The split is CIRCULAR at the reference window itself — those CCs were selected
-    for being above/below zero there, so a gap at the dotted line is guaranteed and
-    means nothing. What is informative is whether the two groups stay apart at the
-    OTHER windows, where the classification did not look.
+    ⚠ The +/− split is CIRCULAR at the reference window itself — those CCs were
+    selected for being above/below zero there, so a gap at the dotted line is
+    guaranteed and means nothing. What is informative is whether the two groups stay
+    apart at the OTHER windows, where the classification did not look. The all-CC line
+    is NOT circular: it never looked at the sign.
     """
     fig, axes = figstyle.grid(len(PAIRS), ncols=4)
     for ax, pair in zip(axes, PAIRS):
@@ -71,48 +100,47 @@ def fig_windows(df: pd.DataFrame, fs: str):
             ax.axis("off"); continue
         keyed = sub.set_index(["animal", "dim"])
         x_lead = pair.split("-")[0]
-        for sign, colour, lab in [(1, "#c0392b", f"+IFI ({x_lead} leads)"),
-                                  (-1, "#2c6fbb", "−IFI")]:
-            members = ref.index[np.sign(ref.to_numpy()) == sign]
+        groups = [(1, "#c0392b", f"+IFI ({x_lead} leads)"),
+                  (-1, "#2c6fbb", "−IFI"),
+                  (0, "#222222", "ALL sig. CCs")]
+        for sign, colour, lab in groups:
+            members = ref.index if sign == 0 else ref.index[np.sign(ref.to_numpy()) == sign]
             if len(members) < 2:
                 continue
             g = keyed.loc[members].reset_index()
-            piv = g.pivot_table(index=["animal", "dim"], columns="window_ms",
-                                values="ifi")
-            wins = np.array(sorted(piv.columns), dtype=float)
-            M = piv[sorted(piv.columns)].to_numpy(float)
-            n = np.sum(np.isfinite(M), axis=0)
-            mean = np.nanmean(M, axis=0)
-            sd = np.nanstd(M, axis=0, ddof=1)
-            sem = np.where(n > 1, sd / np.sqrt(np.maximum(n, 1)), np.nan)
+            wins, mean, sem, wmean, n_an = _group_curves(g)
             # Strength-weighted mean alongside the plain one. |IFI| falls with coupling
             # strength (Spearman -0.25 / -0.33, p < 1e-4), i.e. the extreme IFIs sit on
             # the WEAKEST CCs — the signature of a noisy estimator, since a poorly
             # estimated lag curve yields a large |IFI| by chance. Weighting by CC
-            # strength therefore SHRINKS the gap (6-20%) rather than sharpening it.
-            wt = g.pivot_table(index=["animal", "dim"], columns="window_ms",
-                               values="cc_peak")[sorted(piv.columns)].to_numpy(float)
-            wt = np.clip(np.nan_to_num(wt, nan=0.0), 0, None)
-            wsum = np.nansum(np.where(np.isfinite(M), wt, 0.0), axis=0)
-            wmean = np.divide(
-                np.nansum(np.where(np.isfinite(M), M * wt, 0.0), axis=0),
-                np.where(wsum > 0, wsum, np.nan))
-            ax.plot(wins, mean, "--", color=colour, lw=1.2, alpha=0.75, zorder=3,
-                    label=f"{lab} · {len(members)} CCs (unweighted)")
+            # strength therefore SHRINKS the +/− gap (6-20%) rather than sharpening it.
+            lw_dash, lw_solid = (1.6, 3.0) if sign == 0 else (1.2, 2.4)
+            ax.plot(wins, mean, "--", color=colour, lw=lw_dash, alpha=0.8, zorder=3,
+                    label=f"{lab} · {len(members)} CCs, {n_an} an. (unweighted)")
             ax.fill_between(wins, mean - sem, mean + sem, color=colour, alpha=0.13,
                             zorder=2)
-            ax.plot(wins, wmean, "-", color=colour, lw=2.4, zorder=4,
+            ax.plot(wins, wmean, "-", color=colour, lw=lw_solid, zorder=4,
                     label=f"{lab} · CC-strength weighted")
         ax.axhline(0.0, color="k", lw=1.0, ls="--", zorder=1)
         ax.axvline(REF_W * BIN_MS, color="#666", lw=1.0, ls=":", zorder=1)
-        ax.set_title(f"{pair}  ({sub['animal'].nunique()} animals)", fontsize=10)
+        title = f"{pair}  ({sub['animal'].nunique()} animals)"
+        if overall_test is not None:
+            row = overall_test[overall_test["pair"] == pair]
+            if not row.empty:
+                r = row.iloc[0]
+                star = "  *" if r["p"] < 0.05 else ""
+                title += (f"\nall-CC IFI @±{int(r['window_ms'])} ms: {r['mean']:+.3f}, "
+                          f"p={r['p']:.3f}{star} (n={int(r['n'])})")
+        ax.set_title(title, fontsize=9)
         ax.set_xlabel("integration window ±w (ms)", fontsize=8)
         ax.set_ylabel(f"IFI   +: {x_lead} leads", fontsize=8)
-        ax.legend(fontsize=5.5, loc="best", framealpha=0.6)
-    fig.suptitle(f"CCs grouped by IFI sign vs integration window — {fs} | solid = "
-                 f"CC-strength weighted, dashed = unweighted ± SEM | significant CCs "
-                 f"only, grouped at the dotted line (±{REF_W * BIN_MS} ms) so the split "
-                 f"there is circular by construction", fontsize=10.5)
+        ax.legend(fontsize=5.2, loc="best", framealpha=0.6)
+    fig.suptitle(f"IFI vs integration window, significant CCs — {fs} | red/blue = CCs "
+                 f"grouped by IFI sign at the dotted line (±{REF_W * BIN_MS} ms; that split "
+                 f"is circular there), black = ALL significant CCs (not circular)\n"
+                 f"solid = CC-strength weighted, dashed = unweighted ± SEM, per-animal-first "
+                 f"| title: one-sample t of the all-CC mean vs 0 at ±{REF_W * BIN_MS} ms, "
+                 f"animals-as-n, no cross-pair correction", fontsize=10)
     figstyle.save(fig, ATT / f"HCV1_cc_ifi_windows_{fs}_bin10.png")
     print(f"wrote HCV1_cc_ifi_windows_{fs}_bin10.png")
 
@@ -172,7 +200,11 @@ def main():
         sys.exit(f"{src} not found — run scripts/analyze_cc_ifi_signs.py first")
     df = pd.read_csv(src)
     df["ifi"] = pd.to_numeric(df["ifi"], errors="coerce")
-    fig_windows(df, fs)
+    test_csv = RES / f"cc_ifi_overall_test_bin10{suf}.csv"
+    overall_test = pd.read_csv(test_csv) if test_csv.exists() else None
+    if overall_test is None:
+        print(f"  ({test_csv.name} missing — panel titles will not carry the ask-3 test)")
+    fig_windows(df, fs, overall_test)
     fig_signmap(df, fs)
 
 
