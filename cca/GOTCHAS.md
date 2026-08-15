@@ -2,6 +2,36 @@
 
 One-line entries for non-obvious bugs, so they are not reintroduced.
 
+- **On the ALL-TRIALS frozen fit (`run_cc_label_track`), curve HEIGHT is lower in the naive
+  epoch at EVERY lag — a baseline offset, not learning.** Found 2026-08-15, adversarially
+  verified: peak r "rises" expert − naive 8/8 pairs (both FS), but ~60 % of it is present at
+  |lag| ≥ 200 ms (slow co-modulation on whole-session axes; speed is the candidate); peak
+  MINUS baseline expert − naive is null in every pair with n > 4; the rise is LP-independent
+  (ρ ≈ 0); and the held-out per-epoch REFIT arms show no naive deficit (`epoch_metrics_bin10`
+  CC₁ 0.149/0.139/0.145). Consequence: `cc_label_track`'s in-sample `r`, `peak_r`, curve
+  height — anything with units of correlation — must not be read as a naive→expert change.
+  Report `peak_minus_far` next to `peak_r` (`analyze_cc_crosscorr_epochs.curve_metrics`).
+  IFI is insensitive to scaling but NOT to an additive offset — fine only when null. Item 2's
+  `cc_label_track_stats` per-label `p_*_peak_r` columns carry this caveat.
+
+- **Cumulative integration windows make a sign-split at ±50 ms circular at EVERY window.**
+  `HCV1_cc_ifi_windows_*` groups CCs by IFI sign at |lag| ≤ 50 ms and plots them out to
+  ±250 ms; every wider window still contains those lags, which carry the largest CCs, so the
+  groups "staying apart" out to 250 ms is the same circularity leaking outward — on the
+  disjoint lags 60–250 ms the +/− gap collapses to ~0 in every pair (2026-08-15). Only a
+  disjoint-lag comparison is non-circular.
+
+- **`bin10_tables.md` §B and the per-CC lag curves are DIFFERENT SAMPLES.** §B's CC₁ IFI is
+  from `run_ifi_windows` (whole session, ~370 k bins); `lag_curves_bin10*` (and everything
+  built on it — `cc_ifi_*`) is capped at 12 000 bins = the first ≤ 600 bins of the **first
+  ~20 trials**. Per animal-pair the two CC₁ IFIs correlate only r ≈ 0.4. Never compare an
+  all-CC number from the capped table to §B; use dim 1 of the same table (`cc1_direction`).
+
+- **A figure's SEM band and its title's p-value must be the same unit.** The +/− group
+  lines on `HCV1_cc_ifi_windows_*` were mean ± SEM over (animal, dim) rows — dims-as-n —
+  until 2026-08-15. Collapse each animal's CCs first (`cc_aggregate.per_animal_mean`),
+  then average across animals; the means barely move but the bands are honest.
+
 - **Canonical dimensions are NOT comparable across two CCA fits — 82 % of the time the
   best match at another lag is a different dimension.** Measured (`run_lag_cosine`,
   2026-08-07): split-half |cos| of a canonical vector at a FIXED lag is 0.59 (CC1), 0.39,

@@ -4,9 +4,10 @@
 `STATE.md` *what is believed*; this file tells you **where things live, which script made
 them, and which numbers you are allowed to trust**. Read this before running anything.
 
-Last updated 2026-08-07, after the seven 2026-07-28 meeting items plus the four follow-ups
-Theo asked for (per-CC IFI signs, FF/FB label-and-track, cosine-across-lags, integration
-window vs IFI by epoch).
+Last updated 2026-08-15, after the three 2026-08-07 meeting asks (overall IFI across CCs,
+its ±50 ms test vs 0, epoch cross-correlograms whole and by FF/FB). Before that: the seven
+2026-07-28 items plus the four follow-ups (per-CC IFI signs, FF/FB label-and-track,
+cosine-across-lags, integration window vs IFI by epoch).
 
 ---
 
@@ -35,7 +36,8 @@ co-primary — report both.**
 
 | # | Question | Driver | Analysis | Figures |
 |---|---|---|---|---|
-| 1 | Do different CCs have different IFI (different signs)? | `run_lag_curves.py` → `lag_curves_bin10*.csv` | `analyze_cc_ifi_signs.py` → `cc_ifi_windows_*`, `cc_ifi_signs_*`, `cc_ifi_direction*`, `cc_ifi_mixing_*`, `cc_ifi_signs_tables.md` | `figs_cc_ifi_signs.py` → `HCV1_cc_ifi_windows_*`, `HCV1_cc_ifi_signmap_*` |
+| 1 | Do different CCs have different IFI (different signs)? **+ 08-07 asks 1/3: overall IFI across all sig CCs, tested vs 0 at ±50 ms** | `run_lag_curves.py` → `lag_curves_bin10*.csv` | `analyze_cc_ifi_signs.py` → `cc_ifi_windows_*`, `cc_ifi_signs_*`, `cc_ifi_direction*`, `cc_ifi_mixing_*`, **`cc_ifi_overall_*`, `cc_ifi_overall_test_*`**, `cc_ifi_signs_tables.md` | `figs_cc_ifi_signs.py` → `HCV1_cc_ifi_windows_*` (black = all sig CCs; p in titles), `HCV1_cc_ifi_signmap_*` |
+| 08-07 ask 2 | Cross-correlograms r(lag) naive vs expert, all sig CCs and split FF/FB | *(reuses item 2's CSV + `cc_label_track_epoch_*`)* | `analyze_cc_crosscorr_epochs.py` → `cc_crosscorr_epochs_*`, `_stats_*` (IFI, peak r, **peak − baseline, baseline**; expert−naive **and** intermediate−naive), `cc_crosscorr_epochs_tables.md` | `figs_cc_crosscorr_epochs.py` → `HCV1_cc_crosscorr_epochs_*`, `HCV1_cc_crosscorr_epochs_fffb_*` |
 | 2 | Separate subspaces into FF/FB, track with learning | `run_cc_label_track.py` → `cc_label_track_bin10*.csv` | `analyze_cc_label_track.py` → `cc_label_track_epoch_*`, `_stats_*`, `_tables.md` | `figs_cc_label_track.py` → `HCV1_cc_label_track_*`, `HCV1_cc_label_persistence_*` |
 | 3 | How stable are the CCs across lags? | `run_lag_subspaces.py` → `lag_subspaces_bin10*.csv` | `analyze_lag_subspaces.py` → `lag_subspaces_stability_*`, `_fffb_*`, `_gate_sensitivity_*`, `_evolution_*` | `figs_lag_subspaces.py`, `figs_lag_subspaces_epochs.py` |
 | — | Cosine of each CC to itself across lags | `run_lag_cosine.py` → `lag_cosine_bin10*.csv` | (inline) | `figs_lag_cosine.py` → `HCV1_lag_cosine_*`, `HCV1_lag_cosine_swap_*` |
@@ -116,6 +118,7 @@ is ~78°, i.e. unmeasurable.
 | `fixed_subspace.frozen_perm_null` | `fixed_subspace.py` | Permutation test on a **frozen** fit's own canonical correlations, rank for rank |
 | `fixed_subspace.trial_lag_moments` / `curve_from_moments` | `fixed_subspace.py` | Per-(trial,lag) sufficient statistics; any subset's curve by masking. Makes uncapped runs tractable |
 | `lag_subspace.split_half_floor` | `lag_subspace.py` | Per-area noise floor for subspace angles |
+| `cc_aggregate.per_animal_mean` / `one_sample_by_pair` | `cc_aggregate.py` | Collapse an animal's CCs to one value (optionally CC-strength weighted) BEFORE any across-animal statistic; the per-pair one-sample *t* with BH-across-pairs as a sensitivity column. Used by both the analysis and the figure scripts so they cannot drift |
 
 **Two arithmetic traps that will bite you again if you forget them:**
 
@@ -145,7 +148,22 @@ is ~78°, i.e. unmeasurable.
 **Nulls (everything else):** per-CC IFI sign is at chance (item 1); FF/FB not separable as
 subspaces, 0/8 (item 2 session-level); FF/FB do not diverge with learning (item 2
 interaction, 0 survive FDR); no epoch effect through a frozen subspace, 0/32 (items 5/7);
-integration window vs IFI unchanged with learning (item 4).
+integration window vs IFI unchanged with learning (item 4); **all-CC IFI naive→expert
+0/8, both FS (08-07 ask 2)**.
+
+**Weak / uncorrected (08-07 ask 3):** the overall IFI at ±50 ms across all significant CCs —
+on the **12k-bin-capped curves = first ~20 trials**, n = animals with ≥ 1 sig. CC — is
+nominally non-zero on 2 of 4 looks (FS × weighting), same sign on all 4, for **CA1→RSC**
+(+0.226 p = 0.041 FS-excl; +0.157 p = 0.050 FS-incl) and **V1→RSC** (+0.120 p = 0.019
+FS-incl); DG→CA1 is 1/4 looks and not established. Nothing survives BH across the 8 pairs.
+The like-for-like comparator is CC₁ of the SAME table (`cc_ifi_cc1_test_*`: CA1-RSC +0.149
+p = 0.24 / +0.224 p = 0.019), **not** §B, which is a different sample (whole session).
+
+**A trap measured on this data (08-15):** on the all-trials frozen fit, curve height is
+lower in the naive epoch at EVERY lag — ~60 % a lag-independent baseline offset (slow
+co-modulation; speed the candidate); peak-minus-baseline expert − naive is null wherever
+n > 4; the held-out per-epoch refits show no strength change. Not learning. IFI (shape) is
+insensitive to scaling, not to an additive offset — fine here only because it is null.
 
 **Measured methodological facts you should not re-derive:**
 - Split-half |cos| of a canonical vector at a fixed lag: **CC1 0.59, CC2 0.39, CC3 0.26,

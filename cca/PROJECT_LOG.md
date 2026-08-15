@@ -12,7 +12,87 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-07) — Theo's four follow-ups done; ➜ READ `HANDOFF.md` FIRST
+## CURRENT STATE (2026-08-15) — the three 2026-08-07 meeting asks answered; ➜ READ `HANDOFF.md` FIRST
+
+**Nothing is running.** Meeting 2026-08-07 (Nathalie + Tom; handwritten note transcribed
+to the vault, `Projects/Hippocampus-V1/Meetings/2026-08-07-Hippocampus-V1-Meeting.md`)
+left three asks. All three are pure re-reductions of CSVs already on disk — no refits.
+
+| ask | built | verdict |
+|---|---|---|
+| 1. Add the **average IFI across all CCs** | `analyze_cc_ifi_signs.overall_by_animal` → `cc_ifi_overall_bin10*.csv`; black line on `HCV1_cc_ifi_windows_*` | Sits between the ± groups, tracks whichever sign dominates the pair |
+| 3. **IFI at ±50 ms — different from 0 overall?** | `overall_direction` → `cc_ifi_overall_test_bin10*.csv`; p in the panel titles; `cc_ifi_signs_tables.md` §OVERALL | **Weakly, and only for CA1→RSC and V1→RSC.** Of each pair's 4 looks (FS × weighting): CA1→RSC 2/4 nominal, all positive (+0.226 p=0.041 FS-excl unweighted; +0.157 p=0.050 FS-incl); V1→RSC 2/4, all positive (+0.120 p=0.019 FS-incl). DG→CA1 (p=0.040 FS-excl unweighted) is 1/4 looks — **not established**. **Nothing survives BH across the 8 pairs**, any look. ⚠ Data = the 12k-bin-capped curves = **first ~20 trials, ≤6 s each**; n = animals with ≥1 significant CC (CA1-RSC 8/12, CA1-V1 7/13 FS-excl) |
+| 2. **Cross-correlograms naive vs expert**, also split ±/FF-FB | new `analyze_cc_crosscorr_epochs.py` + `figs_cc_crosscorr_epochs.py` → `HCV1_cc_crosscorr_epochs_{,fffb_}*` | **IFI naive→expert null 0/8, both FS.** Curve *height* is lower in naive at EVERY lag — see the trap below: a baseline offset, not learning |
+
+**Decision taken with Theo (2026-08-15):** the "all CCs" average = **significant CCs only**
+(the same population as the sign-grouped lines), unweighted per-animal mean primary,
+CC-strength-weighted alongside. Every group line on the IFI-windows figure is now
+**per-animal-first** (was over (animal, dim) rows — dims-as-n bands); group means barely
+moved, bands widened. New shared helper `src/tom_cca/cc_aggregate.py`.
+
+### ⚠ NEW TRAP — curve height vs the naive epoch on the ALL-TRIALS frozen fit is a baseline offset
+
+Peak r "rises" expert − naive in **8/8 pairs, both FS** (5 at p < 0.05) on `cc_label_track`.
+Too clean → checked, then adversarially verified. What it actually is:
+- **~60 % of the naive deficit is a lag-INDEPENDENT offset** — the whole curve, baseline at
+  |lag| ≥ 200 ms included, sits lower in naive for the cortical pairs (CA1-RSC, CA1-V1,
+  V1-RSC, RSC-SUB). `curve_metrics` now splits height into `far_r` (baseline) and
+  `peak_minus_far` (coupling-specific): expert − naive on peak-minus-baseline is **null in
+  every pair with n > 4** (CA1-RSC p = 0.08, CA1-V1 0.49, CA1-DG 0.86, V1-RSC 0.20), while
+  the baseline carries the effect (CA1-V1 Δ+0.019 p = 0.002, CA1-RSC Δ+0.014 p = 0.03). Only
+  CA3-DG (n = 4) is peak-specific. A flat offset on frozen axes = slow co-modulation; **running
+  speed (+6.6 cm/s naive→expert) is the obvious candidate — still unmeasured (HANDOFF §6.1)**.
+- Cohort peak r is naive 0.052 → intermediate 0.067 → expert 0.067 (FS-incl 0.064 → 0.078 →
+  0.079); the naive→intermediate rise is **LP-independent** (per-animal Δ vs LP, ρ ≈ −0.01);
+  and the **held-out per-epoch refit arms show no naive deficit at all** (`epoch_metrics_bin10`
+  CC₁ 0.149/0.139/0.145, int − naive p = 0.84; `lag_subspaces_bin10_epochs` 0.149/0.170/0.147,
+  p = 0.97). That is the decisive evidence: coupling strength does not change; what changes
+  is how well one whole-session set of axes fits the session's opening.
+- "Intermediate already equals expert" (56 %/47 % of animal-pairs) is consistent but NOT
+  decisive on its own — they are adjacent 10-trial blocks; and the balanced-trial fit
+  (`fixed_subspace_stats`, Δpeak r mixed-sign n.s.) is CC₁-only on 600 bins/trial and a
+  30-trial fit set, so corroboration rather than a like-for-like control.
+- IFI is insensitive to proportional scaling but **not** to an additive offset (it shrinks
+  |IFI|); harmless here only because the contrast is null.
+**Applies equally to item 2's `cc_label_track_stats` per-label peak-r contrasts
+(`p_FF_peak_r` etc.).** → `GOTCHAS.md`. **Open item:** correlate per-animal Δspeed with the
+per-animal baseline offset (needs the speed trace per epoch, not yet exported).
+
+**Registered prior vs outcome (ask 3, FS-excl):** CA1-RSC positive-significant ✓;
+V1-RSC positive-significant ✗ (p = 0.16; FS-incl 0.019); CA1-SUB negative p ≈ .01–.1 ✗
+(−0.041, p = 0.39); "the other 5 n.s." ✗ — DG→CA1 −0.162 p = 0.040 (1 of 4 looks). Sign
+agrees with §B's CC₁ test in 7/8 pairs FS-excl (CA1-V1 flips) but only **6/8 FS-incl**
+(CA1-CA3, RSC-SUB flip), and 4 of the FS-excl agreements are with §B means ≤ 0.023 — weak
+evidence. ⚠ **§B is a different sample** (whole-session `run_ifi_windows`, ~370 k bins) from
+these curves (12k-bin cap = first ~20 trials); per animal-pair the two CC₁ IFIs correlate
+only r ≈ 0.4. The like-for-like comparator is **CC₁ of the same table**
+(`cc_ifi_cc1_test_bin10*.csv`): CA1-RSC +0.149 p = 0.24 (FS-excl) / +0.224 p = 0.019
+(FS-incl) — so the all-CC mean is 1.5× / 0.7× CC₁, **not** "2–3× because weak CCs" (an
+earlier draft of this entry said that; wrong).
+
+**Adversarial verification (workflow: 3 refuters recomputing from raw CSVs with their own
+code + a judge; 614 k tokens):** every number in `cc_ifi_overall*`, `cc_ifi_overall_test*`,
+`cc_crosscorr_epochs*` and `_stats_*` reproduced to float precision, per-animal-first
+everywhere, sign convention right, BH-none right — no CSV needed regenerating. Findings were
+about claims and guards, all fixed in `9dc50e5`: (1) §B comparator / "2–3×" wrong and the
+12k-bin cap unstated → same-table CC₁, cap and n/N now in the md; (2) the IFI-windows figure's
+"groups stay apart at other windows" was a **nesting artefact** — cumulative windows always
+contain the ±50 ms labelling lags; on the disjoint lags 60–250 ms the +/− gap collapses to ~0
+in every pair → reworded; (3) the naive deficit is mostly a baseline offset → `curve_metrics`;
+(4) "not learning" was right for weaker reasons than stated → held-out refit arms cited;
+(5)/(6) 32 looks in the OVERALL table, hits move with FS × weighting; n ≤ 4 rows no longer
+bolded; SEM bands only for n ≥ 3; (7) 7/8 sign agreement is FS-excl only; (8) `cc_aggregate`
+now raises if `sig_only` and no `sig` column, and on duplicate (pair, animal) rows.
+
+**Tests: 403 pass** (`cd cca && PYTHONPATH=src python -m pytest -q`, ~50 s).
+
+**Open threads unchanged:** speed confound (HANDOFF §6.1 — still the question to put to
+Nathalie/Tom); `MEETING_2026-08-07.md` stale; `fig_rotation_floor` 3-dim angle; Gini
+partner-invariance re-test; two direction discrepancies vs §3.0.
+
+---
+
+## ✓ DONE (2026-08-07) — Theo's four follow-ups done
 
 **New doc: `HANDOFF.md`** — the pipeline map (script → CSV → figure), the column
 dictionary, which numbers are trustworthy, and the traps. A cold session should read that

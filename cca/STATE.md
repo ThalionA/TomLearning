@@ -1,6 +1,6 @@
 # STATE — Tom-learning CCA project
 
-**Last updated:** 2026-07-28. This is the entry point. It reconciles the three analysis
+**Last updated:** 2026-08-15 (finding 3 gains the all-CC ±50 ms test; otherwise 2026-07-28). This is the entry point. It reconciles the three analysis
 arms, names the canonical configs, and states the findings honestly. `README.md` is
 quick-start; `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` are the design specs;
 `PROJECT_LOG.md` is the state of play; `NOTES.md` is the older chronological log. When they
@@ -98,6 +98,14 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    session-pooled: it speaks to the *existence* of a flow, not its change. Directional *change*
    with learning holds its sign but is weak and underpowered (n = 4–6/pair); the CA1→V1 IFI
    rise is the one slope supported at the honest unit and it is **FS-fragile** (null with FS in).
+   *Added 2026-08-15 (meeting ask 3):* the same question on the **average over all significant
+   CCs** (`cc_ifi_overall_test_bin10*.csv`) — ⚠ on the 12k-bin-capped curves, i.e. the **first
+   ~20 trials**, a different sample from the whole-session number above — is weaker: CA1→RSC
+   +0.226 p = 0.041 (FS-excl) / +0.157 p = 0.050 (FS-incl) and V1→RSC +0.120 p = 0.019
+   (FS-incl) are nominal on 2 of 4 looks each with consistent sign; DG→CA1 (p = 0.040, 1/4
+   looks) is not established; **nothing survives BH across the 8 pairs**. CC₁ alone on the
+   same capped data: CA1-RSC +0.149 p = 0.24 / +0.224 p = 0.019. Naive→expert on the all-CC
+   IFI: 0/8, both FS (ask 2).
 4. **Orientation: NULL — and it also does not change with LAG.** Cross-window rotation is at
    or below the split-half noise floor for every pair, both FS conditions (all p > 0.05). No
    reorientation. **This claim is safe because §G of `bin10_tables.md` tests it at CC₁**
