@@ -202,24 +202,81 @@ def overall_direction(per_animal: pd.DataFrame, window_bins: int = HEADLINE_W,
     return out
 
 
-def _md_overall(direction: pd.DataFrame, fs: str) -> str:
+def cc1_direction(tab: pd.DataFrame, window_bins: int = HEADLINE_W,
+                  min_n: int = 3) -> pd.DataFrame:
+    """The like-for-like CC₁ comparator for :func:`overall_direction`: dim 1 of the
+    SAME table (same 12k-bin subset, same estimator), every animal, one-sample *t*.
+
+    `bin10_tables.md` §B asks the same question of CC₁ but on the whole-session
+    `run_ifi_windows` arm (~370 k bins) — a different sample; per animal-pair the two
+    CC₁ IFIs correlate only r ≈ 0.4. Comparing the all-CC number to §B therefore
+    confounds "pooling CCs" with "which trials". This is the fair comparator.
+    """
+    d1 = tab[(tab["dim"] == 1) & (tab["window_bins"] == window_bins) &
+             (tab["degenerate"] == 0)][["animal", "pair", "ifi"]]
+    return cc_aggregate.one_sample_by_pair(d1, value="ifi", pairs=PAIRS, min_n=min_n)
+
+
+def _md_overall(direction: pd.DataFrame, cc1: pd.DataFrame, n_all: pd.Series,
+                fs: str) -> str:
     """Asks 1 + 3: the overall IFI at the headline window, per pair, vs 0."""
     lines = [f"#### {fs} — OVERALL IFI at ±{HEADLINE_W * BIN_MS} ms (all significant "
              "CCs pooled, unweighted per-animal mean) vs 0", "",
              "Per animal, the mean IFI over every CC that beats the per-dim null (not "
              "split by sign); then a one-sample *t* across animals, per pair. "
              "Positive ⇒ the first-named area leads. `w·` columns = the same with each "
-             "CC weighted by its held-out peak. Compare with `bin10_tables.md` §B, which "
-             "is the same question for CC₁ alone.", "",
-             "| pair | n | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) |",
-             "|---|---|---|---|---|---|---|---|---|"]
+             "CC weighted by its held-out peak.", "",
+             "> **Data:** the refit-per-lag curves are capped at 12 000 bins — the first "
+             "≤ 600 bins (6 s) of each of the **first ~20 trials** — so this is the "
+             "session's opening, not the whole session. **n** = animals with ≥ 1 "
+             "significant CC (of `N` recorded for the pair). **CC₁ (same data)** = the "
+             "like-for-like comparator: dim 1 of this same table, every animal — NOT "
+             "`bin10_tables.md` §B, which is CC₁ on the whole-session `run_ifi_windows` "
+             "arm (a different sample; the two correlate r ≈ 0.4 per animal-pair). "
+             "Bold = p < 0.05 on this single look; the pair has 4 looks in all "
+             "(FS-excl/incl × unweighted/weighted) — see the cross-FS summary below.", "",
+             "| pair | n / N | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | "
+             "p (weighted) | CC₁ (same data): mean, p, n |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
+    c1 = cc1.set_index("pair")
     for _, r in direction.iterrows():
         star = "**" if r["p"] < 0.05 else ""
+        if r["pair"] in c1.index:
+            c = c1.loc[r["pair"]]
+            c1s = f"{c['mean']:+.3f}, p={c['p']:.3g}, n={int(c['n'])}"
+        else:
+            c1s = "—"
         lines.append(
-            f"| {r['pair']} | {int(r['n'])} | {star}{r['mean']:+.3f}{star} | "
-            f"{r['sem']:.3f} | {r['t']:+.2f} | {star}{r['p']:.3g}{star} | "
-            f"{'yes' if bool(r['bh_pass']) else 'no'} | {r['wmean']:+.3f} | "
-            f"{r['wp']:.3g} |")
+            f"| {r['pair']} | {int(r['n'])} / {int(n_all.get(r['pair'], 0))} | "
+            f"{star}{r['mean']:+.3f}{star} | {r['sem']:.3f} | {r['t']:+.2f} | "
+            f"{star}{r['p']:.3g}{star} | {'yes' if bool(r['bh_pass']) else 'no'} | "
+            f"{r['wmean']:+.3f} | {r['wp']:.3g} | {c1s} |")
+    return "\n".join(lines) + "\n"
+
+
+def _md_overall_looks(odirs: dict[str, pd.DataFrame]) -> str:
+    """How many of a pair's four looks (FS × weighting) are nominally p < 0.05, and
+    whether the sign is consistent across them — the honest cross-FS summary."""
+    lines = ["#### OVERALL IFI at ±50 ms — the four looks per pair "
+             "(FS-excluded / FS-included × unweighted / weighted)", "",
+             "Nominal p < 0.05 counts; a direction is only worth stating when the sign "
+             "is the same in all four and more than one look is nominal.", "",
+             "| pair | looks p<0.05 (of 4) | signs (excl-u, excl-w, incl-u, incl-w) | "
+             "means |", "|---|---|---|---|"]
+    for pair in PAIRS:
+        ps, signs, means = [], [], []
+        for fs in ("FS-excluded", "FS-included"):
+            d = odirs.get(fs)
+            if d is None or pair not in set(d["pair"]):
+                continue
+            r = d[d["pair"] == pair].iloc[0]
+            for m, p in ((r["mean"], r["p"]), (r["wmean"], r["wp"])):
+                ps.append(p); signs.append("+" if m > 0 else "−"); means.append(m)
+        if not ps:
+            continue
+        k = int(sum(p < 0.05 for p in ps))
+        lines.append(f"| {pair} | {k}/{len(ps)} | {' '.join(signs)} | "
+                     f"{' / '.join(f'{m:+.3f}' for m in means)} |")
     return "\n".join(lines) + "\n"
 
 
@@ -385,6 +442,7 @@ def main():
           "> CC is negative at every lag clips to zero on both sides and returns IFI = 0 "
           "> for *no coupling* rather than *balanced*; those are flagged `degenerate` "
           "> and excluded from the sign counts.", ""]
+    odirs: dict[str, pd.DataFrame] = {}
     for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
         src = RES / f"lag_curves_bin10{suf}.csv"
         if not src.exists():
@@ -437,14 +495,22 @@ def main():
         odir = overall_direction(overall)
         odir.to_csv(RES / f"cc_ifi_overall_test_bin10{suf}.csv", index=False,
                     lineterminator="\n")
-        md.append(_md_overall(odir, fs))
+        cc1 = cc1_direction(tab)
+        cc1.to_csv(RES / f"cc_ifi_cc1_test_bin10{suf}.csv", index=False,
+                   lineterminator="\n")
+        n_all = tab.groupby("pair")["animal"].nunique()
+        md.append(_md_overall(odir, cc1, n_all, fs))
+        odirs[fs] = odir
         print(f"  overall IFI at ±{HEADLINE_W * BIN_MS} ms vs 0 (all sig CCs, "
-              f"animals-as-n):")
+              f"animals-as-n; first ~20 trials, 12k-bin cap):")
+        c1 = cc1.set_index("pair")
         for _, r in odir.iterrows():
             flag = " *" if r["p"] < 0.05 else ""
-            print(f"    {r['pair']:8s} n={int(r['n']):<2d} mean={r['mean']:+.3f} "
-                  f"t={r['t']:+.2f} p={r['p']:.3g}{flag}   "
-                  f"(weighted {r['wmean']:+.3f} p={r['wp']:.3g})")
+            c1s = (f"CC1 same data {c1.loc[r['pair'], 'mean']:+.3f} "
+                   f"p={c1.loc[r['pair'], 'p']:.3g}" if r["pair"] in c1.index else "")
+            print(f"    {r['pair']:8s} n={int(r['n']):<2d}/{int(n_all.get(r['pair'], 0)):<2d} "
+                  f"mean={r['mean']:+.3f} t={r['t']:+.2f} p={r['p']:.3g}{flag}   "
+                  f"(weighted {r['wmean']:+.3f} p={r['wp']:.3g}; {c1s})")
         md.append(_md(tab, counts, fs))
         md.append(_md_direction(direction, fs))
         md.append(_md_sweep(sweep, fs))
@@ -459,6 +525,8 @@ def main():
         deg_all = tab["degenerate"].mean()
         print(f"  degenerate (no coupling either way): "
               f"{deg:.0%} of leading-{LEAD_DIMS} rows, {deg_all:.0%} of all 30 dims")
+    if odirs:
+        md.append(_md_overall_looks(odirs))
     (RES / "cc_ifi_signs_tables.md").write_text("\n".join(md))
     print(f"\nwrote {RES / 'cc_ifi_signs_tables.md'}")
 

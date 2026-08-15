@@ -28,23 +28,29 @@ def per_animal_mean(tab: pd.DataFrame, value: str, by: Sequence[str],
                     drop_degenerate: bool = True) -> pd.DataFrame:
     """One row per (animal, pair, *by): the mean of ``value`` over that animal's CCs.
 
-    ``sig_only`` keeps rows with ``sig == 1``; ``drop_degenerate`` drops rows with
+    ``sig_only`` keeps rows with ``sig == 1`` and **raises** if the column is missing
+    — a table that was already gated upstream must say so with ``sig_only=False``,
+    never silently pass every rank through. ``drop_degenerate`` drops rows with
     ``degenerate == 1`` (present only in the IFI tables — ignored if the column is
     absent). Non-finite ``value`` rows are dropped; a cell left with no finite value
     is omitted rather than returned as NaN.
 
     Columns: ``animal, pair, *by, mean, n_ccs`` and, when ``weight`` is given,
     ``wmean`` — the mean weighted by ``max(weight, 0)`` (a negative held-out CC is
-    "no coupling", not negative evidence). ``wmean`` is NaN when every weight in
-    the cell clips to zero.
+    "no coupling", not negative evidence; a NaN weight also counts as 0, so that CC
+    still counts in ``n_ccs`` but not in ``wmean``). ``wmean`` is NaN when every
+    weight in the cell clips to zero.
     """
     keys = ["animal", "pair", *by]
     sub = tab.copy()
     sub[value] = pd.to_numeric(sub[value], errors="coerce")
-    if sig_only and "sig" in sub.columns:
-        sub = sub[sub["sig"] == 1]
+    if sig_only:
+        if "sig" not in sub.columns:
+            raise KeyError("per_animal_mean(sig_only=True) needs a `sig` column; pass "
+                           "sig_only=False for a table that was gated upstream")
+        sub = sub[pd.to_numeric(sub["sig"], errors="coerce") == 1]
     if drop_degenerate and "degenerate" in sub.columns:
-        sub = sub[sub["degenerate"] == 0]
+        sub = sub[pd.to_numeric(sub["degenerate"], errors="coerce") == 0]
     sub = sub[np.isfinite(sub[value])]
     if sub.empty:
         cols = keys + ["mean", "n_ccs"] + (["wmean"] if weight else [])
@@ -67,15 +73,21 @@ def one_sample_by_pair(per_animal: pd.DataFrame, value: str, pairs: Sequence[str
                        min_n: int = 3) -> pd.DataFrame:
     """Per pair: one-sample *t* of the per-animal ``value`` against 0.
 
-    ``per_animal`` must already be one row per animal within each pair (the output
-    of :func:`per_animal_mean` at a fixed window / epoch). Pairs with fewer than
-    ``min_n`` finite animals are skipped. Rows come back in the order of ``pairs``.
+    ``per_animal`` must be one row per animal within each pair (the output of
+    :func:`per_animal_mean` at a fixed window / epoch); a duplicate (pair, animal)
+    **raises**, because letting it through would silently make windows-as-n or
+    epochs-as-n out of an animals-as-n test. Pairs with fewer than ``min_n`` finite
+    animals are skipped. Rows come back in the order of ``pairs``.
 
     Columns: ``pair, n, mean, sem, t, p, bh_pass`` — ``bh_pass`` is Benjamini-
     Hochberg across the pairs returned. Project policy treats the 8 pairs as
     separate families with no cross-pair correction, so ``bh_pass`` is a
     sensitivity column, not the inferential statement.
     """
+    dup = per_animal.duplicated(subset=["pair", "animal"])
+    if dup.any():
+        raise ValueError(f"one_sample_by_pair: {int(dup.sum())} duplicate (pair, animal) "
+                         "rows — collapse to one value per animal first")
     rows = []
     for pair in pairs:
         v = pd.to_numeric(per_animal.loc[per_animal["pair"] == pair, value],

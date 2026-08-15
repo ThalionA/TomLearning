@@ -22,16 +22,35 @@ level with the held-out numbers elsewhere.
 ⚠ In the uncapped frozen fit almost every leading dim is "significant" (470/475
 cells FS-excl): the gate is nearly a no-op here, unlike in the refit-per-lag arm.
 
-⚠ LEVEL contrasts against the naive epoch are biased on this fit. Found while
-building this (2026-08-15): mean peak r is naive 0.052 → intermediate 0.067 →
-expert 0.068 — intermediate (pre-LP) already equals expert, and expert beats
-intermediate in only 56 % of animal-pairs. The first 10 trials are uniquely low
-because an all-trials fit represents the rest of the session better than the
-session's atypical opening; the BALANCED-trial frozen fit (`fixed_subspace_stats`)
-shows no such rise (Δpeak r mixed-sign, all n.s.). So: trust the IFI (a shape
-ratio, null here) for naive-vs-expert; read peak-r / curve-height differences as
-"first trials are different", not learning. The stats file carries
-intermediate − naive next to expert − naive as the built-in diagnostic.
+⚠ LEVEL contrasts against the naive epoch are NOT a learning readout on this fit.
+Found while building this (2026-08-15) and adversarially verified: mean peak r over
+animal-pairs is naive 0.052 → intermediate 0.067 → expert 0.067 (FS-incl 0.064 →
+0.078 → 0.079); intermediate > naive in 88 % of animal-pairs, expert > intermediate
+in 56 % / 47 % (chance). What the evidence supports:
+  * the naive deficit is ~60 % a lag-INDEPENDENT offset — the whole curve, baseline
+    at |lag| ≥ 200 ms included, sits lower in naive for the cortical pairs (CA1-RSC,
+    CA1-V1, V1-RSC, RSC-SUB); only CA3-DG (n = 4) shows a peak-specific change. A
+    flat offset on frozen axes is slow co-modulation, and running speed (+6.6 cm/s
+    naive→expert, HANDOFF §6.1) is the obvious candidate. `curve_metrics` therefore
+    reports peak r MINUS the far-lag baseline as the coupling-specific statistic;
+  * the naive→intermediate rise is independent of the learning point (per-animal
+    Δ(int − naive) vs LP: Spearman ρ ≈ −0.01, verifier check on
+    `trajectory_w15_bin10.csv`), and the HELD-OUT per-epoch REFIT arms show no
+    naive deficit at all — `epoch_metrics_bin10` CC₁ 0.149 / 0.139 / 0.145
+    (int − naive p = 0.84, exp − naive p = 0.91), `lag_subspaces_bin10_epochs`
+    lag-0 CC₁ 0.149 / 0.170 / 0.147 (p = 0.97), FS-incl likewise. That is the
+    decisive evidence: coupling strength does not change; what changes is how
+    well ONE whole-session set of axes fits the session's opening;
+  * intermediate ≈ expert on its own is NOT decisive — they are adjacent 10-trial
+    blocks, so gradual or pre-LP change would look the same; and the balanced-trial
+    frozen fit (`fixed_subspace_stats`, Δpeak r mixed-sign, all n.s.) is CC₁-only on
+    600 bins/trial and a 30-trial fit set, so it is corroboration, not a like-for-
+    like control.
+So: IFI (a shape ratio; insensitive to proportional scaling, though not to an
+additive baseline shift) is the naive-vs-expert statistic and is null; read curve
+height as "the first ~10 trials are different, mostly as an offset", not as
+learning. The stats file carries intermediate − naive next to expert − naive, and
+peak_minus_far / far_r next to peak_r, as the built-in diagnostics.
 
 Writes:
     results/cc_crosscorr_epochs_bin10{,_fsincl}.csv        per (animal, pair, epoch, group, lag)
@@ -99,6 +118,33 @@ def cross_animal(curves: pd.DataFrame, pair: str, epoch: str, group: str):
     return lags, mean, sem, int(piv.shape[0])
 
 
+def curve_metrics(curves: pd.DataFrame, group: str = "all", far_ms: int = 200) -> pd.DataFrame:
+    """Per (animal, pair, epoch): peak r, the far-lag baseline (mean r at
+    |lag| >= ``far_ms``) and their difference — from the per-animal mean curves.
+
+    ``peak_minus_far`` is the coupling-specific statistic: a lag-INDEPENDENT offset
+    of the whole cross-correlogram (slow co-modulation on the frozen axes — running
+    speed is the obvious candidate) moves ``peak_r`` and ``far_r`` together and leaves
+    this unchanged; a change in lagged coupling moves it. Verifiers found (2026-08-15)
+    that ~60 % of the naive-vs-later peak-r difference is such an offset in the
+    cortical pairs, so peak r alone overstates what changed.
+    """
+    sub = curves[curves["group"] == group]
+    rows = []
+    for (an, pair, ep), g in sub.groupby(["animal", "pair", "epoch"]):
+        r = pd.to_numeric(g["r_mean"], errors="coerce").to_numpy(float)
+        lag = g["lag_ms"].to_numpy(float)
+        ok = np.isfinite(r)
+        if not ok.any():
+            continue
+        far = ok & (np.abs(lag) >= far_ms)
+        far_r = float(np.mean(r[far])) if far.any() else np.nan
+        peak = float(np.max(r[ok]))
+        rows.append({"animal": an, "pair": pair, "epoch": ep, "peak_r": peak,
+                     "far_r": far_r, "peak_minus_far": peak - far_r})
+    return pd.DataFrame(rows)
+
+
 def epoch_contrast(reduced: pd.DataFrame, metric: str, pairs=PAIRS,
                    a: str = "naive", b: str = "expert", min_n: int = 3) -> pd.DataFrame:
     """Per pair: paired *t* of (``b`` − ``a``) on the per-animal mean of ``metric``
@@ -109,7 +155,10 @@ def epoch_contrast(reduced: pd.DataFrame, metric: str, pairs=PAIRS,
     Animals lacking either epoch are dropped. Eight pairs = eight families
     (project policy); ``bh_pass`` across pairs is a sensitivity column.
     """
+    # `cc_label_track_epoch_*` was written sig-gated by analyze_cc_label_track
+    # (reduce_curves, sig_only=True) and carries no `sig` column — say so explicitly.
     pa = cc_aggregate.per_animal_mean(reduced, value=metric, by=["epoch"],
+                                      sig_only="sig" in reduced.columns,
                                       drop_degenerate=False)
     rows = []
     for pair in pairs:
@@ -117,14 +166,14 @@ def epoch_contrast(reduced: pd.DataFrame, metric: str, pairs=PAIRS,
                                                values="mean")
         if a not in w.columns or b not in w.columns:
             continue
-        d = (w[b] - w[a]).to_numpy(float)
-        d = d[np.isfinite(d)]
-        if d.size < min_n:
+        both = np.isfinite(w[a].to_numpy(float)) & np.isfinite(w[b].to_numpy(float))
+        if both.sum() < min_n:
             continue
-        n, _, t, p = paired_stats.paired_t(d)
+        va, vb = w[a].to_numpy(float)[both], w[b].to_numpy(float)[both]
+        n, _, t, p = paired_stats.paired_t(vb - va)
         rows.append({"pair": pair, "metric": metric, "contrast": f"{b}-{a}", "n": int(n),
-                     "mean_a": float(np.nanmean(w[a])), "mean_b": float(np.nanmean(w[b])),
-                     "delta": float(np.mean(d)), "t": t, "p": p})
+                     "mean_a": float(va.mean()), "mean_b": float(vb.mean()),
+                     "delta": float((vb - va).mean()), "t": t, "p": p})
     out = pd.DataFrame(rows)
     if not out.empty:
         out["bh_pass"] = paired_stats.fdr_bh(out["p"].to_numpy(float))
@@ -139,16 +188,19 @@ def _md(stats: pd.DataFrame, curves: pd.DataFrame, fs: str, label_col: str) -> s
              f"reduction already in `cc_label_track_epoch_*` (IFI at ±50 ms; peak r). "
              f"Positive IFI ⇒ first-named area leads. Per-pair families; BH across the "
              f"8 pairs is a sensitivity column.", "",
-             "> ⚠ **Read peak-r (level) contrasts against naive with the caveat in the "
-             "script docstring:** on this all-trials fit the naive epoch is uniquely "
-             "low and intermediate (pre-LP) already equals expert — `intermediate-naive` "
-             "is printed next to `expert-naive` so that is visible. The balanced-trial "
-             "frozen fit shows no peak-r rise. IFI (a shape ratio) is the trustworthy "
-             "naive-vs-expert statistic here.", "",
+             "> ⚠ **Curve-height (peak r) contrasts against naive are not a learning "
+             "readout on this all-trials fit** — see the script docstring: naive is "
+             "uniquely low, ~60 % of that is a lag-independent OFFSET (`far_r`, the "
+             "|lag| ≥ 200 ms baseline, moves with it — slow co-modulation, speed the "
+             "obvious candidate), the rise is LP-independent, and intermediate (pre-LP) "
+             "already equals expert. `peak_minus_far` is the coupling-specific "
+             "statistic; `intermediate-naive` sits next to `expert-naive`. IFI (shape) "
+             "is the naive-vs-expert statistic and is null.", "",
+             "> Rows with n ≤ 4 animals (3 df) are descriptive and are not bolded.", "",
              "| pair | n | metric | contrast | a | b | Δ (b − a) | t | p | BH |",
              "|---|---|---|---|---|---|---|---|---|---|"]
     for _, r in stats.iterrows():
-        star = "**" if r["p"] < 0.05 else ""
+        star = "**" if (r["p"] < 0.05 and r["n"] > 4) else ""
         lines.append(f"| {r['pair']} | {int(r['n'])} | {r['metric']} | {r['contrast']} | "
                      f"{r['mean_a']:+.3f} | {r['mean_b']:+.3f} | "
                      f"{star}{r['delta']:+.3f}{star} | {r['t']:+.2f} | "
@@ -189,9 +241,12 @@ def main():
                       lineterminator="\n")
         red = pd.read_csv(red_src)
         # the epoch file has no `sig` column: it was written sig-gated already
+        cm = curve_metrics(curves)
         stats = pd.concat(
             [epoch_contrast(red, "ifi"), epoch_contrast(red, "peak_r"),
-             epoch_contrast(red, "peak_r", a="naive", b="intermediate")],
+             epoch_contrast(red, "peak_r", a="naive", b="intermediate"),
+             epoch_contrast(cm, "far_r"), epoch_contrast(cm, "peak_minus_far"),
+             epoch_contrast(cm, "peak_minus_far", a="naive", b="intermediate")],
             ignore_index=True)
         stats.to_csv(RES / f"cc_crosscorr_epochs_stats{tag}_bin10{suf}.csv",
                      index=False, lineterminator="\n")
@@ -207,10 +262,16 @@ def main():
                   f"n={int(r['n']):<2d} Δ={r['delta']:+.3f} t={r['t']:+.2f} "
                   f"p={r['p']:.3g}{flag}")
         lvl = red.groupby(["animal", "pair", "epoch"])["peak_r"].mean().unstack("epoch")
-        print(f"  ⚠ level check — cohort mean peak r: naive {lvl['naive'].mean():.3f} → "
-              f"intermediate {lvl['intermediate'].mean():.3f} → expert "
-              f"{lvl['expert'].mean():.3f}; expert>intermediate in "
+        print(f"  ⚠ level check (mean over animal-pairs) — peak r: naive "
+              f"{lvl['naive'].mean():.3f} → intermediate {lvl['intermediate'].mean():.3f} "
+              f"→ expert {lvl['expert'].mean():.3f}; expert>intermediate in "
               f"{(lvl['expert'] > lvl['intermediate']).mean():.0%} of animal-pairs")
+        off = cm.pivot_table(index=["animal", "pair"], columns="epoch",
+                             values=["far_r", "peak_minus_far"])
+        d_far = (off["far_r"]["intermediate"] - off["far_r"]["naive"]).mean()
+        d_pmf = (off["peak_minus_far"]["intermediate"] - off["peak_minus_far"]["naive"]).mean()
+        print(f"  ⚠ offset check — int − naive: far-lag baseline Δ{d_far:+.4f}, "
+              f"peak-minus-baseline Δ{d_pmf:+.4f} (mean over animal-pairs)")
     (RES / f"cc_crosscorr_epochs{tag}_tables.md").write_text("\n".join(md))
     print(f"\nwrote {RES / f'cc_crosscorr_epochs{tag}_tables.md'}")
 

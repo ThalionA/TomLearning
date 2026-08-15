@@ -109,6 +109,29 @@ def test_epoch_contrast_recovers_a_planted_shift():
     assert np.isnan(out2.iloc[0]["p"])
 
 
+def test_curve_metrics_separate_an_offset_from_a_peak():
+    """A curve that is a flat 0.05 offset above another has the same peak-minus-
+    baseline; a curve with a taller peak on the same baseline does not."""
+    lags = np.arange(-250, 251, 10)
+    base = lambda l: 0.10 * np.exp(-(l / 40.0) ** 2)                 # peak 0.10, far 0
+    rows = []
+    for l in lags:
+        rows.append(dict(animal="A", pair="CA1-RSC", group="all", epoch="naive",
+                         lag_ms=int(l), r_mean=base(l), n_ccs=3))
+        rows.append(dict(animal="A", pair="CA1-RSC", group="all", epoch="expert",
+                         lag_ms=int(l), r_mean=base(l) + 0.05, n_ccs=3))       # offset
+        rows.append(dict(animal="A", pair="CA1-RSC", group="all", epoch="intermediate",
+                         lag_ms=int(l), r_mean=1.5 * base(l), n_ccs=3))         # taller
+    cur = pd.DataFrame(rows)
+    m = A.curve_metrics(cur, far_ms=200).set_index("epoch")
+    assert m.loc["naive", "peak_r"] == pytest.approx(0.10)
+    assert m.loc["expert", "peak_r"] == pytest.approx(0.15)
+    assert m.loc["expert", "far_r"] == pytest.approx(0.05, abs=1e-6)
+    assert m.loc["expert", "peak_minus_far"] == pytest.approx(
+        m.loc["naive", "peak_minus_far"], abs=1e-6)                       # offset cancels
+    assert m.loc["intermediate", "peak_minus_far"] == pytest.approx(0.15, abs=1e-6)
+
+
 def test_epoch_contrast_needs_both_epochs_per_animal():
     red = pd.DataFrame([
         dict(animal="a", pair="CA1-RSC", dim=1, epoch="naive", ifi=0.0, peak_r=0.1, sig=1),

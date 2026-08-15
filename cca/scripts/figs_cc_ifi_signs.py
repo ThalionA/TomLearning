@@ -80,9 +80,13 @@ def fig_windows(df: pd.DataFrame, fs: str, overall_test: pd.DataFrame | None = N
 
     ⚠ The +/− split is CIRCULAR at the reference window itself — those CCs were
     selected for being above/below zero there, so a gap at the dotted line is
-    guaranteed and means nothing. What is informative is whether the two groups stay
-    apart at the OTHER windows, where the classification did not look. The all-CC line
-    is NOT circular: it never looked at the sign.
+    guaranteed and means nothing. ⚠ And because the windows are CUMULATIVE
+    (|lag| <= w), every wider window still CONTAINS the labelling lags, which carry
+    the largest CCs — so the groups staying apart at w > 50 ms is mostly the same
+    circularity leaking outward, not independent evidence (verified 2026-08-15: on
+    the DISJOINT lags 60–250 ms alone the +/− gap collapses to ~0 in every pair).
+    The all-CC line is not sign-circular: it never looked at the sign — though its
+    population is still 'CCs significant at lag 0', i.e. the better-coupled cells.
     """
     fig, axes = figstyle.grid(len(PAIRS), ncols=4)
     for ax, pair in zip(axes, PAIRS):
@@ -92,9 +96,10 @@ def fig_windows(df: pd.DataFrame, fs: str, overall_test: pd.DataFrame | None = N
         if sub.empty:
             ax.set_title(f"{pair}\n(no significant CCs)", fontsize=9)
             ax.axis("off"); continue
-        # label each (animal, CC) by its sign at the reference window
+        # label each (animal, CC) by its sign at the reference window; the ALL group
+        # takes every finite CC there (an exact 0 has no sign but is still a CC)
         ref = sub[sub["window_bins"] == REF_W].set_index(["animal", "dim"])["ifi"]
-        ref = ref[np.isfinite(ref) & (ref != 0)]
+        ref = ref[np.isfinite(ref)]
         if ref.empty:
             ax.set_title(f"{pair}\n(no usable CCs)", fontsize=9)
             ax.axis("off"); continue
@@ -136,11 +141,13 @@ def fig_windows(df: pd.DataFrame, fs: str, overall_test: pd.DataFrame | None = N
         ax.set_ylabel(f"IFI   +: {x_lead} leads", fontsize=8)
         ax.legend(fontsize=5.2, loc="best", framealpha=0.6)
     fig.suptitle(f"IFI vs integration window, significant CCs — {fs} | red/blue = CCs "
-                 f"grouped by IFI sign at the dotted line (±{REF_W * BIN_MS} ms; that split "
-                 f"is circular there), black = ALL significant CCs (not circular)\n"
+                 f"grouped by IFI sign at the dotted line (±{REF_W * BIN_MS} ms): circular "
+                 f"there AND leaking outward, since every wider window still contains those "
+                 f"lags; black = ALL significant CCs (not sign-circular)\n"
                  f"solid = CC-strength weighted, dashed = unweighted ± SEM, per-animal-first "
                  f"| title: one-sample t of the all-CC mean vs 0 at ±{REF_W * BIN_MS} ms, "
-                 f"animals-as-n, no cross-pair correction", fontsize=10)
+                 f"animals-as-n (n = animals with ≥1 sig. CC), no cross-pair correction | "
+                 f"data = first ~20 trials (12k-bin cap)", fontsize=10)
     figstyle.save(fig, ATT / f"HCV1_cc_ifi_windows_{fs}_bin10.png")
     print(f"wrote HCV1_cc_ifi_windows_{fs}_bin10.png")
 

@@ -6,11 +6,13 @@ and its *_stats_* file for the panel titles.
 
 Figure 1  HCV1_cc_crosscorr_epochs_<fs>_bin10
           Per pair, mean r(lag) over ALL of an animal's significant CCs, then across
-          animals ± SEM: naive (blue) vs expert (red) bold, intermediate thin grey.
-          Title carries the expert − naive paired t on the all-CC IFI at ±50 ms and on
-          peak r, PLUS intermediate − naive on peak r — the built-in diagnostic that
-          the curve-height difference is a first-trials/fit-set effect (intermediate,
-          pre-LP, already sits with expert), not learning.
+          animals ± SEM: naive (blue) vs expert (red) bold with SEM bands,
+          intermediate thin grey (mean only, no band). Title carries the expert −
+          naive paired t on (i) the all-CC IFI at ±50 ms — the naive-vs-expert
+          statistic — and (ii) the two halves of the curve-height difference: peak
+          MINUS the |lag| ≥ 200 ms baseline (coupling-specific) and the baseline
+          itself (a lag-independent offset = slow co-modulation, speed the obvious
+          candidate). SEM bands are drawn only when n ≥ 3 animals.
 
 Figure 2  HCV1_cc_crosscorr_epochs_fffb_<fs>_bin10
           The same, split by the whole-session FF/FB label (identical to slide 10 of
@@ -57,14 +59,14 @@ def _fmt(row, name):
     return f"{name} Δ{row['delta']:+.3f} p={row['p']:.2g}{star}"
 
 
-def _draw(ax, curves, pair, epoch, group, ls, lw, alpha, label):
+def _draw(ax, curves, pair, epoch, group, ls, lw, alpha, label, band=True):
     lags, mean, sem, n = cross_animal(curves, pair, epoch, group)
     if n == 0:
         return 0
     c = EPOCH_COLOUR[epoch]
     ax.plot(lags, mean, ls, color=c, lw=lw, alpha=alpha, zorder=3,
-            label=f"{label} (n={n})")
-    if lw >= 1.6:
+            label=f"{label} (n={n})" + ("" if band else ", mean only"))
+    if band and n >= 3:                    # an SEM from 2 animals is not a band
         ax.fill_between(lags, mean - sem, mean + sem, color=c, alpha=0.14, zorder=2)
     return n
 
@@ -75,27 +77,33 @@ def fig_all(curves: pd.DataFrame, stats: pd.DataFrame, fs: str):
         x_lead = pair.split("-")[0]
         drawn = 0
         for epoch in EPOCHS:
-            lw, alpha = (1.1, 0.9) if epoch == "intermediate" else (2.0, 1.0)
-            drawn += _draw(ax, curves, pair, epoch, "all", "-", lw, alpha, epoch)
+            mid = epoch == "intermediate"
+            drawn += _draw(ax, curves, pair, epoch, "all", "-",
+                           1.1 if mid else 2.0, 0.9 if mid else 1.0, epoch, band=not mid)
         if drawn == 0:
             ax.set_title(f"{pair}\n(no data)", fontsize=9); ax.axis("off"); continue
         ax.axvline(0, color="k", lw=0.7, ls=":", zorder=0)
         ax.axhline(0, color="k", lw=0.7, ls=":", zorder=0)
         ax.axvspan(-HEADLINE_MS, HEADLINE_MS, color="#000", alpha=0.03, zorder=0)
         t1 = _fmt(_p(stats, pair, "ifi", "expert-naive"), "IFI@±50 exp−naive")
-        t2 = _fmt(_p(stats, pair, "peak_r", "expert-naive"), "peak r exp−naive")
-        t3 = _fmt(_p(stats, pair, "peak_r", "intermediate-naive"), "peak r int−naive")
-        ax.set_title(f"{pair}\n{t1}\n{t2} · {t3}", fontsize=8)
+        t2 = _fmt(_p(stats, pair, "peak_minus_far", "expert-naive"), "peak−baseline")
+        t3 = _fmt(_p(stats, pair, "far_r", "expert-naive"), "baseline offset")
+        ax.set_title(f"{pair}\n{t1}\nexp−naive: {t2} · {t3}", fontsize=8)
         ax.set_xlabel(f"lag (ms)   +: {x_lead} leads", fontsize=8)
         ax.set_ylabel("mean r over sig. CCs (frozen, in-sample)", fontsize=8)
         ax.legend(fontsize=6.5, loc="upper right", framealpha=0.6)
+    ifi_rows = stats[(stats["metric"] == "ifi") & (stats["contrast"] == "expert-naive")]
+    n_ifi_hits = int((ifi_rows["p"] < 0.05).sum())
     fig.suptitle(f"Cross-correlograms by learning epoch, all significant CCs — {fs} | "
-                 f"frozen axes (same components every epoch), per-animal-first mean ± SEM\n"
-                 f"⚠ curve HEIGHT: naive is uniquely low on this all-trials fit — "
-                 f"intermediate (pre-LP) already equals expert, and the balanced-trial "
-                 f"fit shows no rise — read height as 'first trials differ', not learning; "
-                 f"IFI (shape) is the naive-vs-expert statistic and is null",
-                 fontsize=10)
+                 f"frozen axes (same components every epoch), per-animal-first mean ± SEM"
+                 f" (bands only for n ≥ 3)\n"
+                 f"IFI@±50 ms expert−naive: {n_ifi_hits}/{len(ifi_rows)} pairs p<0.05 — "
+                 f"the naive-vs-expert statistic. Curve HEIGHT is not: naive sits low at "
+                 f"EVERY lag on this all-trials fit\n(a baseline offset = slow "
+                 f"co-modulation, speed the obvious candidate; LP-independent; held-out "
+                 f"refits show no strength change) — titles split height into "
+                 f"peak−baseline (coupling-specific) vs baseline (offset)",
+                 fontsize=9.5)
     figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
     print(f"wrote HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
 
@@ -119,12 +127,12 @@ def fig_fffb(curves: pd.DataFrame, fs: str):
         ax.set_ylabel("mean r over sig. CCs (frozen, in-sample)", fontsize=8)
         ax.legend(fontsize=6.5, loc="upper right", framealpha=0.6, ncol=2)
     fig.suptitle(f"Cross-correlograms, naive vs expert, split by FF/FB label — {fs} | "
-                 f"solid = +IFI-labelled (FF, {'first'} area leads), dashed = −IFI-labelled "
+                 f"solid = +IFI-labelled (FF, first area leads), dashed = −IFI-labelled "
                  f"(FB); label from the whole-session fit at ±{HEADLINE_MS} ms (as on "
                  f"slide 10), so the asymmetry inside the shaded band is circular by "
-                 f"construction\nper-animal-first mean ± SEM; frozen axes; the naive-"
-                 f"vs-expert height caveat of the all-CC figure applies here too",
-                 fontsize=10)
+                 f"construction\nper-animal-first mean ± SEM (bands only for n ≥ 3); "
+                 f"frozen axes; the naive-vs-expert height caveat of the all-CC figure "
+                 f"applies here too", fontsize=10)
     figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_fffb_{fs}_bin10.png")
     print(f"wrote HCV1_cc_crosscorr_epochs_fffb_{fs}_bin10.png")
 

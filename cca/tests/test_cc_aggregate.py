@@ -62,6 +62,23 @@ def test_gates_can_be_switched_off():
     assert out.iloc[0]["mean"] == pytest.approx(0.3)
 
 
+def test_missing_sig_column_raises_rather_than_passing_every_rank():
+    """A table gated upstream must SAY so (sig_only=False); silently including all
+    ranks would defeat the 'significant CCs only' decision without a trace."""
+    tab = pd.DataFrame(_rows("A", "CA1-RSC", [0.2, 0.4])).drop(columns="sig")
+    with pytest.raises(KeyError):
+        agg.per_animal_mean(tab, value="ifi", by=["window_bins"])
+    out = agg.per_animal_mean(tab, value="ifi", by=["window_bins"], sig_only=False)
+    assert out.iloc[0]["mean"] == pytest.approx(0.3)
+
+
+def test_string_typed_sig_column_is_coerced_not_silently_emptied():
+    tab = pd.DataFrame(_rows("A", "CA1-RSC", [0.2, 0.4]))
+    tab["sig"] = tab["sig"].astype(str)
+    out = agg.per_animal_mean(tab, value="ifi", by=["window_bins"])
+    assert out.iloc[0]["mean"] == pytest.approx(0.3)
+
+
 def test_weighted_mean_uses_clipped_weights():
     """Weights are held-out CC peaks; a negative one means 'no coupling' and must
     contribute nothing (clip at 0), not pull the mean the wrong way."""
@@ -147,6 +164,15 @@ def test_one_sample_skips_pairs_with_too_few_animals():
     out = agg.one_sample_by_pair(pa, value="mean", pairs=["CA1-RSC", "CA1-DG"],
                                  min_n=3)
     assert out["pair"].tolist() == ["CA1-DG"]
+
+
+def test_one_sample_refuses_more_than_one_row_per_animal():
+    """Two windows' worth of per-animal rows passed straight in would silently be
+    windows-as-n — exactly the pseudoreplication the helper exists to prevent."""
+    pa = pd.concat([_per_animal("CA1-RSC", [0.1, 0.2, 0.3]),
+                    _per_animal("CA1-RSC", [0.1, 0.2, 0.3])], ignore_index=True)
+    with pytest.raises(ValueError):
+        agg.one_sample_by_pair(pa, value="mean", pairs=["CA1-RSC"])
 
 
 def test_one_sample_keeps_requested_pair_order():
