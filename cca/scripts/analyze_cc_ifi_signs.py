@@ -15,10 +15,18 @@ The question is descriptive, so the output is descriptive: per pair, how many ca
 dimensions carry a positive vs a negative IFI, and whether both signs co-occur within the
 same animal and pair.
 
+2026-08-07 meeting follow-ups (asks 1 and 3): the OVERALL IFI — the ungrouped mean over
+all of an animal's significant CCs — alongside the sign-split, and a one-sample test of it
+against 0 at the headline ±50 ms window, animals-as-n (`overall_by_animal`,
+`overall_direction`). Unweighted per-animal mean is primary; the CC-strength-weighted mean
+is carried alongside.
+
 Writes:
-    results/cc_ifi_windows_bin10{,_fsincl}.csv   one row per (animal, pair, dim, window)
-    results/cc_ifi_signs_bin10{,_fsincl}.csv     per (animal, pair, window) sign counts
-    results/cc_ifi_signs_tables.md               per-pair summary, both FS
+    results/cc_ifi_windows_bin10{,_fsincl}.csv       one row per (animal, pair, dim, window)
+    results/cc_ifi_signs_bin10{,_fsincl}.csv         per (animal, pair, window) sign counts
+    results/cc_ifi_overall_bin10{,_fsincl}.csv       per (animal, pair, window) all-CC mean
+    results/cc_ifi_overall_test_bin10{,_fsincl}.csv  per pair, all-CC IFI @ ±50 ms vs 0
+    results/cc_ifi_signs_tables.md                   per-pair summary, both FS
 
 Usage: PYTHONPATH=src python scripts/analyze_cc_ifi_signs.py
 """
@@ -31,7 +39,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import perdim_ifi  # noqa: E402
+from tom_cca import cc_aggregate, perdim_ifi  # noqa: E402
 
 RES = Path(__file__).resolve().parents[1] / "results"
 PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
@@ -156,6 +164,63 @@ def dim_direction(tab: pd.DataFrame, window_bins: int = HEADLINE_W) -> pd.DataFr
         g["fdr_pass"] = paired_stats.fdr_bh(g["p"].to_numpy(float))
         keep.append(g)
     return pd.concat(keep, ignore_index=True)
+
+
+def overall_by_animal(tab: pd.DataFrame) -> pd.DataFrame:
+    """Ask 1 (2026-08-07): the average IFI across ALL of an animal's significant CCs.
+
+    Per (animal, pair, window): ``mean_ifi`` = plain mean over the CCs that beat the
+    per-dim null and are not degenerate — the same population as the +IFI / −IFI
+    groups in the figure, just not split by sign; ``wmean_ifi`` = the same mean
+    weighted by each CC's held-out peak (clipped at 0); ``n_ccs`` = how many CCs.
+
+    Collapsing to one value per animal here is what makes the downstream test
+    animals-as-n rather than dims-as-n.
+    """
+    pa = cc_aggregate.per_animal_mean(tab, value="ifi", by=["window_bins", "window_ms"],
+                                      weight="cc_peak")
+    return pa.rename(columns={"mean": "mean_ifi", "wmean": "wmean_ifi"})
+
+
+def overall_direction(per_animal: pd.DataFrame, window_bins: int = HEADLINE_W,
+                      min_n: int = 3) -> pd.DataFrame:
+    """Ask 3 (2026-08-07): is the overall IFI at ±50 ms different from 0?
+
+    One-sample *t* across animals of each animal's all-significant-CC mean IFI at
+    the fixed headline window, per pair. The unweighted mean (``mean``, ``t``,
+    ``p``) is the primary statement; the CC-strength-weighted version (``wmean``,
+    ``wt``, ``wp``) is reported alongside. Eight pairs = eight per-pair families
+    (project policy); ``bh_pass`` across pairs is a sensitivity column only.
+    """
+    at = per_animal[per_animal["window_bins"] == window_bins]
+    un = cc_aggregate.one_sample_by_pair(at, value="mean_ifi", pairs=PAIRS, min_n=min_n)
+    wt = cc_aggregate.one_sample_by_pair(at, value="wmean_ifi", pairs=PAIRS, min_n=min_n)
+    wt = wt.rename(columns={"n": "wn", "mean": "wmean", "sem": "wsem", "t": "wt",
+                            "p": "wp", "bh_pass": "wbh_pass"})
+    out = un.merge(wt, on="pair", how="left")
+    out.insert(1, "window_ms", int(window_bins) * BIN_MS)
+    return out
+
+
+def _md_overall(direction: pd.DataFrame, fs: str) -> str:
+    """Asks 1 + 3: the overall IFI at the headline window, per pair, vs 0."""
+    lines = [f"#### {fs} — OVERALL IFI at ±{HEADLINE_W * BIN_MS} ms (all significant "
+             "CCs pooled, unweighted per-animal mean) vs 0", "",
+             "Per animal, the mean IFI over every CC that beats the per-dim null (not "
+             "split by sign); then a one-sample *t* across animals, per pair. "
+             "Positive ⇒ the first-named area leads. `w·` columns = the same with each "
+             "CC weighted by its held-out peak. Compare with `bin10_tables.md` §B, which "
+             "is the same question for CC₁ alone.", "",
+             "| pair | n | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) |",
+             "|---|---|---|---|---|---|---|---|---|"]
+    for _, r in direction.iterrows():
+        star = "**" if r["p"] < 0.05 else ""
+        lines.append(
+            f"| {r['pair']} | {int(r['n'])} | {star}{r['mean']:+.3f}{star} | "
+            f"{r['sem']:.3f} | {r['t']:+.2f} | {star}{r['p']:.3g}{star} | "
+            f"{'yes' if bool(r['bh_pass']) else 'no'} | {r['wmean']:+.3f} | "
+            f"{r['wp']:.3g} |")
+    return "\n".join(lines) + "\n"
 
 
 def _md(tab: pd.DataFrame, counts: pd.DataFrame, fs: str) -> str:
@@ -365,6 +430,21 @@ def main():
                 f"({summ['exp_frac']:.0%})**\n"
                 f"- binomial test: **p = {summ['p']:.3f}**\n\n"
                 f"**Verdict: sign-mixing is indistinguishable from a coin flip.**\n")
+        # 2026-08-07 asks 1 + 3: the ungrouped (all significant CCs) mean and its test
+        overall = overall_by_animal(tab)
+        overall.to_csv(RES / f"cc_ifi_overall_bin10{suf}.csv", index=False,
+                       lineterminator="\n")
+        odir = overall_direction(overall)
+        odir.to_csv(RES / f"cc_ifi_overall_test_bin10{suf}.csv", index=False,
+                    lineterminator="\n")
+        md.append(_md_overall(odir, fs))
+        print(f"  overall IFI at ±{HEADLINE_W * BIN_MS} ms vs 0 (all sig CCs, "
+              f"animals-as-n):")
+        for _, r in odir.iterrows():
+            flag = " *" if r["p"] < 0.05 else ""
+            print(f"    {r['pair']:8s} n={int(r['n']):<2d} mean={r['mean']:+.3f} "
+                  f"t={r['t']:+.2f} p={r['p']:.3g}{flag}   "
+                  f"(weighted {r['wmean']:+.3f} p={r['wp']:.3g})")
         md.append(_md(tab, counts, fs))
         md.append(_md_direction(direction, fs))
         md.append(_md_sweep(sweep, fs))

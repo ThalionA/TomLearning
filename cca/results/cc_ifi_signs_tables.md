@@ -17,6 +17,21 @@ Each animal contributes only the CCs that beat the circular-shift null. Chance i
 
 **Verdict: sign-mixing is indistinguishable from a coin flip.**
 
+#### FS-excluded — OVERALL IFI at ±50 ms (all significant CCs pooled, unweighted per-animal mean) vs 0
+
+Per animal, the mean IFI over every CC that beats the per-dim null (not split by sign); then a one-sample *t* across animals, per pair. Positive ⇒ the first-named area leads. `w·` columns = the same with each CC weighted by its held-out peak. Compare with `bin10_tables.md` §B, which is the same question for CC₁ alone.
+
+| pair | n | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) |
+|---|---|---|---|---|---|---|---|---|
+| CA1-RSC | 8 | **+0.226** | 0.090 | +2.50 | **0.0409** | no | +0.218 | 0.0503 |
+| CA1-CA3 | 6 | -0.095 | 0.043 | -2.20 | 0.0788 | no | -0.091 | 0.0408 |
+| CA1-DG | 9 | **-0.162** | 0.066 | -2.46 | **0.0395** | no | -0.143 | 0.0674 |
+| CA1-V1 | 7 | -0.111 | 0.050 | -2.22 | 0.0685 | no | -0.100 | 0.0375 |
+| CA3-DG | 5 | -0.053 | 0.056 | -0.96 | 0.391 | no | -0.033 | 0.578 |
+| CA1-SUB | 6 | -0.041 | 0.044 | -0.94 | 0.391 | no | -0.075 | 0.142 |
+| RSC-SUB | 7 | +0.003 | 0.060 | +0.05 | 0.964 | no | +0.007 | 0.91 |
+| V1-RSC | 8 | +0.089 | 0.057 | +1.56 | 0.163 | no | +0.116 | 0.0589 |
+
 ### FS-excluded — do CCs within a pair disagree in sign?
 
 Leading 5 canonical dims, integration window ±50 ms. `mixed` = that animal has at least one positive-IFI CC **and** at least one negative-IFI CC in the same pair. Positive IFI ⇒ the first-named area leads.
@@ -86,6 +101,21 @@ Each animal contributes only the CCs that beat the circular-shift null. Chance i
 - binomial test: **p = 0.087**
 
 **Verdict: sign-mixing is indistinguishable from a coin flip.**
+
+#### FS-included — OVERALL IFI at ±50 ms (all significant CCs pooled, unweighted per-animal mean) vs 0
+
+Per animal, the mean IFI over every CC that beats the per-dim null (not split by sign); then a one-sample *t* across animals, per pair. Positive ⇒ the first-named area leads. `w·` columns = the same with each CC weighted by its held-out peak. Compare with `bin10_tables.md` §B, which is the same question for CC₁ alone.
+
+| pair | n | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) |
+|---|---|---|---|---|---|---|---|---|
+| CA1-RSC | 12 | +0.157 | 0.072 | +2.20 | 0.0501 | no | +0.169 | 0.0332 |
+| CA1-CA3 | 9 | -0.047 | 0.045 | -1.06 | 0.321 | no | -0.040 | 0.185 |
+| CA1-DG | 11 | -0.119 | 0.068 | -1.75 | 0.11 | no | -0.140 | 0.0365 |
+| CA1-V1 | 8 | -0.201 | 0.114 | -1.76 | 0.121 | no | -0.197 | 0.132 |
+| CA3-DG | 5 | -0.058 | 0.068 | -0.86 | 0.44 | no | -0.043 | 0.443 |
+| CA1-SUB | 6 | -0.051 | 0.032 | -1.60 | 0.171 | no | -0.112 | 0.0266 |
+| RSC-SUB | 7 | -0.019 | 0.045 | -0.41 | 0.693 | no | +0.009 | 0.88 |
+| V1-RSC | 9 | **+0.120** | 0.041 | +2.94 | **0.0188** | no | +0.108 | 0.0273 |
 
 ### FS-included — do CCs within a pair disagree in sign?
 
