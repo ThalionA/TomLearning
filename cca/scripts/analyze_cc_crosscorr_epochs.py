@@ -171,13 +171,72 @@ def epoch_contrast(reduced: pd.DataFrame, metric: str, pairs=PAIRS,
             continue
         va, vb = w[a].to_numpy(float)[both], w[b].to_numpy(float)[both]
         n, _, t, p = paired_stats.paired_t(vb - va)
-        rows.append({"pair": pair, "metric": metric, "contrast": f"{b}-{a}", "n": int(n),
+        rows.append({"pair": pair, "metric": metric, "contrast": f"{b}-{a}",
+                     "unit": "animals", "n": int(n),
                      "mean_a": float(va.mean()), "mean_b": float(vb.mean()),
                      "delta": float((vb - va).mean()), "t": t, "p": p})
     out = pd.DataFrame(rows)
     if not out.empty:
         out["bh_pass"] = paired_stats.fdr_bh(out["p"].to_numpy(float))
     return out
+
+
+def epoch_contrast_ccs(reduced: pd.DataFrame, metric: str, pairs=PAIRS,
+                       a: str = "naive", b: str = "expert", min_n: int = 3) -> pd.DataFrame:
+    """The same contrast with **CCs as n**: every significant (animal, dim) is one
+    paired sample, pooled across animals within a pair. Frozen axes make the pairing
+    exact — dim k of animal A in the naive epoch IS dim k of animal A in expert.
+
+    ⚠ This is the field convention (Gonzalez & Buzsáki) and the more powerful unit,
+    but CCs are nested in animals — an animal with ten CCs weighs ten times one with
+    one, and the ten are not independent — so the project reports it as a POWER
+    CHECK next to animals-as-n, never instead of it (STATE.md §3.0 units policy).
+    """
+    if "sig" in reduced.columns:
+        reduced = reduced[pd.to_numeric(reduced["sig"], errors="coerce") == 1]
+    rows = []
+    for pair in pairs:
+        w = reduced[reduced["pair"] == pair].pivot_table(index=["animal", "dim"],
+                                                         columns="epoch", values=metric)
+        if a not in w.columns or b not in w.columns:
+            continue
+        both = np.isfinite(w[a].to_numpy(float)) & np.isfinite(w[b].to_numpy(float))
+        if both.sum() < min_n:
+            continue
+        va, vb = w[a].to_numpy(float)[both], w[b].to_numpy(float)[both]
+        n, _, t, p = paired_stats.paired_t(vb - va)
+        rows.append({"pair": pair, "metric": metric, "contrast": f"{b}-{a}",
+                     "unit": "ccs", "n": int(n),
+                     "mean_a": float(va.mean()), "mean_b": float(vb.mean()),
+                     "delta": float((vb - va).mean()), "t": t, "p": p})
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        out["bh_pass"] = paired_stats.fdr_bh(out["p"].to_numpy(float))
+    return out
+
+
+def per_cc_curve_metrics(df: pd.DataFrame, far_ms: int = 200,
+                         sig_only: bool = True) -> pd.DataFrame:
+    """Per (animal, pair, dim, epoch) from the RAW label-track curves: peak r, the
+    far-lag baseline (|lag| >= ``far_ms``) and peak − baseline — the per-CC version
+    of :func:`curve_metrics`, so the CCs-as-n contrast can be run on the same three
+    quantities as the animals-as-n one.
+    """
+    if sig_only and "sig" in df.columns:
+        df = df[pd.to_numeric(df["sig"], errors="coerce") == 1]
+    rows = []
+    for (an, pair, dim, ep), g in df.groupby(["animal", "pair", "dim", "epoch"]):
+        r = pd.to_numeric(g["r"], errors="coerce").to_numpy(float)
+        lag = pd.to_numeric(g["lag_ms"], errors="coerce").to_numpy(float)
+        ok = np.isfinite(r) & np.isfinite(lag)
+        if not ok.any():
+            continue
+        far = ok & (np.abs(lag) >= far_ms)
+        far_r = float(np.mean(r[far])) if far.any() else np.nan
+        peak = float(np.max(r[ok]))
+        rows.append({"animal": an, "pair": pair, "dim": int(dim), "epoch": ep,
+                     "peak_r": peak, "far_r": far_r, "peak_minus_far": peak - far_r})
+    return pd.DataFrame(rows)
 
 
 def _md(stats: pd.DataFrame, curves: pd.DataFrame, fs: str, label_col: str) -> str:
@@ -197,14 +256,26 @@ def _md(stats: pd.DataFrame, curves: pd.DataFrame, fs: str, label_col: str) -> s
              "statistic; `intermediate-naive` sits next to `expert-naive`. IFI (shape) "
              "is the naive-vs-expert statistic and is null.", "",
              "> Rows with n ≤ 4 animals (3 df) are descriptive and are not bolded.", "",
-             "| pair | n | metric | contrast | a | b | Δ (b − a) | t | p | BH |",
-             "|---|---|---|---|---|---|---|---|---|---|"]
-    for _, r in stats.iterrows():
+             "> **Two units per row.** *animals-as-n* (inferential unit): each animal's "
+             "significant CCs are averaged first, then a paired *t* across animals. "
+             "*CCs-as-n* (power check, field convention): every significant (animal, "
+             "dim) is one paired sample, pooled across animals — CCs are nested in "
+             "animals, so this over-counts and is never the inferential statement.", "",
+             "| pair | metric | contrast | a → b (animals) | Δ | animals: n, t, p, BH | "
+             "CCs: n, Δ, t, p, BH |",
+             "|---|---|---|---|---|---|---|"]
+    an = stats[stats["unit"] == "animals"].set_index(["pair", "metric", "contrast"])
+    cc = stats[stats["unit"] == "ccs"].set_index(["pair", "metric", "contrast"])
+    for key, r in an.iterrows():
         star = "**" if (r["p"] < 0.05 and r["n"] > 4) else ""
-        lines.append(f"| {r['pair']} | {int(r['n'])} | {r['metric']} | {r['contrast']} | "
-                     f"{r['mean_a']:+.3f} | {r['mean_b']:+.3f} | "
-                     f"{star}{r['delta']:+.3f}{star} | {r['t']:+.2f} | "
-                     f"{star}{r['p']:.3g}{star} | {'yes' if bool(r['bh_pass']) else 'no'} |")
+        c = cc.loc[key] if key in cc.index else None
+        cs = (f"{int(c['n'])}, {c['delta']:+.3f}, {c['t']:+.2f}, "
+              f"{'**' if c['p'] < 0.05 else ''}{c['p']:.3g}{'**' if c['p'] < 0.05 else ''}, "
+              f"{'yes' if bool(c['bh_pass']) else 'no'}" if c is not None else "—")
+        lines.append(f"| {key[0]} | {key[1]} | {key[2]} | "
+                     f"{r['mean_a']:+.3f} → {r['mean_b']:+.3f} | {star}{r['delta']:+.3f}{star} | "
+                     f"{int(r['n'])}, {r['t']:+.2f}, {star}{r['p']:.3g}{star}, "
+                     f"{'yes' if bool(r['bh_pass']) else 'no'} | {cs} |")
     # how many CCs / animals sit behind each panel line
     lines += ["", "**Animals per (pair, epoch) — group = all / FF / FB:**", "",
               "| pair | " + " | ".join(EPOCHS) + " |", "|---|" + "---|" * len(EPOCHS)]
@@ -241,13 +312,19 @@ def main():
                       lineterminator="\n")
         red = pd.read_csv(red_src)
         # the epoch file has no `sig` column: it was written sig-gated already
-        cm = curve_metrics(curves)
-        stats = pd.concat(
-            [epoch_contrast(red, "ifi"), epoch_contrast(red, "peak_r"),
-             epoch_contrast(red, "peak_r", a="naive", b="intermediate"),
-             epoch_contrast(cm, "far_r"), epoch_contrast(cm, "peak_minus_far"),
-             epoch_contrast(cm, "peak_minus_far", a="naive", b="intermediate")],
-            ignore_index=True)
+        cm = curve_metrics(curves)                 # per animal (mean curve)
+        pcm = per_cc_curve_metrics(df)             # per CC (raw curves)
+        contrasts = [("ifi", "naive", "expert"), ("peak_r", "naive", "expert"),
+                     ("peak_r", "naive", "intermediate"),
+                     ("far_r", "naive", "expert"), ("peak_minus_far", "naive", "expert"),
+                     ("peak_minus_far", "naive", "intermediate")]
+        parts = []
+        for metric, ea, eb in contrasts:
+            src_an = red if metric in ("ifi", "peak_r") else cm
+            src_cc = red if metric in ("ifi", "peak_r") else pcm
+            parts.append(epoch_contrast(src_an, metric, a=ea, b=eb))
+            parts.append(epoch_contrast_ccs(src_cc, metric, a=ea, b=eb))
+        stats = pd.concat(parts, ignore_index=True)
         stats.to_csv(RES / f"cc_crosscorr_epochs_stats{tag}_bin10{suf}.csv",
                      index=False, lineterminator="\n")
         md.append(_md(stats, curves, fs, label_col))
@@ -255,12 +332,16 @@ def main():
         n_sig = df[df["sig"] == 1].groupby(["animal", "pair", "dim"]).ngroups
         print(f"\n[{fs}] {n_sig}/{n_cells} (animal, pair, dim) cells significant; "
               f"{len(curves)} curve rows")
-        print("  contrasts on the all-CC per-animal mean (paired t):")
-        for _, r in stats.iterrows():
+        print("  contrasts (paired t) — animals-as-n | CCs-as-n:")
+        an = stats[stats["unit"] == "animals"].set_index(["pair", "metric", "contrast"])
+        cc = stats[stats["unit"] == "ccs"].set_index(["pair", "metric", "contrast"])
+        for key, r in an.iterrows():
             flag = " *" if r["p"] < 0.05 else ""
-            print(f"    {r['pair']:8s} {r['metric']:7s} {r['contrast']:19s} "
-                  f"n={int(r['n']):<2d} Δ={r['delta']:+.3f} t={r['t']:+.2f} "
-                  f"p={r['p']:.3g}{flag}")
+            c = cc.loc[key] if key in cc.index else None
+            cs = (f"| CCs n={int(c['n']):<3d} Δ={c['delta']:+.3f} p={c['p']:.3g}"
+                  f"{' *' if c['p'] < 0.05 else ''}" if c is not None else "")
+            print(f"    {key[0]:8s} {key[1]:14s} {key[2]:19s} n={int(r['n']):<2d} "
+                  f"Δ={r['delta']:+.3f} p={r['p']:.3g}{flag:3s} {cs}")
         lvl = red.groupby(["animal", "pair", "epoch"])["peak_r"].mean().unstack("epoch")
         print(f"  ⚠ level check (mean over animal-pairs) — peak r: naive "
               f"{lvl['naive'].mean():.3f} → intermediate {lvl['intermediate'].mean():.3f} "

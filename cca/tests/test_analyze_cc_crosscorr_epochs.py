@@ -132,6 +132,43 @@ def test_curve_metrics_separate_an_offset_from_a_peak():
     assert m.loc["intermediate", "peak_minus_far"] == pytest.approx(0.15, abs=1e-6)
 
 
+def test_epoch_contrast_ccs_pairs_each_cc_across_epochs():
+    """CCs-as-n: every significant (animal, dim) is one paired sample (frozen axes,
+    so the same component exists in both epochs). Two animals x 3 CCs -> n = 6."""
+    rows = []
+    for an in ("A", "B"):
+        for dim in (1, 2, 3):
+            rows.append(dict(animal=an, pair="CA1-RSC", dim=dim, epoch="naive",
+                             ifi=0.0, peak_r=0.1))
+            rows.append(dict(animal=an, pair="CA1-RSC", dim=dim, epoch="expert",
+                             ifi=0.1 + 0.01 * dim, peak_r=0.1))
+    # a CC present in one epoch only must be dropped, not counted
+    rows.append(dict(animal="C", pair="CA1-RSC", dim=1, epoch="naive", ifi=9.0, peak_r=9.0))
+    red = pd.DataFrame(rows)
+    out = A.epoch_contrast_ccs(red, metric="ifi", pairs=["CA1-RSC"])
+    r = out.iloc[0]
+    assert r["n"] == 6 and r["unit"] == "ccs"
+    assert r["delta"] == pytest.approx(0.12)
+    assert r["p"] < 1e-4
+    # the animals-as-n version of the same table has n = 2 (C dropped: one epoch)
+    an = A.epoch_contrast(red, metric="ifi", pairs=["CA1-RSC"], min_n=2)
+    assert an.iloc[0]["n"] == 2 and an.iloc[0]["unit"] == "animals"
+
+
+def test_per_cc_curve_metrics_match_curve_metrics_on_one_cc():
+    """With one significant CC per animal the per-CC metrics equal the per-animal
+    curve metrics; the far-lag baseline is |lag| >= 200 ms."""
+    lags = np.arange(-250, 251, 10)
+    raw = pd.DataFrame([dict(animal="A", pair="CA1-RSC", dim=1, epoch="naive", lag_ms=int(l),
+                             r=0.2 * np.exp(-(l / 40.0) ** 2) + 0.03, sig=1, label="FF")
+                        for l in lags])
+    m = A.per_cc_curve_metrics(raw).iloc[0]
+    assert m["peak_r"] == pytest.approx(0.23)
+    assert m["far_r"] == pytest.approx(0.03, abs=1e-6)
+    assert m["peak_minus_far"] == pytest.approx(0.20, abs=1e-6)
+    assert {"animal", "pair", "dim", "epoch"} <= set(A.per_cc_curve_metrics(raw).columns)
+
+
 def test_epoch_contrast_needs_both_epochs_per_animal():
     red = pd.DataFrame([
         dict(animal="a", pair="CA1-RSC", dim=1, epoch="naive", ifi=0.0, peak_r=0.1, sig=1),

@@ -46,17 +46,24 @@ EPOCH_COLOUR = {"naive": "#2c6fbb", "intermediate": "#95a5a6", "expert": "#c0392
 HEADLINE_MS = 50
 
 
-def _p(stats: pd.DataFrame, pair: str, metric: str, contrast: str):
+def _p(stats: pd.DataFrame, pair: str, metric: str, contrast: str, unit: str = "animals"):
     r = stats[(stats["pair"] == pair) & (stats["metric"] == metric) &
               (stats["contrast"] == contrast)]
+    if "unit" in r.columns:
+        r = r[r["unit"] == unit]
     return None if r.empty else r.iloc[0]
 
 
-def _fmt(row, name):
+def _fmt(row, name, row_cc=None):
+    """'name Δ p(animals) | p(CCs, n)' — the animals-as-n Δ and p, then the CCs-as-n
+    p as the power check (n = significant CCs pooled over animals)."""
     if row is None:
         return f"{name} —"
     star = "*" if row["p"] < 0.05 else ""
-    return f"{name} Δ{row['delta']:+.3f} p={row['p']:.2g}{star}"
+    s = f"{name} Δ{row['delta']:+.3f} p={row['p']:.2g}{star}"
+    if row_cc is not None:
+        s += f" | CCs p={row_cc['p']:.2g}{'*' if row_cc['p'] < 0.05 else ''} (n={int(row_cc['n'])})"
+    return s
 
 
 def _draw(ax, curves, pair, epoch, group, ls, lw, alpha, label, band=True):
@@ -85,25 +92,31 @@ def fig_all(curves: pd.DataFrame, stats: pd.DataFrame, fs: str):
         ax.axvline(0, color="k", lw=0.7, ls=":", zorder=0)
         ax.axhline(0, color="k", lw=0.7, ls=":", zorder=0)
         ax.axvspan(-HEADLINE_MS, HEADLINE_MS, color="#000", alpha=0.03, zorder=0)
-        t1 = _fmt(_p(stats, pair, "ifi", "expert-naive"), "IFI@±50 exp−naive")
-        t2 = _fmt(_p(stats, pair, "peak_minus_far", "expert-naive"), "peak−baseline")
-        t3 = _fmt(_p(stats, pair, "far_r", "expert-naive"), "baseline offset")
-        ax.set_title(f"{pair}\n{t1}\nexp−naive: {t2} · {t3}", fontsize=8)
+        c = "expert-naive"
+        t1 = _fmt(_p(stats, pair, "ifi", c), "IFI@±50 exp−naive",
+                  _p(stats, pair, "ifi", c, "ccs"))
+        t2 = _fmt(_p(stats, pair, "peak_minus_far", c), "peak−baseline",
+                  _p(stats, pair, "peak_minus_far", c, "ccs"))
+        t3 = _fmt(_p(stats, pair, "far_r", c), "baseline offset",
+                  _p(stats, pair, "far_r", c, "ccs"))
+        ax.set_title(f"{pair}\n{t1}\nexp−naive: {t2}\n{t3}", fontsize=7.5)
         ax.set_xlabel(f"lag (ms)   +: {x_lead} leads", fontsize=8)
         ax.set_ylabel("mean r over sig. CCs (frozen, in-sample)", fontsize=8)
         ax.legend(fontsize=6.5, loc="upper right", framealpha=0.6)
-    ifi_rows = stats[(stats["metric"] == "ifi") & (stats["contrast"] == "expert-naive")]
-    n_ifi_hits = int((ifi_rows["p"] < 0.05).sum())
+    ifi_an = stats[(stats["metric"] == "ifi") & (stats["contrast"] == "expert-naive")]
+    if "unit" in ifi_an.columns:
+        ifi_an = ifi_an[ifi_an["unit"] == "animals"]
+    n_ifi_hits = int((ifi_an["p"] < 0.05).sum())
     fig.suptitle(f"Cross-correlograms by learning epoch, all significant CCs — {fs} | "
                  f"frozen axes (same components every epoch), per-animal-first mean ± SEM"
                  f" (bands only for n ≥ 3)\n"
-                 f"IFI@±50 ms expert−naive: {n_ifi_hits}/{len(ifi_rows)} pairs p<0.05 — "
-                 f"the naive-vs-expert statistic. Curve HEIGHT is not: naive sits low at "
-                 f"EVERY lag on this all-trials fit\n(a baseline offset = slow "
-                 f"co-modulation, speed the obvious candidate; LP-independent; held-out "
-                 f"refits show no strength change) — titles split height into "
-                 f"peak−baseline (coupling-specific) vs baseline (offset)",
-                 fontsize=9.5)
+                 f"IFI@±50 ms expert−naive: {n_ifi_hits}/{len(ifi_an)} pairs p<0.05 "
+                 f"(animals-as-n) — the naive-vs-expert statistic. Curve HEIGHT is not: "
+                 f"naive sits low at EVERY lag on this all-trials fit\n(a baseline offset "
+                 f"= slow co-modulation, speed the obvious candidate; LP-independent; "
+                 f"held-out refits show no strength change) — titles: Δ and p with "
+                 f"animals as n, then p with significant CCs as n (power check; CCs are "
+                 f"nested in animals)", fontsize=9.5)
     figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
     print(f"wrote HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
 
