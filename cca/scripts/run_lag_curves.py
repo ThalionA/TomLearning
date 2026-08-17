@@ -42,8 +42,13 @@ from tom_cca import config, dataio, lagged, partial  # noqa: E402
 
 K = 30
 N_FOLDS = 5
-MAX_SAMPLES = 12000          # cap per pair — these sessions run to ~370k engaged bins
-MAX_BINS_PER_TRIAL = 600     # <= 6 s/trial kept; consecutive, so lag adjacency survives
+# ⚠ Sample cap. Until 2026-08-15 the DEFAULT was 12 000 bins taken as the first
+# <= 600 bins of each whole trial in temporal order — i.e. the first ~20 trials' onset
+# phase, NOT the session. Every per-CC IFI result built on this file (item 1, the
+# 2026-08-07 asks 1/3) inherited that. Default is now UNCAPPED (0 = all running bins);
+# the cap remains available (--max-samples / --max-per-trial) for smoke tests only.
+MAX_SAMPLES = 0              # 0 = no cap; sessions run to ~370k engaged bins
+MAX_BINS_PER_TRIAL = 0       # 0 = whole trials; consecutive blocks keep lag adjacency
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
          ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
 FDR_DIMS = 10                # BH family = leading dims; see lagged.perdim_significance
@@ -64,6 +69,14 @@ def parse_args():
                         "p floor is 1/(n+1); BH over FDR_DIMS needs it below "
                         "alpha/FDR_DIMS, i.e. >199 for 10 dims at alpha=0.05.")
     p.add_argument("--out", default="", help="output CSV stem override")
+    p.add_argument("--max-samples", type=int, default=MAX_SAMPLES,
+                   help="cap on running bins per pair, taken as consecutive within-trial "
+                        "blocks from the FIRST trials onward (0 = no cap, the default). "
+                        "The old default of 12000 kept only the first ~20 trials.")
+    p.add_argument("--max-per-trial", type=int, default=MAX_BINS_PER_TRIAL,
+                   help="max consecutive bins kept per trial when capping (0 = whole trial)")
+    p.add_argument("--animals", default="",
+                   help="comma-separated animal ids to run (smoke tests / timing)")
     return p.parse_args()
 
 
@@ -77,13 +90,19 @@ def _capped_index(trial_ids, max_samples=MAX_SAMPLES, max_per_trial=MAX_BINS_PER
     """Indices keeping a CONSECUTIVE within-trial block (<= max_per_trial bins) from
     each whole trial in turn until ~max_samples — bounds cost on these long sessions
     while preserving the bin adjacency the segment-aware lag pairing needs (an even
-    stride would break it)."""
+    stride would break it). ``0`` for either limit means "no limit"; with both 0 every
+    bin is kept (the default since 2026-08-15). ⚠ Any cap takes the EARLIEST trials."""
+    trial_ids = np.asarray(trial_ids)
+    if not max_samples and not max_per_trial:
+        return np.arange(trial_ids.size)
     keep, total = [], 0
     for t in np.unique(trial_ids):
-        pos = np.where(trial_ids == t)[0][:max_per_trial]   # temporal order within trial
+        pos = np.where(trial_ids == t)[0]                   # temporal order within trial
+        if max_per_trial:
+            pos = pos[:max_per_trial]
         keep.append(pos)
         total += pos.size
-        if total >= max_samples:
+        if max_samples and total >= max_samples:
             break
     return np.sort(np.concatenate(keep))
 
@@ -99,9 +118,13 @@ def main():
     behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
     entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)
     thr = cfg.velocity_thresh_cm_s
+    cap_desc = ("NONE (all running bins)" if not args.max_samples and not args.max_per_trial
+                else f"{args.max_samples or 'inf'} bins, <= {args.max_per_trial or 'all'} "
+                     f"per trial, EARLIEST trials first")
     print(f"LAG-CC curves | bin={args.bin_ms}ms smooth={args.smooth_ms}ms K={K} "
           f"max_lag={args.max_lag} ({args.max_lag * args.bin_ms} ms) | "
-          f"FS={'incl' if args.include_fs else 'excl'}\n")
+          f"FS={'incl' if args.include_fs else 'excl'} | cap: {cap_desc}\n")
+    only = {int(x) for x in args.animals.split(",") if x.strip()} if args.animals else None
 
     out = config.RESULTS_DIR / f"{stem}.csv"
     rows = []
@@ -112,6 +135,8 @@ def main():
             w.writeheader(); w.writerows(rows)
 
     for a in animals:
+        if only is not None and int(a.animal_id) not in only:
+            continue
         try:
             streams = dataio._load_temporal_streams(a, cfg)
         except Exception:
@@ -120,8 +145,11 @@ def main():
         trial_ids_full = streams.trial_idx_50ms[run]
         if np.unique(trial_ids_full).size < N_FOLDS + 1:
             continue
-        cap = _capped_index(trial_ids_full)
+        cap = _capped_index(trial_ids_full, args.max_samples, args.max_per_trial)
         trial_ids = trial_ids_full[cap]
+        tr = np.unique(trial_ids)
+        print(f"  animal {a.animal_id}: {cap.size} of {trial_ids_full.size} running bins, "
+              f"trials {int(tr.min())}..{int(tr.max())} ({tr.size} trials)")
         is_learner = a.animal_id in entries
         present = {}
         for area in config.AREAS:
