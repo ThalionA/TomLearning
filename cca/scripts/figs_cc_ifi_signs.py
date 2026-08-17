@@ -133,9 +133,12 @@ def fig_windows(df: pd.DataFrame, fs: str, overall_test: pd.DataFrame | None = N
             row = overall_test[overall_test["pair"] == pair]
             if not row.empty:
                 r = row.iloc[0]
-                star = "  *" if r["p"] < 0.05 else ""
+                star = "*" if r["p"] < 0.05 else ""
                 title += (f"\nall-CC IFI @±{int(r['window_ms'])} ms: {r['mean']:+.3f}, "
-                          f"p={r['p']:.3f}{star} (n={int(r['n'])})")
+                          f"p={r['p']:.3f}{star} (n={int(r['n'])} animals)")
+                if "ccs_n" in row.columns and np.isfinite(r["ccs_n"]):
+                    cs = "*" if r["ccs_p"] < 0.05 else ""
+                    title += f" | CCs as n: p={r['ccs_p']:.3g}{cs} (n={int(r['ccs_n'])})"
         ax.set_title(title, fontsize=9)
         ax.set_xlabel("integration window ±w (ms)", fontsize=8)
         ax.set_ylabel(f"IFI   +: {x_lead} leads", fontsize=8)

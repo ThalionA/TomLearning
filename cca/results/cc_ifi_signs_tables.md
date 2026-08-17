@@ -19,20 +19,20 @@ Each animal contributes only the CCs that beat the circular-shift null. Chance i
 
 #### FS-excluded — OVERALL IFI at ±50 ms (all significant CCs pooled, unweighted per-animal mean) vs 0
 
-Per animal, the mean IFI over every CC that beats the per-dim null (not split by sign); then a one-sample *t* across animals, per pair. Positive ⇒ the first-named area leads. `w·` columns = the same with each CC weighted by its held-out peak.
+Per animal, the mean IFI over every CC that beats the per-dim null (not split by sign); then a one-sample *t* across animals, per pair. Positive ⇒ the first-named area leads. `w·` columns = the same with each CC weighted by its held-out peak. **CCs-as-n** = every significant CC as one sample pooled over animals (power check; CCs are nested in animals).
 
 > **Data:** the refit-per-lag curves are capped at 12 000 bins — the first ≤ 600 bins (6 s) of each of the **first ~20 trials** — so this is the session's opening, not the whole session. **n** = animals with ≥ 1 significant CC (of `N` recorded for the pair). **CC₁ (same data)** = the like-for-like comparator: dim 1 of this same table, every animal — NOT `bin10_tables.md` §B, which is CC₁ on the whole-session `run_ifi_windows` arm (a different sample; the two correlate r ≈ 0.4 per animal-pair). Bold = p < 0.05 on this single look; the pair has 4 looks in all (FS-excl/incl × unweighted/weighted) — see the cross-FS summary below.
 
-| pair | n / N | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) | CC₁ (same data): mean, p, n |
-|---|---|---|---|---|---|---|---|---|---|
-| CA1-RSC | 8 / 12 | **+0.226** | 0.090 | +2.50 | **0.0409** | no | +0.218 | 0.0503 | +0.149, p=0.24, n=12 |
-| CA1-CA3 | 6 / 7 | -0.095 | 0.043 | -2.20 | 0.0788 | no | -0.091 | 0.0408 | -0.050, p=0.108, n=7 |
-| CA1-DG | 9 / 11 | **-0.162** | 0.066 | -2.46 | **0.0395** | no | -0.143 | 0.0674 | -0.135, p=0.0903, n=11 |
-| CA1-V1 | 7 / 13 | -0.111 | 0.050 | -2.22 | 0.0685 | no | -0.100 | 0.0375 | -0.137, p=0.188, n=13 |
-| CA3-DG | 5 / 5 | -0.053 | 0.056 | -0.96 | 0.391 | no | -0.033 | 0.578 | -0.038, p=0.332, n=5 |
-| CA1-SUB | 6 / 7 | -0.041 | 0.044 | -0.94 | 0.391 | no | -0.075 | 0.142 | -0.103, p=0.118, n=7 |
-| RSC-SUB | 7 / 7 | +0.003 | 0.060 | +0.05 | 0.964 | no | +0.007 | 0.91 | +0.078, p=0.504, n=7 |
-| V1-RSC | 8 / 9 | +0.089 | 0.057 | +1.56 | 0.163 | no | +0.116 | 0.0589 | +0.139, p=0.0572, n=9 |
+| pair | n / N | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) | CCs-as-n: n, mean, p | CC₁ (same data): mean, p, n |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CA1-RSC | 8 / 12 | **+0.226** | 0.090 | +2.50 | **0.0409** | no | +0.218 | 0.0503 | 21, +0.202, **0.00429** | +0.149, p=0.24, n=12 |
+| CA1-CA3 | 6 / 7 | -0.095 | 0.043 | -2.20 | 0.0788 | no | -0.091 | 0.0408 | 23, -0.032, 0.575 | -0.050, p=0.108, n=7 |
+| CA1-DG | 9 / 11 | **-0.162** | 0.066 | -2.46 | **0.0395** | no | -0.143 | 0.0674 | 44, -0.138, **0.0061** | -0.135, p=0.0903, n=11 |
+| CA1-V1 | 7 / 13 | -0.111 | 0.050 | -2.22 | 0.0685 | no | -0.100 | 0.0375 | 19, -0.123, **0.0222** | -0.137, p=0.188, n=13 |
+| CA3-DG | 5 / 5 | -0.053 | 0.056 | -0.96 | 0.391 | no | -0.033 | 0.578 | 34, -0.080, **0.0441** | -0.038, p=0.332, n=5 |
+| CA1-SUB | 6 / 7 | -0.041 | 0.044 | -0.94 | 0.391 | no | -0.075 | 0.142 | 28, -0.029, 0.464 | -0.103, p=0.118, n=7 |
+| RSC-SUB | 7 / 7 | +0.003 | 0.060 | +0.05 | 0.964 | no | +0.007 | 0.91 | 24, -0.007, 0.906 | +0.078, p=0.504, n=7 |
+| V1-RSC | 8 / 9 | +0.089 | 0.057 | +1.56 | 0.163 | no | +0.116 | 0.0589 | 45, +0.087, **0.0214** | +0.139, p=0.0572, n=9 |
 
 ### FS-excluded — do CCs within a pair disagree in sign?
 
@@ -106,20 +106,20 @@ Each animal contributes only the CCs that beat the circular-shift null. Chance i
 
 #### FS-included — OVERALL IFI at ±50 ms (all significant CCs pooled, unweighted per-animal mean) vs 0
 
-Per animal, the mean IFI over every CC that beats the per-dim null (not split by sign); then a one-sample *t* across animals, per pair. Positive ⇒ the first-named area leads. `w·` columns = the same with each CC weighted by its held-out peak.
+Per animal, the mean IFI over every CC that beats the per-dim null (not split by sign); then a one-sample *t* across animals, per pair. Positive ⇒ the first-named area leads. `w·` columns = the same with each CC weighted by its held-out peak. **CCs-as-n** = every significant CC as one sample pooled over animals (power check; CCs are nested in animals).
 
 > **Data:** the refit-per-lag curves are capped at 12 000 bins — the first ≤ 600 bins (6 s) of each of the **first ~20 trials** — so this is the session's opening, not the whole session. **n** = animals with ≥ 1 significant CC (of `N` recorded for the pair). **CC₁ (same data)** = the like-for-like comparator: dim 1 of this same table, every animal — NOT `bin10_tables.md` §B, which is CC₁ on the whole-session `run_ifi_windows` arm (a different sample; the two correlate r ≈ 0.4 per animal-pair). Bold = p < 0.05 on this single look; the pair has 4 looks in all (FS-excl/incl × unweighted/weighted) — see the cross-FS summary below.
 
-| pair | n / N | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) | CC₁ (same data): mean, p, n |
-|---|---|---|---|---|---|---|---|---|---|
-| CA1-RSC | 12 / 12 | +0.157 | 0.072 | +2.20 | 0.0501 | no | +0.169 | 0.0332 | +0.224, p=0.0185, n=12 |
-| CA1-CA3 | 9 / 9 | -0.047 | 0.045 | -1.06 | 0.321 | no | -0.040 | 0.185 | -0.031, p=0.502, n=9 |
-| CA1-DG | 11 / 11 | -0.119 | 0.068 | -1.75 | 0.11 | no | -0.140 | 0.0365 | -0.090, p=0.0864, n=11 |
-| CA1-V1 | 8 / 13 | -0.201 | 0.114 | -1.76 | 0.121 | no | -0.197 | 0.132 | -0.136, p=0.202, n=13 |
-| CA3-DG | 5 / 5 | -0.058 | 0.068 | -0.86 | 0.44 | no | -0.043 | 0.443 | -0.032, p=0.466, n=5 |
-| CA1-SUB | 6 / 7 | -0.051 | 0.032 | -1.60 | 0.171 | no | -0.112 | 0.0266 | -0.158, p=0.0313, n=7 |
-| RSC-SUB | 7 / 7 | -0.019 | 0.045 | -0.41 | 0.693 | no | +0.009 | 0.88 | +0.075, p=0.463, n=7 |
-| V1-RSC | 9 / 9 | **+0.120** | 0.041 | +2.94 | **0.0188** | no | +0.108 | 0.0273 | +0.141, p=0.00841, n=9 |
+| pair | n / N | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | p (weighted) | CCs-as-n: n, mean, p | CC₁ (same data): mean, p, n |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CA1-RSC | 12 / 12 | +0.157 | 0.072 | +2.20 | 0.0501 | no | +0.169 | 0.0332 | 39, +0.155, **0.00666** | +0.224, p=0.0185, n=12 |
+| CA1-CA3 | 9 / 9 | -0.047 | 0.045 | -1.06 | 0.321 | no | -0.040 | 0.185 | 45, -0.022, 0.626 | -0.031, p=0.502, n=9 |
+| CA1-DG | 11 / 11 | -0.119 | 0.068 | -1.75 | 0.11 | no | -0.140 | 0.0365 | 54, -0.103, **0.0388** | -0.090, p=0.0864, n=11 |
+| CA1-V1 | 8 / 13 | -0.201 | 0.114 | -1.76 | 0.121 | no | -0.197 | 0.132 | 21, -0.058, 0.454 | -0.136, p=0.202, n=13 |
+| CA3-DG | 5 / 5 | -0.058 | 0.068 | -0.86 | 0.44 | no | -0.043 | 0.443 | 37, -0.075, **0.0324** | -0.032, p=0.466, n=5 |
+| CA1-SUB | 6 / 7 | -0.051 | 0.032 | -1.60 | 0.171 | no | -0.112 | 0.0266 | 32, -0.044, 0.312 | -0.158, p=0.0313, n=7 |
+| RSC-SUB | 7 / 7 | -0.019 | 0.045 | -0.41 | 0.693 | no | +0.009 | 0.88 | 23, +0.006, 0.907 | +0.075, p=0.463, n=7 |
+| V1-RSC | 9 / 9 | **+0.120** | 0.041 | +2.94 | **0.0188** | no | +0.108 | 0.0273 | 56, +0.115, **0.000169** | +0.141, p=0.00841, n=9 |
 
 ### FS-included — do CCs within a pair disagree in sign?
 

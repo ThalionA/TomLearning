@@ -202,6 +202,28 @@ def overall_direction(per_animal: pd.DataFrame, window_bins: int = HEADLINE_W,
     return out
 
 
+def overall_direction_ccs(tab: pd.DataFrame, window_bins: int = HEADLINE_W,
+                          min_n: int = 3) -> pd.DataFrame:
+    """Ask 3 with **significant CCs as n**: every significant, non-degenerate
+    (animal, dim) IFI at the headline window is one sample, pooled across animals
+    within a pair; one-sample *t* vs 0. The field convention and the more powerful
+    unit — but CCs are nested in animals (an animal with six CCs weighs six times
+    one with one), so this is a POWER CHECK next to :func:`overall_direction`, never
+    the inferential statement (STATE.md §3.0 units policy).
+    """
+    at = tab[(tab["window_bins"] == window_bins) & (tab["sig"] == 1) &
+             (tab["degenerate"] == 0)][["animal", "pair", "dim", "ifi"]].copy()
+    at["ifi"] = pd.to_numeric(at["ifi"], errors="coerce")
+    at = at[np.isfinite(at["ifi"])]
+    # one_sample_by_pair insists on one row per animal; here the unit IS the CC, so
+    # give every (animal, dim) its own "animal" key on purpose
+    at["animal"] = at["animal"].astype(str) + ":cc" + at["dim"].astype(str)
+    out = cc_aggregate.one_sample_by_pair(at, value="ifi", pairs=PAIRS, min_n=min_n)
+    out.insert(1, "unit", "ccs")
+    out.insert(2, "window_ms", int(window_bins) * BIN_MS)
+    return out
+
+
 def cc1_direction(tab: pd.DataFrame, window_bins: int = HEADLINE_W,
                   min_n: int = 3) -> pd.DataFrame:
     """The like-for-like CC₁ comparator for :func:`overall_direction`: dim 1 of the
@@ -225,7 +247,8 @@ def _md_overall(direction: pd.DataFrame, cc1: pd.DataFrame, n_all: pd.Series,
              "Per animal, the mean IFI over every CC that beats the per-dim null (not "
              "split by sign); then a one-sample *t* across animals, per pair. "
              "Positive ⇒ the first-named area leads. `w·` columns = the same with each "
-             "CC weighted by its held-out peak.", "",
+             "CC weighted by its held-out peak. **CCs-as-n** = every significant CC as one "
+             "sample pooled over animals (power check; CCs are nested in animals).", "",
              "> **Data:** the refit-per-lag curves are capped at 12 000 bins — the first "
              "≤ 600 bins (6 s) of each of the **first ~20 trials** — so this is the "
              "session's opening, not the whole session. **n** = animals with ≥ 1 "
@@ -236,8 +259,8 @@ def _md_overall(direction: pd.DataFrame, cc1: pd.DataFrame, n_all: pd.Series,
              "Bold = p < 0.05 on this single look; the pair has 4 looks in all "
              "(FS-excl/incl × unweighted/weighted) — see the cross-FS summary below.", "",
              "| pair | n / N | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | "
-             "p (weighted) | CC₁ (same data): mean, p, n |",
-             "|---|---|---|---|---|---|---|---|---|---|"]
+             "p (weighted) | CCs-as-n: n, mean, p | CC₁ (same data): mean, p, n |",
+             "|---|---|---|---|---|---|---|---|---|---|---|"]
     c1 = cc1.set_index("pair")
     for _, r in direction.iterrows():
         star = "**" if r["p"] < 0.05 else ""
@@ -246,11 +269,16 @@ def _md_overall(direction: pd.DataFrame, cc1: pd.DataFrame, n_all: pd.Series,
             c1s = f"{c['mean']:+.3f}, p={c['p']:.3g}, n={int(c['n'])}"
         else:
             c1s = "—"
+        if "ccs_n" in direction.columns and np.isfinite(r.get("ccs_n", np.nan)):
+            cs = "**" if r["ccs_p"] < 0.05 else ""
+            ccs = f"{int(r['ccs_n'])}, {r['ccs_mean']:+.3f}, {cs}{r['ccs_p']:.3g}{cs}"
+        else:
+            ccs = "—"
         lines.append(
             f"| {r['pair']} | {int(r['n'])} / {int(n_all.get(r['pair'], 0))} | "
             f"{star}{r['mean']:+.3f}{star} | {r['sem']:.3f} | {r['t']:+.2f} | "
             f"{star}{r['p']:.3g}{star} | {'yes' if bool(r['bh_pass']) else 'no'} | "
-            f"{r['wmean']:+.3f} | {r['wp']:.3g} | {c1s} |")
+            f"{r['wmean']:+.3f} | {r['wp']:.3g} | {ccs} | {c1s} |")
     return "\n".join(lines) + "\n"
 
 
@@ -493,6 +521,10 @@ def main():
         overall.to_csv(RES / f"cc_ifi_overall_bin10{suf}.csv", index=False,
                        lineterminator="\n")
         odir = overall_direction(overall)
+        # CCs-as-n power check, merged in as ccs_* columns so the figure reads one file
+        occ = overall_direction_ccs(tab).drop(columns=["unit", "window_ms"])
+        occ = occ.rename(columns={c: f"ccs_{c}" for c in occ.columns if c != "pair"})
+        odir = odir.merge(occ, on="pair", how="left")
         odir.to_csv(RES / f"cc_ifi_overall_test_bin10{suf}.csv", index=False,
                     lineterminator="\n")
         cc1 = cc1_direction(tab)
@@ -508,9 +540,12 @@ def main():
             flag = " *" if r["p"] < 0.05 else ""
             c1s = (f"CC1 same data {c1.loc[r['pair'], 'mean']:+.3f} "
                    f"p={c1.loc[r['pair'], 'p']:.3g}" if r["pair"] in c1.index else "")
+            ccs = (f"CCs n={int(r['ccs_n'])} p={r['ccs_p']:.3g}"
+                   f"{' *' if r['ccs_p'] < 0.05 else ''}"
+                   if np.isfinite(r.get("ccs_n", np.nan)) else "")
             print(f"    {r['pair']:8s} n={int(r['n']):<2d}/{int(n_all.get(r['pair'], 0)):<2d} "
                   f"mean={r['mean']:+.3f} t={r['t']:+.2f} p={r['p']:.3g}{flag}   "
-                  f"(weighted {r['wmean']:+.3f} p={r['wp']:.3g}; {c1s})")
+                  f"(weighted {r['wmean']:+.3f} p={r['wp']:.3g}; {ccs}; {c1s})")
         md.append(_md(tab, counts, fs))
         md.append(_md_direction(direction, fs))
         md.append(_md_sweep(sweep, fs))

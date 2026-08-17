@@ -73,6 +73,21 @@ def test_overall_direction_skips_pairs_below_min_n():
     assert out.empty                                  # 3 animals per pair < 4
 
 
+def test_overall_direction_ccs_counts_every_significant_cc_once():
+    """CCs-as-n: every significant, non-degenerate (animal, dim) at the headline window
+    is one sample, pooled over animals. In the fixture CA1-RSC has 3+2+1 = 6 sig CCs
+    (a4's non-sig CC excluded); CA1-DG has 2+2+1 = 5 (a4's degenerate CC excluded)."""
+    out = A.overall_direction_ccs(_windows_table(), window_bins=5).set_index("pair")
+    assert out.loc["CA1-RSC", "n"] == 6 and out.loc["CA1-DG", "n"] == 5
+    assert out.loc["CA1-RSC", "unit"] == "ccs"
+    # CA1-RSC values: 0.3, 0.1, -0.1, 0.2, 0.2, 0.1 -> mean 0.1333, positive
+    assert out.loc["CA1-RSC", "mean"] == pytest.approx(0.8 / 6)
+    assert out.loc["CA1-RSC", "t"] > 0
+    # CA1-DG: 0.05, -0.05, -0.1, 0.1, 0.02 -> mean 0.004, ~0
+    assert out.loc["CA1-DG", "mean"] == pytest.approx(0.004)
+    assert out.loc["CA1-DG", "p"] > 0.5
+
+
 def test_overall_recombines_from_sign_groups():
     """The all-CC mean equals the count-weighted mean of the +IFI and −IFI groups
     labelled at the SAME window — the identity the figure prints."""
