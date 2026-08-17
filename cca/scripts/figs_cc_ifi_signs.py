@@ -150,7 +150,7 @@ def fig_windows(df: pd.DataFrame, fs: str, overall_test: pd.DataFrame | None = N
                  f"solid = CC-strength weighted, dashed = unweighted ± SEM, per-animal-first "
                  f"| title: one-sample t of the all-CC mean vs 0 at ±{REF_W * BIN_MS} ms, "
                  f"animals-as-n (n = animals with ≥1 sig. CC), no cross-pair correction | "
-                 f"data = first ~20 trials (12k-bin cap)", fontsize=10)
+                 f"data = whole session (uncapped)", fontsize=10)
     figstyle.save(fig, ATT / f"HCV1_cc_ifi_windows_{fs}_bin10.png")
     print(f"wrote HCV1_cc_ifi_windows_{fs}_bin10.png")
 

@@ -1,0 +1,11 @@
+START Mon Aug 17 20:06:51 BST 2026
+  launched fs=excl part1 animals=71,52,61,28 pid=2986
+  launched fs=excl part2 animals=66,70,73,34,36,63,98,41 pid=2987
+  launched fs=excl part3 animals=75,77,100,68 pid=2988
+  launched fs=incl part1 animals=71,52,61,28 pid=2989
+  launched fs=incl part2 animals=66,70,73,34,36,63,98,41 pid=2990
+  launched fs=incl part3 animals=75,77,100,68 pid=2991
+PARTS DONE Mon Aug 17 23:16:03 BST 2026 fail=0
+lag_curves_bin10.csv: 76347 rows, animals [28, 34, 36, 41, 52, 61, 63, 66, 68, 70, 71, 73, 75, 77, 98, 100], 71 animal-pairs
+lag_curves_bin10_fsincl.csv: 83283 rows, animals [28, 34, 36, 41, 52, 61, 63, 66, 68, 70, 71, 73, 75, 77, 98, 100], 73 animal-pairs
+END Mon Aug 17 23:16:04 BST 2026 fail=0

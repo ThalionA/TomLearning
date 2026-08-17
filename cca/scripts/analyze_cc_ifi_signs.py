@@ -227,12 +227,13 @@ def overall_direction_ccs(tab: pd.DataFrame, window_bins: int = HEADLINE_W,
 def cc1_direction(tab: pd.DataFrame, window_bins: int = HEADLINE_W,
                   min_n: int = 3) -> pd.DataFrame:
     """The like-for-like CC₁ comparator for :func:`overall_direction`: dim 1 of the
-    SAME table (same 12k-bin subset, same estimator), every animal, one-sample *t*.
+    SAME table (same sample, same estimator), every animal, one-sample *t*.
 
-    `bin10_tables.md` §B asks the same question of CC₁ but on the whole-session
-    `run_ifi_windows` arm (~370 k bins) — a different sample; per animal-pair the two
-    CC₁ IFIs correlate only r ≈ 0.4. Comparing the all-CC number to §B therefore
-    confounds "pooling CCs" with "which trials". This is the fair comparator.
+    Since 2026-08-17 `run_lag_curves` is UNCAPPED (all running bins), so this now
+    reproduces `bin10_tables.md` §B to the third decimal (CA1-RSC +0.081, CA1-SUB
+    −0.087, V1-RSC +0.021). Under the old 12k-bin cap (first ~20 trials) the two
+    correlated only r ≈ 0.4 per animal-pair — the cap, not CC pooling, was the
+    difference. Kept as the like-for-like comparator inside this table.
     """
     d1 = tab[(tab["dim"] == 1) & (tab["window_bins"] == window_bins) &
              (tab["degenerate"] == 0)][["animal", "pair", "ifi"]]
@@ -249,15 +250,15 @@ def _md_overall(direction: pd.DataFrame, cc1: pd.DataFrame, n_all: pd.Series,
              "Positive ⇒ the first-named area leads. `w·` columns = the same with each "
              "CC weighted by its held-out peak. **CCs-as-n** = every significant CC as one "
              "sample pooled over animals (power check; CCs are nested in animals).", "",
-             "> **Data:** the refit-per-lag curves are capped at 12 000 bins — the first "
-             "≤ 600 bins (6 s) of each of the **first ~20 trials** — so this is the "
-             "session's opening, not the whole session. **n** = animals with ≥ 1 "
-             "significant CC (of `N` recorded for the pair). **CC₁ (same data)** = the "
-             "like-for-like comparator: dim 1 of this same table, every animal — NOT "
-             "`bin10_tables.md` §B, which is CC₁ on the whole-session `run_ifi_windows` "
-             "arm (a different sample; the two correlate r ≈ 0.4 per animal-pair). "
-             "Bold = p < 0.05 on this single look; the pair has 4 looks in all "
-             "(FS-excl/incl × unweighted/weighted) — see the cross-FS summary below.", "",
+             "> **Data:** the refit-per-lag curves are UNCAPPED since 2026-08-17 — every "
+             "running bin of every trial (whole session, ~370 k bins/animal). Until then "
+             "`run_lag_curves` kept only the first ~20 trials (12k-bin cap); numbers "
+             "before that date are not comparable. **n** = animals with ≥ 1 significant "
+             "CC (of `N` recorded for the pair). **CC₁ (same data)** = dim 1 of this "
+             "same table, every animal — the like-for-like comparator; it reproduces "
+             "`bin10_tables.md` §B. Bold = p < 0.05 on this single look; the pair has "
+             "4 looks in all (FS-excl/incl × unweighted/weighted) — see the cross-FS "
+             "summary below.", "",
              "| pair | n / N | mean IFI | SEM | t | p | BH (8 pairs) | weighted mean | "
              "p (weighted) | CCs-as-n: n, mean, p | CC₁ (same data): mean, p, n |",
              "|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -409,13 +410,28 @@ def direction_sweep(tab: pd.DataFrame, max_dim: int = 6) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _md_sweep(sweep: pd.DataFrame, fs: str) -> str:
+def _mixing_verdict(summ: dict) -> str:
+    """Data-driven one-liner for the sign-mixing test (was a fixed string until
+    2026-08-17, when the whole-session data flipped it)."""
+    if not np.isfinite(summ.get("p", np.nan)) or summ["p"] >= 0.05:
+        return "sign-mixing is indistinguishable from a coin flip."
+    if summ["observed"] < summ["expected"]:
+        return ("LESS sign-mixing than independent signs would give — an animal's "
+                "significant CCs share a direction more often than chance (consistent "
+                "with a non-zero overall IFI), the opposite of 'different CCs, "
+                "different signs'.")
+    return ("MORE sign-mixing than chance — CCs within an animal-pair disagree in "
+            "direction more often than independent signs would.")
+
+
+def _md_sweep(sweep: pd.DataFrame, fs: str, n_fdr: int) -> str:
     if sweep.empty:
         return ""
+    surv = (f"{n_fdr} dimension(s) survive the fixed-window FDR test above"
+            if n_fdr else "Nothing here survives the fixed-window FDR test above")
     lines = [f"#### {fs} — strongest per-CC directions across the window sweep", "",
              "⚠ **Selected minima over ~150 tests per pair (25 windows × 6 dims) — "
-             "descriptive pointers, not inference.** Nothing here survives the "
-             "fixed-window FDR test above.", "",
+             f"descriptive pointers, not inference.** {surv}.", "",
              "| pair | CC | window | n | mean IFI | p (uncorrected) |",
              "|---|---|---|---|---|---|"]
     for _, r in sweep.sort_values("p").head(8).iterrows():
@@ -514,8 +530,8 @@ def main():
                 f"- observed mixed: **{summ['observed']} ({summ['obs_frac']:.0%})**\n"
                 f"- expected by chance: **{summ['expected']:.1f} "
                 f"({summ['exp_frac']:.0%})**\n"
-                f"- binomial test: **p = {summ['p']:.3f}**\n\n"
-                f"**Verdict: sign-mixing is indistinguishable from a coin flip.**\n")
+                f"- binomial test: **p = {summ['p']:.3g}**\n\n"
+                f"**Verdict: {_mixing_verdict(summ)}**\n")
         # 2026-08-07 asks 1 + 3: the ungrouped (all significant CCs) mean and its test
         overall = overall_by_animal(tab)
         overall.to_csv(RES / f"cc_ifi_overall_bin10{suf}.csv", index=False,
@@ -534,7 +550,7 @@ def main():
         md.append(_md_overall(odir, cc1, n_all, fs))
         odirs[fs] = odir
         print(f"  overall IFI at ±{HEADLINE_W * BIN_MS} ms vs 0 (all sig CCs, "
-              f"animals-as-n; first ~20 trials, 12k-bin cap):")
+              f"animals-as-n; whole session, uncapped):")
         c1 = cc1.set_index("pair")
         for _, r in odir.iterrows():
             flag = " *" if r["p"] < 0.05 else ""
@@ -548,7 +564,8 @@ def main():
                   f"(weighted {r['wmean']:+.3f} p={r['wp']:.3g}; {ccs}; {c1s})")
         md.append(_md(tab, counts, fs))
         md.append(_md_direction(direction, fs))
-        md.append(_md_sweep(sweep, fs))
+        md.append(_md_sweep(sweep, fs, int(direction["fdr_pass"].sum())
+                            if not direction.empty else 0))
         at = counts[counts["window_bins"] == HEADLINE_W]
         print(f"\n{fs}: {tab['animal'].nunique()} animals, "
               f"{tab['dim'].nunique()} dims, {tab['window_bins'].nunique()} windows "
