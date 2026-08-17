@@ -4,7 +4,7 @@
 `STATE.md` *what is believed*; this file tells you **where things live, which script made
 them, and which numbers you are allowed to trust**. Read this before running anything.
 
-Last updated 2026-08-15, after the three 2026-08-07 meeting asks (overall IFI across CCs,
+Last updated 2026-08-17 (whole-session lag curves; covariance-route cca_fit), after the three 2026-08-07 meeting asks (overall IFI across CCs,
 its ±50 ms test vs 0, epoch cross-correlograms whole and by FF/FB). Before that: the seven
 2026-07-28 items plus the four follow-ups (per-CC IFI signs, FF/FB label-and-track,
 cosine-across-lags, integration window vs IFI by epoch).
@@ -70,11 +70,16 @@ gitignored; regenerate from the scripts.
 
 ### ⚠ The sample cap differs by driver and it matters
 
-- `run_lag_curves`, `run_lag_subspaces`, `run_lag_cosine` cap at **12 000 bins** by taking
-  consecutive within-trial blocks. Because a trial is ~2 900 bins (~30 s of running),
-  that stops inside the **first ~20 trials** — for a late learner that window is entirely
-  pre-learning. Fine for questions about lag geometry; **wrong for anything comparing
-  epochs**.
+- **`run_lag_curves` is UNCAPPED since 2026-08-17** (all running bins, whole session;
+  `--max-samples/--max-per-trial` restore the old cap for smoke tests). Before that it
+  capped at 12 000 bins = the first ≤600 bins of the **first ~20 trials**, and every
+  per-CC IFI number (item 1, asks 1/3) inherited that without saying so. Made tractable by
+  the covariance-route `core.cca_fit` (17× faster at n ~ 3e5, pinned to the SVD reference).
+- `run_lag_subspaces`, `run_lag_cosine` still cap at **12 000 bins** by taking consecutive
+  within-trial blocks. Because a trial is ~2 900 bins (~30 s of running), that stops inside
+  the **first ~20 trials** — for a late learner that window is entirely pre-learning. Fine
+  for questions about lag geometry; **wrong for anything comparing epochs or claiming a
+  session-level flow** — if either is ever used that way, uncap it the same way.
 - `run_cc_label_track` has **no cap** — every running bin of every trial. It fits CCA
   once, so the cap bought nothing and actively hurt: the old cap kept only the first
   0.4–1.8 s of each trial, and **running speed rises +12.0 cm/s naive→expert on those
@@ -145,19 +150,20 @@ is ~78°, i.e. unmeasurable.
 - **CA1-DG rotates with lag** (item 3, `11c0278`): survives every estimability gate
   including none, both FS, Δ 20–35°, p(Bonf) to 0.0003.
 
-**Nulls (everything else):** per-CC IFI sign is at chance (item 1); FF/FB not separable as
+**Nulls (everything else):** no pair has two reliably-signed CCs of opposite sign (item 1; on whole-session data an animal's sig CCs share a sign MORE than chance); FF/FB not separable as
 subspaces, 0/8 (item 2 session-level); FF/FB do not diverge with learning (item 2
 interaction, 0 survive FDR); no epoch effect through a frozen subspace, 0/32 (items 5/7);
 integration window vs IFI unchanged with learning (item 4); **all-CC IFI naive→expert
 0/8, both FS (08-07 ask 2)**.
 
-**Weak / uncorrected (08-07 ask 3):** the overall IFI at ±50 ms across all significant CCs —
-on the **12k-bin-capped curves = first ~20 trials**, n = animals with ≥ 1 sig. CC — is
-nominally non-zero on 2 of 4 looks (FS × weighting), same sign on all 4, for **CA1→RSC**
-(+0.226 p = 0.041 FS-excl; +0.157 p = 0.050 FS-incl) and **V1→RSC** (+0.120 p = 0.019
-FS-incl); DG→CA1 is 1/4 looks and not established. Nothing survives BH across the 8 pairs.
-The like-for-like comparator is CC₁ of the SAME table (`cc_ifi_cc1_test_*`: CA1-RSC +0.149
-p = 0.24 / +0.224 p = 0.019), **not** §B, which is a different sample (whole session).
+**Positive (08-07 ask 3, WHOLE-SESSION since 08-17):** the overall IFI at ±50 ms across all
+significant CCs is non-zero for **CA1→RSC** (+0.053 p = 0.005 FS-excl, +0.068 p = 8×10⁻⁵
+FS-incl; survives BH across the 8 pairs on every look), and, weaker but consistent across
+FS/units, **DG→CA1** (−0.053 p = 0.014 / −0.044 p = 0.020), **DG→CA3** (−0.061 p = 0.027 /
+−0.082 p = 0.013) and **V1→RSC** (+0.038 p = 0.024 / +0.030 p = 0.050); CCs-as-n
+p ≤ 10⁻³ for all four. CC₁ of the same table reproduces §B to 3 dp. Sign-mixing among an
+animal's significant CCs is LESS than chance (item 1 re-read). ⚠ The 08-15 numbers on the
+first-20-trials cap (CA1→RSC +0.226 etc.) are superseded.
 
 **A trap measured on this data (08-15):** on the all-trials frozen fit, curve height is
 lower in the naive epoch at EVERY lag — ~60 % a lag-independent baseline offset (slow

@@ -21,11 +21,25 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   disjoint lags 60–250 ms the +/− gap collapses to ~0 in every pair (2026-08-15). Only a
   disjoint-lag comparison is non-circular.
 
-- **`bin10_tables.md` §B and the per-CC lag curves are DIFFERENT SAMPLES.** §B's CC₁ IFI is
-  from `run_ifi_windows` (whole session, ~370 k bins); `lag_curves_bin10*` (and everything
-  built on it — `cc_ifi_*`) is capped at 12 000 bins = the first ≤ 600 bins of the **first
-  ~20 trials**. Per animal-pair the two CC₁ IFIs correlate only r ≈ 0.4. Never compare an
-  all-CC number from the capped table to §B; use dim 1 of the same table (`cc1_direction`).
+- **A driver's sample cap can silently turn a session question into a first-20-trials
+  question.** `run_lag_curves` defaulted to 12 000 bins = the first ≤ 600 bins of the first
+  ~20 trials from 2026-07-28 to 2026-08-17; item 1 and the 08-07 asks 1/3 were answered on
+  that without anyone saying so, and their CC₁ disagreed with the whole-session §B at
+  r ≈ 0.4 per animal-pair (magnitudes 3–5× inflated). Since 2026-08-17 the default is
+  uncapped and CC₁ reproduces §B to 3 dp. `run_lag_subspaces` / `run_lag_cosine` still cap
+  — check `_capped_index` before trusting any "session-level" claim from a capped driver.
+
+- **Never hard-code a verdict string next to a test.** "Sign-mixing is indistinguishable
+  from a coin flip" and "nothing survives FDR" were fixed strings in `analyze_cc_ifi_signs`;
+  the whole-session data flipped both and the md would have kept printing the old verdict.
+  Same class as the interpretive suptitles the verifiers flagged. Derive the sentence from
+  the numbers (`_mixing_verdict`) or leave interpretation to the log.
+
+- **A thin SVD of the n×k data matrix is the wrong CCA at n ~ 3e5.** `core.cca_fit` took
+  1.66 s per fit at 300 k rows (×1255 fits per pair = 35 min/pair, >12 h per run); the
+  k×k covariance route gives identical results in 97 ms. Fixed 2026-08-17 (`d3ffec4`),
+  pinned to `_cca_fit_svd`. If a run is unexpectedly slow, profile before parallelising —
+  the first batch spent more time in `system` (BLAS thread spin) than in `user`.
 
 - **A figure's SEM band and its title's p-value must be the same unit.** The +/− group
   lines on `HCV1_cc_ifi_windows_*` were mean ± SEM over (animal, dim) rows — dims-as-n —

@@ -12,11 +12,83 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-15) — the three 2026-08-07 meeting asks answered; ➜ READ `HANDOFF.md` FIRST
+## CURRENT STATE (2026-08-17) — lag curves re-run WHOLE-SESSION; asks 1/3 + item 1 re-answered; ➜ READ `HANDOFF.md` FIRST
+
+**Nothing is running.** Two things happened on 2026-08-17 on top of the 08-15 entry below:
+
+### 1. `run_lag_curves` was silently answering session questions on the first ~20 trials — fixed
+
+Theo (rightly) objected that the IFI-windows figures used the 12k-bin cap = the **first ≤600
+bins of the first ~20 trials**. That cap was the driver's default since 2026-07-28; HANDOFF §2
+had flagged it as "wrong for epochs" and I had left it in place for the session-level asks —
+a mistake. Now: **`run_lag_curves.py` default is UNCAPPED** (all ~370 k running bins/animal;
+`--max-samples/--max-per-trial` keep the old cap for smoke tests, `--animals` for subsets).
+Re-run both FS via `scripts/run_lag_curves_uncapped_batch.sh` (6 processes, 3 BLAS threads
+each, ~3 h; `merge_lag_curve_parts.py` stitches) — `results/lag_curves_bin10{,_fsincl}.csv`
+are now whole-session (76 347 / 83 283 rows, 71 / 73 animal-pairs, 16 animals).
+**Every pre-2026-08-17 number derived from `lag_curves_bin10*` (item 1, asks 1/3,
+`figs_lag_curves`) is superseded.**
+
+**Made tractable by a core change (`d3ffec4`): `core.cca_fit` now uses the k×k covariance
+route** (eigen-whitening) instead of a thin SVD of the n×k data matrix — 97 ms vs 1.66 s per
+fit at 300 k rows, ×1255 fits per pair (curve + 200-shuffle null). Pinned to the old
+implementation (`core._cca_fit_svd`, kept for tests only) in 4 tests to 1e-12; on a real
+animal-pair through the full lag machinery the held-out curves agree to 5e-15 with identical
+p-values and FDR masks; 410 tests pass. Rank rule documented (`_COV_EIG_FLOOR = 1e-10`
+relative eigenvalue ≈ 1e-5 relative singular value; the Gram matrix cannot resolve below that
+and PCA scores never get near it). Every arm uses `cca_fit`, so all results reproduce to
+floating precision — but note it in any methods text.
+
+### 2. Whole-session answers (both FS; `cc_ifi_signs_tables.md`, `HCV1_cc_ifi_windows_*`)
+
+**Ask 3 — overall IFI across all significant CCs at ±50 ms vs 0** (656 / 701 significant
+dims, was 238 / 307; every animal now contributes; magnitudes 3–5× smaller than the capped
+values, which were noise-inflated):
+
+| pair | FS-excl (animals) | FS-incl (animals) | CCs-as-n | BH across pairs |
+|---|---|---|---|---|
+| **CA1→RSC** | +0.053 p=0.005 (n=12) | +0.068 p=8×10⁻⁵ | 6×10⁻⁶ / 3×10⁻¹² | **survives, every look** |
+| **DG→CA1** | −0.053 p=0.014 (n=11) | −0.044 p=0.020 | 3×10⁻⁵ / 2×10⁻⁴ | weighted + CCs |
+| **DG→CA3** | −0.061 p=0.027 (n=5) | −0.082 p=0.013 | 0.002 / 2×10⁻⁵ | weighted (excl) + CCs |
+| **V1→RSC** | +0.038 p=0.024 (n=9) | +0.030 p=0.050 | 6×10⁻⁷ / 9×10⁻⁴ | weighted + CCs |
+| CA1-CA3, CA1-V1, CA1-SUB, RSC-SUB | n.s. | n.s. | n.s. | — |
+
+CC₁ on the same data now reproduces `bin10_tables.md` §B to 3 dp (CA1-RSC +0.081, CA1-SUB
+−0.087, V1-RSC +0.021) — the earlier r ≈ 0.4 disagreement was entirely the cap. Reading:
+CA1→RSC and V1→RSC feed-forward into RSC; DG leads both CA1 and CA3 (the anatomical
+direction); CA1-SUB's CC₁-only SUB→CA1 flow (§B) is **not** carried by the all-CC average
+(−0.025 p=0.40 / +0.008 p=0.87).
+
+**Item 1 re-read on whole-session data:** sign-mixing is now **LESS than chance** — 64/71
+animal-pairs mixed vs 70.2 expected (99 %) at ~9 sig CCs each, binomial p < 0.001 (FS-incl
+69/73 vs 72.6, p = 0.001). An animal's significant CCs share a direction more often than
+independent signs would — the opposite of "different CCs, different signs" and consistent
+with ask 3. CA1-RSC CC₁ (+0.081, p = 6×10⁻⁴) survives per-pair FDR (CA1-CA3 CC11 FS-incl too);
+no pair has two reliably-signed dims of opposite sign. The two verdict strings in the md
+were hard-coded and are now data-driven — a recurring hazard, see GOTCHAS.
+
+**Ask 2 also gained CCs-as-n** (Theo's ask): `cc_crosscorr_epochs_stats_*` and the figure
+titles carry both units. IFI naive→expert stays null on both; the baseline offset is
+p < 10⁻⁵ on CCs; peak−baseline gains ~5 % nominal "hits" on CCs (Δ ≈ +0.004) that are 4–6×
+smaller than the offset. Also verified by hand: CA1-V1 FS-incl has a LARGER p on CCs-as-n
+(0.45 vs 0.12) because two animals contribute one very negative CC each while animal 61's
+seven CCs span −0.39…+0.73 — CCs-as-n is only more powerful when the CCs agree.
+
+**Tests: 410 pass.** Figures regenerated: `HCV1_cc_ifi_windows_*` (whole-session, both
+units in titles), `HCV1_perdim_ifi_*`, `HCV1_lagcc_*`, `HCV1_cc_crosscorr_epochs_*`.
+
+**Open:** MEETING/STATE/HANDOFF numbers for item 1 and §3.0 finding 3 updated below; the
+per-epoch speed export for the offset finding is still the next thing.
+
+---
+
+## ✓ DONE (2026-08-15) — the three 2026-08-07 meeting asks answered
 
 **Nothing is running.** Meeting 2026-08-07 (Nathalie + Tom; handwritten note transcribed
 to the vault, `Projects/Hippocampus-V1/Meetings/2026-08-07-Hippocampus-V1-Meeting.md`)
 left three asks. All three are pure re-reductions of CSVs already on disk — no refits.
+**⚠ Superseded on 2026-08-17 for asks 1/3: the numbers below are on the first-20-trials
+cap; see the entry above.**
 
 | ask | built | verdict |
 |---|---|---|
