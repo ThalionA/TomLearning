@@ -54,15 +54,17 @@ def _p(stats: pd.DataFrame, pair: str, metric: str, contrast: str, unit: str = "
     return None if r.empty else r.iloc[0]
 
 
-def _fmt(row, name, row_cc=None):
-    """'name Δ p(animals) | p(CCs, n)' — the animals-as-n Δ and p, then the CCs-as-n
-    p as the power check (n = significant CCs pooled over animals)."""
+def _fmt(row, name, row_cc=None, with_n=False):
+    """'name Δ p(animals) | CCs p' — the animals-as-n Δ and p, then the CCs-as-n p as
+    the power check (n = significant CCs pooled over animals; printed once per panel)."""
     if row is None:
         return f"{name} —"
     star = "*" if row["p"] < 0.05 else ""
     s = f"{name} Δ{row['delta']:+.3f} p={row['p']:.2g}{star}"
     if row_cc is not None:
-        s += f" | CCs p={row_cc['p']:.2g}{'*' if row_cc['p'] < 0.05 else ''} (n={int(row_cc['n'])})"
+        s += f" | CCs p={row_cc['p']:.2g}{'*' if row_cc['p'] < 0.05 else ''}"
+        if with_n:
+            s += f" ({int(row_cc['n'])} CCs)"
     return s
 
 
@@ -93,13 +95,13 @@ def fig_all(curves: pd.DataFrame, stats: pd.DataFrame, fs: str):
         ax.axhline(0, color="k", lw=0.7, ls=":", zorder=0)
         ax.axvspan(-HEADLINE_MS, HEADLINE_MS, color="#000", alpha=0.03, zorder=0)
         c = "expert-naive"
-        t1 = _fmt(_p(stats, pair, "ifi", c), "IFI@±50 exp−naive",
-                  _p(stats, pair, "ifi", c, "ccs"))
-        t2 = _fmt(_p(stats, pair, "peak_minus_far", c), "peak−baseline",
+        t1 = _fmt(_p(stats, pair, "ifi", c), "IFI@±50",
+                  _p(stats, pair, "ifi", c, "ccs"), with_n=True)
+        t2 = _fmt(_p(stats, pair, "peak_minus_far", c), "peak−base",
                   _p(stats, pair, "peak_minus_far", c, "ccs"))
-        t3 = _fmt(_p(stats, pair, "far_r", c), "baseline offset",
+        t3 = _fmt(_p(stats, pair, "far_r", c), "baseline",
                   _p(stats, pair, "far_r", c, "ccs"))
-        ax.set_title(f"{pair}\n{t1}\nexp−naive: {t2}\n{t3}", fontsize=7.5)
+        ax.set_title(f"{pair} — expert − naive\n{t1}\n{t2}\n{t3}", fontsize=7.5)
         ax.set_xlabel(f"lag (ms)   +: {x_lead} leads", fontsize=8)
         ax.set_ylabel("mean r over sig. CCs (frozen, in-sample)", fontsize=8)
         ax.legend(fontsize=6.5, loc="upper right", framealpha=0.6)
