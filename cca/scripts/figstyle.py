@@ -69,6 +69,72 @@ def grid(n, ncols=2, panel=(5.4, 3.5)):
     return fig, axes.ravel()
 
 
+def check_text_overflow(fig, tol_px: float = 1.0) -> list[str]:
+    """Render-time fence for clipped or colliding text (added 2026-08-18 after
+    figures were sent twice with panel titles cut off at the figure edge — see
+    ~/.claude/MISTAKES.md, `no-verification`).
+
+    Draws the figure, then measures every visible non-empty text artist (suptitle,
+    axes titles, axis labels, legends, annotations — tick labels excluded) against the figure box and every
+    axes title against every other axes title. Returns one human-readable line per
+    problem, empty if the figure is clean. Never raises — a warning must not stop a
+    batch — but :func:`save` prints every line loudly.
+    """
+    import matplotlib.text as mtext
+    fig.canvas.draw()                                    # constrained_layout settles here
+    renderer = fig.canvas.get_renderer()
+    fbox = fig.bbox                                      # display pixels
+    issues: list[str] = []
+
+    def _label(artist):
+        s = artist.get_text().replace("\n", " ⏎ ")
+        return (s[:60] + "…") if len(s) > 60 else s
+
+    # tick labels are excluded: they routinely sit a few px outside a non-constrained
+    # figure and are never the thing that gets clipped in practice
+    ticks = set()
+    for ax in fig.axes:
+        for axis in (ax.xaxis, ax.yaxis):
+            ticks.update(id(tl) for tl in axis.get_ticklabels(which="both"))
+    for art in fig.findobj(mtext.Text):
+        if id(art) in ticks or not art.get_visible() or not art.get_text().strip():
+            continue
+        try:
+            bb = art.get_window_extent(renderer)
+        except Exception:                                # noqa: BLE001
+            continue
+        if bb.width == 0 or bb.height == 0:
+            continue
+        sides = []
+        if bb.x0 < fbox.x0 - tol_px:
+            sides.append(f"left by {fbox.x0 - bb.x0:.0f}px")
+        if bb.x1 > fbox.x1 + tol_px:
+            sides.append(f"right by {bb.x1 - fbox.x1:.0f}px")
+        if bb.y0 < fbox.y0 - tol_px:
+            sides.append(f"bottom by {fbox.y0 - bb.y0:.0f}px")
+        if bb.y1 > fbox.y1 + tol_px:
+            sides.append(f"top by {bb.y1 - fbox.y1:.0f}px")
+        if sides:
+            kind = "suptitle" if art is fig._suptitle else "text"
+            issues.append(f"{kind} outside the figure ({', '.join(sides)}): '{_label(art)}'")
+
+    titles = []
+    for ax in fig.axes:
+        for tt in (ax.title, getattr(ax, "_left_title", None), getattr(ax, "_right_title", None)):
+            if tt is not None and tt.get_visible() and tt.get_text().strip():
+                try:
+                    titles.append((tt, tt.get_window_extent(renderer)))
+                except Exception:                        # noqa: BLE001
+                    pass
+    for i in range(len(titles)):
+        for j in range(i + 1, len(titles)):
+            a, ba = titles[i]; b, bb = titles[j]
+            if ba.overlaps(bb):
+                ov = min(ba.x1, bb.x1) - max(ba.x0, bb.x0)
+                issues.append(f"axes titles overlap by {ov:.0f}px: '{_label(a)}' | '{_label(b)}'")
+    return issues
+
+
 def save(fig, stem, max_px: int = MAX_PX, mirror: bool = True):
     """Write ``<stem>.png`` (longest side <= ``max_px``) AND ``<stem>.svg``, then close.
 
@@ -78,12 +144,18 @@ def save(fig, stem, max_px: int = MAX_PX, mirror: bool = True):
     The pair is ALSO mirrored into :data:`REPO_FIGURES` (unless ``mirror=False``) so the
     project folder holds every figure, not just the vault. Pass ``mirror=False`` for a
     figure that is genuinely vault-only.
+
+    Before writing, :func:`check_text_overflow` runs and PRINTS a ``[figstyle] ⚠`` line
+    for every text artist that falls outside the figure or every pair of axes titles
+    that collide — read the run's output; a clean figure prints nothing.
     """
     stem = str(stem)
     if stem.endswith(".png") or stem.endswith(".svg"):
         stem = stem[:-4]
     w_in, h_in = fig.get_size_inches()
     dpi = min(150.0, max_px / max(w_in, h_in))
+    for line in check_text_overflow(fig):
+        print(f"  [figstyle] ⚠ {Path(stem).name}: {line}")
     fig.savefig(f"{stem}.png", dpi=dpi)
     fig.savefig(f"{stem}.svg")
     if mirror:
