@@ -15,9 +15,12 @@ Figure 1  HCV1_cc_crosscorr_epochs_<fs>_bin10
           candidate). SEM bands are drawn only when n ≥ 3 animals.
 
 Figure 2  HCV1_cc_crosscorr_epochs_fffb_<fs>_bin10
-          The same, split by the whole-session FF/FB label (identical to slide 10 of
-          CCA_update_20260807.pptx): FF solid, FB dashed, naive vs expert only.
-          Signed curves of opposite-labelled CCs are never averaged together.
+          Tom's layout (2026-08-18): per pair TWO panels — naive vs expert for the
+          FF-labelled CCs (first-named area leads at ±50 ms) and, next to it, naive vs
+          expert for the FB-labelled CCs (second-named area leads). Labels from the
+          whole-session fit (identical to slide 10 of CCA_update_20260807.pptx).
+          Signed curves of opposite-labelled CCs are never averaged together. Titles
+          carry item 2's per-label expert − naive IFI test (cc_label_track_stats_*).
 
 Frozen axes, so the SAME components are compared across epochs. r is IN-SAMPLE for
 the whole session: a contrast statistic, not a coupling strength.
@@ -32,6 +35,7 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
+import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -123,31 +127,48 @@ def fig_all(curves: pd.DataFrame, stats: pd.DataFrame, fs: str):
     print(f"wrote HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
 
 
-def fig_fffb(curves: pd.DataFrame, fs: str):
-    fig, axes = figstyle.grid(len(PAIRS), ncols=4)
-    for ax, pair in zip(axes, PAIRS):
-        x_lead = pair.split("-")[0]
+def fig_fffb(curves: pd.DataFrame, fs: str, label_stats: pd.DataFrame | None = None):
+    """Tom's 2026-08-18 layout: per pair, TWO panels side by side — the naive vs expert
+    cross-correlograms of the FF-labelled CCs (first-named area leads at ±50 ms) in one,
+    of the FB-labelled CCs (second-named area leads) in the other. 8 pairs x 2 = 16
+    panels, two pairs per row. Titles carry item 2's per-label expert − naive paired t
+    on the IFI at ±50 ms (`cc_label_track_stats_*`, animals-as-n).
+    """
+    fig, axes = figstyle.grid(2 * len(PAIRS), ncols=4)
+    ls = label_stats.set_index("pair") if label_stats is not None else None
+    for k, ax in enumerate(axes):
+        pair, group = PAIRS[k // 2], ("FF", "FB")[k % 2]
+        a1, a2 = pair.split("-")
+        leader = a1 if group == "FF" else a2
         drawn = 0
-        for group, ls in [("FF", "-"), ("FB", "--")]:
-            for epoch in ("naive", "expert"):
-                drawn += _draw(ax, curves, pair, epoch, group, ls, 2.0, 1.0,
-                               f"{group} {epoch}")
+        for epoch in ("naive", "expert"):
+            drawn += _draw(ax, curves, pair, epoch, group, "-", 2.0, 1.0, epoch)
         if drawn == 0:
-            ax.set_title(f"{pair}\n(no data)", fontsize=9); ax.axis("off"); continue
+            ax.set_title(f"{pair} — {group} CCs\n(no data)", fontsize=9)
+            ax.axis("off"); continue
         ax.axvline(0, color="k", lw=0.7, ls=":", zorder=0)
         ax.axhline(0, color="k", lw=0.7, ls=":", zorder=0)
         ax.axvspan(-HEADLINE_MS, HEADLINE_MS, color="#000", alpha=0.03, zorder=0)
-        ax.set_title(pair, fontsize=10)
-        ax.set_xlabel(f"lag (ms)   +: {x_lead} leads", fontsize=8)
-        ax.set_ylabel("mean r over sig. CCs (frozen, in-sample)", fontsize=8)
-        ax.legend(fontsize=6.5, loc="upper right", framealpha=0.6, ncol=2)
-    fig.suptitle(f"Cross-correlograms, naive vs expert, split by FF/FB label — {fs} | "
-                 f"solid = +IFI-labelled (FF, first area leads), dashed = −IFI-labelled "
-                 f"(FB); label from the whole-session fit at ±{HEADLINE_MS} ms (as on "
-                 f"slide 10), so the asymmetry inside the shaded band is circular by "
-                 f"construction\nper-animal-first mean ± SEM (bands only for n ≥ 3); "
-                 f"frozen axes; the naive-vs-expert height caveat of the all-CC figure "
-                 f"applies here too", fontsize=10)
+        title = f"{pair} — {group}-labelled CCs ({leader} leads at ±{HEADLINE_MS} ms)"
+        if ls is not None and pair in ls.index:
+            r = ls.loc[pair]
+            n, d, pv = r.get(f"n_{group}_ifi"), r.get(f"d_{group}_ifi"), r.get(f"p_{group}_ifi")
+            if np.isfinite(pv):
+                title += (f"\nexpert − naive IFI@±50: Δ{d:+.3f} p={pv:.2g}"
+                          f"{'*' if pv < 0.05 else ''} (n={int(n)} animals)")
+        ax.set_title(title, fontsize=8)
+        ax.set_xlabel(f"lag (ms)   +: {a1} leads", fontsize=8)
+        ax.set_ylabel(f"mean r over {group} CCs (frozen, in-sample)", fontsize=8)
+        ax.legend(fontsize=7, loc="upper right", framealpha=0.6)
+    fig.suptitle(f"Cross-correlograms, naive vs expert, ONE DIRECTION PER PANEL — {fs}\n"
+                 f"per pair: left = FF-labelled CCs (+IFI, first-named area leads), right = "
+                 f"FB-labelled CCs (−IFI, second-named area leads); label from the "
+                 f"whole-session fit at ±{HEADLINE_MS} ms (as on slide 10) — the asymmetry "
+                 f"inside the shaded band is circular by construction\n"
+                 f"per-animal-first mean ± SEM (bands only for n ≥ 3); frozen axes; titles: "
+                 f"item-2 paired t of the per-label IFI, animals-as-n; the naive-vs-expert "
+                 f"HEIGHT caveat of the all-CC figure applies (baseline offset, not learning)",
+                 fontsize=10)
     figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_fffb_{fs}_bin10.png")
     print(f"wrote HCV1_cc_crosscorr_epochs_fffb_{fs}_bin10.png")
 
@@ -162,7 +183,9 @@ def main():
     curves = pd.read_csv(src)
     stats = pd.read_csv(RES / f"cc_crosscorr_epochs_stats_bin10{suf}.csv")
     fig_all(curves, stats, fs)
-    fig_fffb(curves, fs)
+    ls_csv = RES / f"cc_label_track_stats_bin10{suf}.csv"
+    label_stats = pd.read_csv(ls_csv) if ls_csv.exists() else None
+    fig_fffb(curves, fs, label_stats)
 
 
 if __name__ == "__main__":
