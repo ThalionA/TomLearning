@@ -17,7 +17,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import core
+from . import core, lagpairs
+from .paired_stats import fdr_bh  # single BH implementation (re-exported; noqa: F401)
 
 
 def lag_slice(
@@ -39,12 +40,26 @@ def lag_slice(
     return x[:, -lag:, :], y[:, : n_bins + lag, :]
 
 
-def information_flow_index(lags: np.ndarray, cc1: np.ndarray) -> float:
-    """(X-leads - Y-leads) / (X-leads + Y-leads); held-out CC1 clipped at 0."""
+def ifi_sides(lags: np.ndarray, cc1: np.ndarray) -> tuple[float, float]:
+    """The two halves of the IFI: mean clipped CC over positive lags (X leads) and over
+    negative lags (Y leads). Lag 0 excluded; CCs clipped at 0; a side with no finite
+    value contributes 0.0. Exposed so callers can flag the *degenerate* case
+    (both sides 0 -> IFI 0.0 means "no coupling either way", not "balanced") without
+    re-deriving the clipping rule."""
+    lags = np.asarray(lags)
+    cc1 = np.asarray(cc1, dtype=float)
     pos = np.clip(cc1[lags > 0], 0.0, None)
     neg = np.clip(cc1[lags < 0], 0.0, None)
     pos_mean = np.nanmean(pos) if np.any(np.isfinite(pos)) else 0.0
     neg_mean = np.nanmean(neg) if np.any(np.isfinite(neg)) else 0.0
+    return float(pos_mean), float(neg_mean)
+
+
+def information_flow_index(lags: np.ndarray, cc1: np.ndarray) -> float:
+    """(X-leads - Y-leads) / (X-leads + Y-leads); held-out CC1 clipped at 0.
+    Returns 0.0 when both sides clip to zero — see :func:`ifi_sides` to tell that
+    apart from a genuinely balanced curve."""
+    pos_mean, neg_mean = ifi_sides(lags, cc1)
     total = pos_mean + neg_mean
     if total <= 0:
         return 0.0
@@ -151,21 +166,10 @@ def _segment_lagged_pairs(Sx, Sy, groups, lag):
     lag curve is not contaminated by the running-bin concatenation (report §2.7
     caveat). Returns ``(Xp, Yp, group_ids)`` or ``None`` if no trial is long enough.
     """
-    Xs, Ys, gs = [], [], []
-    for g in np.unique(groups):
-        idx = np.where(groups == g)[0]
-        xt, yt = Sx[idx], Sy[idx]
-        n = xt.shape[0]
-        if n <= abs(lag) + 2:
-            continue
-        if lag >= 0:
-            xp, yp = xt[: n - lag], yt[lag:]
-        else:
-            xp, yp = xt[-lag:], yt[: n + lag]
-        Xs.append(xp); Ys.append(yp); gs.append(np.full(xp.shape[0], g))
-    if not Xs:
+    ix, iy = lagpairs.lag_pair_indices(groups, lag)
+    if ix.size == 0:
         return None
-    return np.vstack(Xs), np.vstack(Ys), np.concatenate(gs)
+    return Sx[ix], Sy[iy], np.asarray(groups)[ix]
 
 
 def heldout_lag_curve_flat_perdim(Sx, Sy, groups, max_lag, n_dims=1, n_folds=5, seed=0):
@@ -318,24 +322,3 @@ def perdim_significance(Sx, Sy, cc_heldout, groups=None, n_shuffles: int = 100,
         mask = p < alpha
     mask = mask & np.isfinite(cc)
     return PerDimSignificance(np.asarray(mask, dtype=bool), p, thr, null_mode)
-
-
-def fdr_bh(pvals, q: float = 0.05) -> np.ndarray:
-    """Benjamini-Hochberg mask over the finite p-values (local copy: importing
-    ``paired_stats`` here would not cycle, but keeping ``lagged`` dependency-light
-    matters more than deduplicating nine lines)."""
-    p = np.asarray(pvals, dtype=float)
-    finite = np.isfinite(p)
-    if not np.any(finite):
-        return np.zeros_like(p, dtype=bool)
-    pf = p[finite]
-    n = pf.size
-    order = np.argsort(pf)
-    ranked = pf[order]
-    thresh = q * np.arange(1, n + 1) / n
-    passed = ranked <= thresh
-    k = np.max(np.flatnonzero(passed)) + 1 if np.any(passed) else 0
-    cut = ranked[k - 1] if k else -np.inf
-    out = np.zeros_like(p, dtype=bool)
-    out[finite] = pf <= cut
-    return out

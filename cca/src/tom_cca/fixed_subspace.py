@@ -26,7 +26,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import core, membership, partial
+from . import core, lagpairs, membership, partial
+from .paired_stats import fdr_bh
 
 
 @dataclass
@@ -87,14 +88,13 @@ def fit_fixed(X, Y, groups, Z=None, k: int = 30, trials=None,
     ky = int(min(k, yr.shape[1], sel.sum() - 1))
     if kx < 1 or ky < 1:
         return None
-    x_mean, y_mean = xr.mean(0), yr.mean(0)
-    _, sx, vtx = np.linalg.svd(xr - x_mean, full_matrices=False)
-    _, sy, vty = np.linalg.svd(yr - y_mean, full_matrices=False)
-    if not np.any(sx > 0) or not np.any(sy > 0):
+    px, py = core.pca_fit_flat(xr, kx), core.pca_fit_flat(yr, ky)
+    x_mean, y_mean, cx, cy = px.mean, py.mean, px.components, py.components
+    sx_all, sy_all = core.pca_project(xr, px), core.pca_project(yr, py)
+    if not np.any(sx_all) or not np.any(sy_all):        # constant activity -> no basis
         return None
-    cx, cy = vtx[:kx].T, vty[:ky].T
     try:
-        model = core.cca_fit((xr - x_mean) @ cx, (yr - y_mean) @ cy)
+        model = core.cca_fit(sx_all, sy_all)
     except Exception:                                       # noqa: BLE001
         return None
     d = int(min(model.A.shape[1], model.B.shape[1]))
@@ -132,19 +132,10 @@ def variate_lag_curve(u, v, groups, lags) -> np.ndarray:
     groups = np.asarray(groups)
     out = np.full(len(list(lags)), np.nan)
     for i, lag in enumerate(lags):
-        lag = int(lag)
-        us, vs = [], []
-        for g in np.unique(groups):
-            idx = np.where(groups == g)[0]
-            n = idx.size
-            if n <= abs(lag) + 2:
-                continue
-            xi, yi = (idx[: n - lag], idx[lag:]) if lag >= 0 else \
-                     (idx[-lag:], idx[: n + lag])
-            us.append(u[xi]); vs.append(v[yi])
-        if not us:
+        ix, iy = lagpairs.lag_pair_indices(groups, int(lag))
+        if ix.size == 0:
             continue
-        a, b = np.concatenate(us), np.concatenate(vs)
+        a, b = u[ix], v[iy]
         ok = np.isfinite(a) & np.isfinite(b)
         if ok.sum() < 3:
             continue
@@ -337,20 +328,7 @@ def frozen_perm_null(X, Y, n_shuffles: int = 200, alpha: float = 0.05, seed: int
     return FrozenSignificance(mask, p, thr, r_obs)
 
 
-def _fdr_bh(pvals, q: float = 0.05) -> np.ndarray:
-    p = np.asarray(pvals, dtype=float)
-    finite = np.isfinite(p)
-    if not np.any(finite):
-        return np.zeros_like(p, dtype=bool)
-    pf = p[finite]
-    n = pf.size
-    ranked = np.sort(pf)
-    passed = ranked <= q * np.arange(1, n + 1) / n
-    k = np.max(np.flatnonzero(passed)) + 1 if np.any(passed) else 0
-    cut = ranked[k - 1] if k else -np.inf
-    out = np.zeros_like(p, dtype=bool)
-    out[finite] = pf <= cut
-    return out
+_fdr_bh = fdr_bh   # single BH implementation lives in paired_stats (since 2026-08-19)
 
 
 def trial_lag_moments(u, v, groups, lags):
@@ -377,11 +355,10 @@ def trial_lag_moments(u, v, groups, lags):
         n = idx.size
         ut, vt = u[idx], v[idx]
         for li, lag in enumerate(lags):
-            lag = int(lag)
-            if n <= abs(lag) + 2:
+            loc = lagpairs.lag_local_index(n, int(lag))
+            if loc is None:
                 continue
-            a = ut[: n - lag] if lag >= 0 else ut[-lag:]
-            b = vt[lag:] if lag >= 0 else vt[: n + lag]
+            a, b = ut[loc[0]], vt[loc[1]]
             ok = np.isfinite(a) & np.isfinite(b)
             if ok.sum() < 1:
                 continue

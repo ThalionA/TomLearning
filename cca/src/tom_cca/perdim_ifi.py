@@ -156,9 +156,6 @@ def ifi_windows_by_dim(lag, cc, dim, max_window: int | None = None):
             if not (np.any(lg[sel] > 0) and np.any(lg[sel] < 0)):
                 continue
             ifi[i, j] = lagged.information_flow_index(lg[sel], c[sel])
-            pos = np.clip(c[sel][lg[sel] > 0], 0.0, None)
-            neg = np.clip(c[sel][lg[sel] < 0], 0.0, None)
-            pm = np.nanmean(pos) if np.any(np.isfinite(pos)) else 0.0
-            nm = np.nanmean(neg) if np.any(np.isfinite(neg)) else 0.0
+            pm, nm = lagged.ifi_sides(lg[sel], c[sel])
             degen[i, j] = (pm + nm) <= 0
     return dims, windows, ifi, degen

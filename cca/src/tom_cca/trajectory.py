@@ -50,10 +50,9 @@ def sliding_windows(unique_trials, window: int, step: int,
 
 
 def _pca_project(train: np.ndarray, test: np.ndarray, k: int):
-    mu = train.mean(0)
-    _, _, vt = np.linalg.svd(train - mu, full_matrices=False)
-    comp = vt[:k].T
-    return (train - mu) @ comp, (test - mu) @ comp
+    """Fit on ``train``, project both — alias of :func:`core.pca_fit_flat`."""
+    pca = core.pca_fit_flat(train, k)
+    return core.pca_project(train, pca), core.pca_project(test, pca)
 
 
 def heldout_cc1(X: np.ndarray, Y: np.ndarray, group_ids: np.ndarray,

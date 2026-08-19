@@ -38,9 +38,9 @@ class ReferenceFit:
 
 
 def _pca_fit(M: np.ndarray, k: int):
-    mu = M.mean(0)
-    _, _, vt = np.linalg.svd(M - mu, full_matrices=False)
-    return mu, vt[:k].T
+    """``(mean, components (n_units, k))`` — alias of :func:`core.pca_fit_flat`."""
+    pca = core.pca_fit_flat(M, k)
+    return pca.mean, pca.components
 
 
 def reference_fit(X, Y, train_mask, Z=None, k: int = 30) -> ReferenceFit:

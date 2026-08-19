@@ -38,7 +38,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, dataio, lagged, partial  # noqa: E402
+from tom_cca import config, core, dataio, lagged, partial  # noqa: E402
 
 K = 30
 N_FOLDS = 5
@@ -79,11 +79,6 @@ def parse_args():
                    help="comma-separated animal ids to run (smoke tests / timing)")
     return p.parse_args()
 
-
-def _pca_scores(M, k):
-    mu = M.mean(0)
-    _, _, vt = np.linalg.svd(M - mu, full_matrices=False)
-    return (M - mu) @ vt[:k].T
 
 
 def _capped_index(trial_ids, max_samples=MAX_SAMPLES, max_per_trial=MAX_BINS_PER_TRIAL):
@@ -167,8 +162,8 @@ def main():
             # lag curve is held-out per fold, so the directionality CC is unbiased)
             Xr = partial.partial_out(X, Z) if Z is not None else X
             Yr = partial.partial_out(Y, Z) if Z is not None else Y
-            Sx = _pca_scores(Xr, min(K, Xr.shape[1]))
-            Sy = _pca_scores(Yr, min(K, Yr.shape[1]))
+            Sx, _ = core.pca_scores(Xr, min(K, Xr.shape[1]))
+            Sy, _ = core.pca_scores(Yr, min(K, Yr.shape[1]))
             d = int(min(Sx.shape[1], Sy.shape[1]))
             try:
                 lags, cc = lagged.heldout_lag_curve_flat_perdim(

@@ -39,7 +39,7 @@ import numpy as np
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, subspace_stats  # noqa: E402
+from tom_cca import config, paired_stats, subspace_stats  # noqa: E402
 
 
 LANDMARKS = list(range(1, 7))
@@ -120,24 +120,7 @@ def _wilcoxon(deltas: list[float]):
         return (n, float(np.median(arr)), float("nan"), float("nan"))
 
 
-def _fdr_bh(pvals: np.ndarray, q: float = 0.05) -> np.ndarray:
-    """Benjamini-Hochberg FDR mask. Operates on finite p-values only."""
-    p = np.asarray(pvals, dtype=float)
-    finite = np.isfinite(p)
-    if not np.any(finite):
-        return np.zeros_like(p, dtype=bool)
-    p_f = p[finite]
-    n = p_f.size
-    order = np.argsort(p_f)
-    ranked = p_f[order]
-    threshold = q * np.arange(1, n + 1) / n
-    passed = ranked <= threshold
-    cutoff = ranked[np.max(np.where(passed))] if np.any(passed) else -1
-    out_f = p_f <= cutoff if cutoff >= 0 else np.zeros(n, dtype=bool)
-    out = np.zeros_like(p, dtype=bool)
-    out[finite] = out_f
-    return out
-
+_fdr_bh = paired_stats.fdr_bh   # single BH implementation (since 2026-08-19)
 
 def _run_tests(table, pairs, alpha, fdr_q) -> list[dict]:
     """Build per (pair, landmark, contrast, stat) test rows."""

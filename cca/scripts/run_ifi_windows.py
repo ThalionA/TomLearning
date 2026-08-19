@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, dataio, lagged, partial  # noqa: E402
+from tom_cca import config, core, dataio, lagged, partial  # noqa: E402
 
 K = 30
 N_FOLDS = 5
@@ -47,12 +47,6 @@ def parse_args():
                    help="Gaussian s.d. (ms) for spike-train smoothing (Buzsáki = 2.5)")
     return p.parse_args()
 
-
-def _pca_scores(M, k):
-    mu = M.mean(0)
-    _, _, vt = np.linalg.svd(M - mu, full_matrices=False)
-    comp = vt[:k].T
-    return (M - mu) @ comp
 
 
 def main():
@@ -103,8 +97,8 @@ def main():
             # lag curve is held-out per fold, so the directionality CC is unbiased)
             Xr = partial.partial_out(X, Z) if Z is not None else X
             Yr = partial.partial_out(Y, Z) if Z is not None else Y
-            Sx = _pca_scores(Xr, min(K, Xr.shape[1]))
-            Sy = _pca_scores(Yr, min(K, Yr.shape[1]))
+            Sx, _ = core.pca_scores(Xr, min(K, Xr.shape[1]))
+            Sy, _ = core.pca_scores(Yr, min(K, Yr.shape[1]))
             try:
                 lags, cc = lagged.heldout_lag_curve_flat(
                     Sx, Sy, trial_ids, max_lag=args.max_lag, n_folds=N_FOLDS)
@@ -114,8 +108,7 @@ def main():
             peak_lag = int(lags[np.nanargmax(cc)]) if np.any(np.isfinite(cc)) else 0
             for w in range(1, ifi_w.size + 1):
                 mask = np.abs(lags) <= w
-                cc_pos = float(np.nanmean(np.clip(cc[mask & (lags > 0)], 0, None)))
-                cc_neg = float(np.nanmean(np.clip(cc[mask & (lags < 0)], 0, None)))
+                cc_pos, cc_neg = lagged.ifi_sides(lags[mask], cc[mask])
                 rows.append({
                     "animal": a.animal_id, "learner": int(is_learner),
                     "pair": f"{ax}-{ay}", "bin_ms": args.bin_ms,

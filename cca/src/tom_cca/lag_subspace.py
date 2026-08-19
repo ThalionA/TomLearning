@@ -31,7 +31,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import core, membership, partial, subspace
+from . import core, lagpairs, membership, partial, subspace
 
 
 @dataclass
@@ -53,35 +53,19 @@ def segment_lag(X, Y, Z, groups, lag: int):
     third area out of ``Y`` using ``Z`` at ``X``'s times would inject exactly the lag
     the analysis is trying to measure. ``Zx``/``Zy`` are ``None`` when ``Z`` is ``None``.
     """
-    lag = int(lag)
-    Xs, Ys, Zxs, Zys, gs = [], [], [], [], []
-    for g in np.unique(groups):
-        idx = np.where(groups == g)[0]
-        n = idx.size
-        if n <= abs(lag) + 2:
-            continue
-        if lag >= 0:
-            xi, yi = idx[: n - lag], idx[lag:]
-        else:
-            xi, yi = idx[-lag:], idx[: n + lag]
-        Xs.append(X[xi]); Ys.append(Y[yi]); gs.append(np.full(xi.size, g))
-        if Z is not None:
-            Zxs.append(Z[xi]); Zys.append(Z[yi])
-    if not Xs:
+    ix, iy = lagpairs.lag_pair_indices(groups, lag)
+    if ix.size == 0:
         return None
-    return (np.vstack(Xs), np.vstack(Ys),
-            np.vstack(Zxs) if Zxs else None,
-            np.vstack(Zys) if Zys else None,
-            np.concatenate(gs))
+    return (X[ix], Y[iy],
+            Z[ix] if Z is not None else None,
+            Z[iy] if Z is not None else None,
+            np.asarray(groups)[ix])
 
 
 def _scores(M, k, train):
-    """PCA fit on training rows only, applied to all rows -> (scores, components)."""
-    k = int(min(k, M.shape[1], max(1, np.count_nonzero(train) - 1)))
-    mu = M[train].mean(0)
-    _, _, vt = np.linalg.svd(M[train] - mu, full_matrices=False)
-    comp = vt[:k].T                                  # (n_units, k)
-    return (M - mu) @ comp, comp
+    """PCA fit on training rows only, applied to all rows -> (scores, components).
+    Thin alias of :func:`core.pca_scores` (the single PCA helper since 2026-08-19)."""
+    return core.pca_scores(M, k, train=train)
 
 
 def lagged_fit(X, Y, groups, Z=None, lag: int = 0, k: int = 30, n_folds: int = 5,

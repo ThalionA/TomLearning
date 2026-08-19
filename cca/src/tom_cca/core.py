@@ -133,6 +133,41 @@ def pca_transform(tensor: np.ndarray, state: PCAState) -> np.ndarray:
     return scores.reshape(n_tr, n_bin, state.components.shape[1])
 
 
+@dataclass
+class FlatPCA:
+    """PCA basis fitted on flat ``(n_samples, n_units)`` rows (running-state regime)."""
+
+    mean: np.ndarray        # (n_units,) mean of the fitting rows
+    components: np.ndarray  # (n_units, k) columns are PC axes
+
+
+def pca_fit_flat(M: np.ndarray, k: int, train=None) -> FlatPCA:
+    """Fit PCA on the rows of ``M`` selected by ``train`` (default: all rows).
+
+    THE single PCA-to-scores helper for the temporal arm (before 2026-08-19 the same
+    four lines lived in seven places — audit/REPORT_2026-08-19.md §2.3). ``k`` is
+    clipped to ``min(k, n_units, n_train - 1)`` so a small fitting set never raises.
+    Rows are used as given — callers mask non-finite bins upstream.
+    """
+    M = np.asarray(M, dtype=float)
+    rows = M if train is None else M[np.asarray(train, dtype=bool)]
+    k = int(min(k, M.shape[1], max(1, rows.shape[0] - 1)))
+    mu = rows.mean(0)
+    _, _, vt = np.linalg.svd(rows - mu, full_matrices=False)
+    return FlatPCA(mean=mu, components=vt[:k].T)
+
+
+def pca_project(M: np.ndarray, pca: FlatPCA) -> np.ndarray:
+    """Scores ``(M - mean) @ components`` for a basis from :func:`pca_fit_flat`."""
+    return (np.asarray(M, dtype=float) - pca.mean) @ pca.components
+
+
+def pca_scores(M: np.ndarray, k: int, train=None):
+    """Fit on ``train`` rows (default all), project ALL rows -> ``(scores, components)``."""
+    pca = pca_fit_flat(M, k, train)
+    return pca_project(M, pca), pca.components
+
+
 # ---------------------------------------------------------------------------
 # Canonical correlation analysis
 # ---------------------------------------------------------------------------

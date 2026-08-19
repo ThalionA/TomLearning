@@ -58,10 +58,9 @@ class WindowSubspace:
 
 
 def _pca_fit(M: np.ndarray, k: int):
-    """Fit a k-component PCA: returns ``(mean, components (n_units, k))``."""
-    mu = M.mean(0)
-    _, _, vt = np.linalg.svd(M - mu, full_matrices=False)
-    return mu, vt[:k].T
+    """``(mean, components (n_units, k))`` — alias of :func:`core.pca_fit_flat`."""
+    pca = core.pca_fit_flat(M, k)
+    return pca.mean, pca.components
 
 
 def _project(M: np.ndarray, mu: np.ndarray, comp: np.ndarray) -> np.ndarray:
