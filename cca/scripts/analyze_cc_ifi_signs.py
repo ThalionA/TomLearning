@@ -32,21 +32,17 @@ Usage: PYTHONPATH=src python scripts/analyze_cc_ifi_signs.py
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import cc_aggregate, perdim_ifi  # noqa: E402
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-BIN_MS = 10
+from _common import FS_CONDITIONS, RES, TEMPORAL, config
+from tom_cca import cc_aggregate, perdim_ifi
+PAIRS = list(config.PAIR_NAMES)
+BIN_MS = TEMPORAL.bin_ms
 LEAD_DIMS = 5          # "leading" CCs — where held-out CC is above the floor
-HEADLINE_W = 5         # bins = +/-50 ms, the report's headline IFI window
+HEADLINE_W = TEMPORAL.label_w_bins         # bins = +/-50 ms, the report's headline IFI window
 
 
 def check_sig_consistency(df: pd.DataFrame) -> dict:
@@ -487,7 +483,7 @@ def main():
           "> for *no coupling* rather than *balanced*; those are flagged `degenerate` "
           "> and excluded from the sign counts.", ""]
     odirs: dict[str, pd.DataFrame] = {}
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"lag_curves_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue

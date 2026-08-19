@@ -26,18 +26,14 @@ Usage: PYTHONPATH=src python scripts/analyze_perdim_ifi.py
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import mixed_effects, paired_stats, perdim_ifi  # noqa: E402
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
+from _common import FS_CONDITIONS, RES, config
+from tom_cca import mixed_effects, paired_stats, perdim_ifi
+PAIRS = list(config.PAIR_NAMES)
 FIELDS = ["animal", "learner", "pair", "dim", "ifi", "peak_lag_ms", "cc_max",
           "cc_at_zero", "sig", "n_sig"]
 
@@ -192,7 +188,7 @@ def main():
           "> tracked component. These are statements about rank, not about a persistent",
           "> subspace — see meeting item 3.", ""]
     diag = ["", "## Is canonical rank meaningful out of sample?", ""]
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"lag_curves_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue

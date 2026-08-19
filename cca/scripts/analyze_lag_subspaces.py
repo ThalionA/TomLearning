@@ -28,19 +28,15 @@ Usage: PYTHONPATH=src python scripts/analyze_lag_subspaces.py
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import paired_stats  # noqa: E402
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-TAU_BINS = 5
+from _common import FS_CONDITIONS, RES, TEMPORAL, config
+from tom_cca import paired_stats
+PAIRS = list(config.PAIR_NAMES)
+TAU_BINS = TEMPORAL.label_w_bins   # must match run_lag_subspaces.TAU_BINS
 
 
 def _paired(deltas):
@@ -360,7 +356,7 @@ def main():
           "STATE.md §3.0 policy). Angles are the LARGEST principal angle over 3 "
           "canonical dims, so a subspace that matches on its dominant axis but diverges "
           "elsewhere is not scored as stable.", ""]
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"lag_subspaces_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue

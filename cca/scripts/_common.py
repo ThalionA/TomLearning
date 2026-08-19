@@ -32,7 +32,10 @@ FIGS = config.FIGURES_DIR
 PAIRS = list(config.PAIRS_TEMPORAL)       # [("CA1","RSC"), ...] panel order
 PAIR_NAMES = list(config.PAIR_NAMES)      # ["CA1-RSC", ...]
 TEMPORAL = config.TEMPORAL
+EPOCHS = list(config.EPOCH_NAMES)         # ["naive", "intermediate", "expert"]
 FS_SUFFIX = "_fsincl"
+# The two co-primary FS conditions every analyze/figs script loops over: (suffix, label).
+FS_CONDITIONS = [("", "FS-excluded"), (FS_SUFFIX, "FS-included")]
 
 
 def fs_suffix(include_fs: bool) -> str:

@@ -33,19 +33,14 @@ Usage: PYTHONPATH=src python scripts/analyze_cc_label_anova.py
 """
 from __future__ import annotations
 
-import sys
 import warnings
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
+from _common import EPOCHS, FS_CONDITIONS, RES, config
+PAIRS = list(config.PAIR_NAMES)
 # (column, label, is the LABEL main effect circular for this DV?)
 DVS = [("peak_r", "peak r", False),
        ("abs_ifi", "|IFI|", False),
@@ -187,7 +182,7 @@ def main():
           "",
           "Replaces the ΔFF − ΔFB contrast, which discarded the intermediate epoch and "
           "could not separate main effects from the interaction.", ""]
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"cc_label_track_epoch_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue

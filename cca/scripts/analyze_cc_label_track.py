@@ -32,21 +32,16 @@ Usage: PYTHONPATH=src python scripts/analyze_cc_label_track.py
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import lagged, paired_stats, perdim_ifi  # noqa: E402
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
-LABEL_W = 5           # bins; must match run_cc_label_track.LABEL_W
-EXPECTED_ANIMALS = 12  # learners with a learning point
+from _common import FS_CONDITIONS, RES, TEMPORAL, config
+from tom_cca import lagged, paired_stats, perdim_ifi
+PAIRS = list(config.PAIR_NAMES)
+LABEL_W = TEMPORAL.label_w_bins   # bins; the window run_cc_label_track labelled at
+EXPECTED_ANIMALS = config.EXPECTED_LEARNERS
 METRICS = [("peak_r", "peak r"), ("ifi", "IFI"), ("peak_lag_ms", "peak lag (ms)")]
 
 
@@ -214,7 +209,7 @@ def main():
           "label cannot be re-drawn by noise each epoch.", "",
           "> Correlations are IN-SAMPLE by construction (the frozen fit saw every "
           "> epoch). They are contrast statistics, not coupling strengths.", ""]
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"cc_label_track_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue

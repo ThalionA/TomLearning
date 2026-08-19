@@ -65,18 +65,14 @@ Usage: PYTHONPATH=src python scripts/analyze_cc_crosscorr_epochs.py [--label-col
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import cc_aggregate, paired_stats  # noqa: E402
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
+from _common import EPOCHS, FS_CONDITIONS, RES, config
+from tom_cca import cc_aggregate, paired_stats
+PAIRS = list(config.PAIR_NAMES)
 GROUPS = ["all", "FF", "FB"]
 
 
@@ -379,7 +375,7 @@ def main():
           "Frozen-axes lag curves (`cc_label_track_bin10*.csv`), averaged over each "
           "animal's significant CCs first, then across animals. `r` is in-sample for "
           "the whole session: a contrast across epochs, not a coupling strength.", ""]
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"cc_label_track_bin10{suf}.csv"
         red_src = RES / f"cc_label_track_epoch_bin10{suf}.csv"
         if not src.exists() or not red_src.exists():

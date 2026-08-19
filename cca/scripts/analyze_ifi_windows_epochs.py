@@ -35,22 +35,17 @@ Usage: PYTHONPATH=src python scripts/analyze_ifi_windows_epochs.py
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import paired_stats, perdim_ifi  # noqa: E402
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
-BIN_MS = 10
-HEADLINE_W = 5          # bins = +/-50 ms
-EXPECTED_ANIMALS = 12
+from _common import FS_CONDITIONS, RES, TEMPORAL, config
+from tom_cca import paired_stats, perdim_ifi
+PAIRS = list(config.PAIR_NAMES)
+BIN_MS = TEMPORAL.bin_ms
+HEADLINE_W = TEMPORAL.label_w_bins          # bins = +/-50 ms
+EXPECTED_ANIMALS = config.EXPECTED_LEARNERS
 
 
 def build_windows(df: pd.DataFrame) -> pd.DataFrame:
@@ -145,7 +140,7 @@ def main():
           "> components across the conditions being contrasted.", "",
           "> Correlations are IN-SAMPLE by construction; these are contrast statistics.",
           ""]
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"cc_label_track_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue

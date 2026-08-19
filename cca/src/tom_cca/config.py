@@ -90,6 +90,10 @@ PAIRS_TEMPORAL: tuple[tuple[str, str], ...] = (
 )
 PAIR_NAMES: tuple[str, ...] = tuple(f"{x}-{y}" for x, y in PAIRS_TEMPORAL)
 
+# Cohort-size guard for the analyze scripts: learners with a recorded learning point in
+# this dataset (12 as of 2026-06). A results CSV with fewer animals is flagged PARTIAL.
+EXPECTED_LEARNERS = 12
+
 # --- Surrogate / significance ------------------------------------------------
 # Shuffle count for the circular-shift surrogate used to test canonical-dimension
 # significance (95th-percentile threshold). Centralised so all continuous-regime

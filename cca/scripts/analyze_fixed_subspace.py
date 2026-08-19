@@ -21,19 +21,14 @@ Usage: PYTHONPATH=src python scripts/analyze_fixed_subspace.py
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import fixed_subspace, paired_stats, perdim_ifi  # noqa: E402
 
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
+from _common import EPOCHS, FS_CONDITIONS, RES, config
+from tom_cca import fixed_subspace, paired_stats, perdim_ifi
+PAIRS = list(config.PAIR_NAMES)
 METRICS = [("peak_r", "peak r"), ("ifi", "IFI"), ("peak_lag_ms", "peak lag (ms)"),
            ("width_ms", "half-max width (ms)")]
 
@@ -216,7 +211,7 @@ def main():
           "> **Not a coupling strength.** The frozen fit saw every epoch, so `peak r` is "
           "> in-sample and optimistic. It is a contrast statistic only; the leak-free "
           "> numbers live in `lag_subspaces_tables.md`.", ""]
-    for suf, fs in [("", "FS-excluded"), ("_fsincl", "FS-included")]:
+    for suf, fs in FS_CONDITIONS:
         src = RES / f"fixed_subspace_bin10{suf}.csv"
         if not src.exists():
             print(f"skip {fs}: {src.name} not found"); continue
