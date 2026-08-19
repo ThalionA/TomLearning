@@ -79,6 +79,48 @@ units in titles), `HCV1_perdim_ifi_*`, `HCV1_lagcc_*`, `HCV1_cc_crosscorr_epochs
 
 **Open:** MEETING/STATE/HANDOFF numbers for item 1 and §3.0 finding 3 updated below; the
 per-epoch speed export for the offset finding is still the next thing.
+**2026-08-19: code audit report written — `audit/REPORT_2026-08-19.md` (entry below); awaiting Theo's pick of candidates.**
+
+---
+
+## 📋 AUDIT (2026-08-19) — temporal CCA method: consolidate / simplify / document — REPORT ONLY, nothing moved
+
+**Nothing is running. No code or results changed.** Theo asked for an audit of the temporal
+CCA method with the goal of a modular, robust codebase portable to another dataset.
+Deliverable: **`audit/REPORT_2026-08-19.md`** (+ four `_appendix_*` files with the raw
+file:line sweeps). Baseline measured: 31 src modules / 6 954 LOC, 83 scripts / 16 828 LOC,
+**414 tests pass in 42 s**.
+
+Headlines (details + file:line in the report):
+- **~⅔ of the tree is off the temporal path** — the spatial / landmark / kCCA arms and the
+  *original* Arm-A/B pipeline (`lagged_temporal`, `lagged_landmark`, `segments`,
+  `pipeline.prepare_pair_temporal`, `analysis.analyse_pair_temporal`, `run_temporal.py`) are
+  imported by **none** of the five live drivers. Candidate `legacy/` move (~3 000 src LOC, ~45 scripts).
+- **Drift risk:** within-trial lag pairing implemented **9×** (guards differ; `subspace_window`
+  crosses trials); BH-FDR **4×** (identical); PCA→scores **7×** (two driver copies byte-identical);
+  sample cap **4×** with **two different selection rules** (`run_fixed_subspace._cap_bins` ≠ the
+  12 k rule); running-bin prep block copied in 13 drivers; IFI 0.0-vs-NaN split between
+  `lagged.information_flow_index` and `perdim_ifi.curve_ifi`; per-animal aggregation bypasses
+  `cc_aggregate`'s guards in 3 analyze scripts.
+- **Docs ≠ code:** HANDOFF §2.4 ("train-only partial-out where the readout is cross-validated")
+  is true only for `run_lag_subspaces`; `run_lag_curves`/`run_lag_cosine` residualise + PCA in-sample
+  (mild, unsupervised w.r.t. X–Y — doc fix first). `config.temporal_bin_ms=50 "Locked"` vs drivers at 10.
+  `cfg.temporal_circshift_min_bins` is read by no live null (global roll, min shift 1 — **not** a
+  result-changing bug at n≈3e5; config/doc drift). **`cc_label_track_*.csv` column `cc_heldout` is the
+  IN-SAMPLE frozen-fit r** (`run_cc_label_track.py:255` writes `frozen_perm_null(...).r_obs`) — carried,
+  not tested on; rename candidate.
+- **Portability:** `src/` is clean of area-name literals outside `config.py`; the coupling lives in
+  the scripts — `PAIRS` redeclared 51×, vault path hard-coded in 24 figs scripts (7 absolute
+  `/Users/theoamvr/…`), `sys.path.insert` in ~80 scripts (no `pyproject`), the canonical temporal
+  config (10 ms · σ 2.5 · k 30 · 5 folds · 200 shuf · ±250 ms · fdr_dims 10 · label_w 5) exists nowhere
+  as one object.
+- **Proposed shape** (report §5): eight temporal modules (`config, dataio, preprocess*, lagpairs*,
+  core, nulls*, ifi*, stats`) + `lag_subspace`/`fixed_subspace`, everything else under `legacy/`;
+  `scripts/_common.py`; `pyproject.toml`; a 2-page `METHOD.md` (step → function → config → test).
+  Six passes (report §6), P0 = equivalence tests first, P1+P2 zero-risk remove most of the clutter.
+
+**Next:** Theo picks candidates by number; apply one section at a time, tests + commit per section;
+rejections with a load-bearing reason go to `audit/CONVENTIONS.md`.
 
 ---
 
