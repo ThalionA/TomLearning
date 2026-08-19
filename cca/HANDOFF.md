@@ -30,9 +30,18 @@ cosine-across-lags, integration window vs IFI by epoch).
 
 ## 1. Pipeline map — script → output → figure
 
-Every driver takes `--bin-ms 10 --smooth-ms 2.5` and writes both FS conditions
-(`_fsincl` suffix = fast-spiking units included). **FS-excluded and FS-included are
-co-primary — report both.**
+Every driver defaults to the canonical temporal config (`config.TEMPORAL`: 10 ms bins,
+σ 2.5 ms, K 30, 5 folds, 200 shuffles, ±25 lags, FDR over 10 dims, label window 5 bins —
+`python scripts/run_x.py` with no flags) and writes both FS conditions (`--include-fs` →
+`_fsincl` suffix = fast-spiking units included). **FS-excluded and FS-included are
+co-primary — report both.** Since 2026-08-19 the drivers share one prep
+(`src/tom_cca/preprocess.py`: running mask, unit selection, sample cap, pair/confound
+construction — every skip now prints a reason) and one parser/paths module
+(`scripts/_common.py`); the analyze/figs scripts take `PAIRS`, `RES`, `EPOCHS` and the FS
+idiom from the same place. ⚠ `run_lag_subspaces`, `run_lag_cosine` (12 000 / 600) and
+`run_fixed_subspace` (600 per trial) keep their HISTORICAL caps as parser defaults so the
+CSVs reproduce — the cap is now printed at start and exposed as `--max-samples /
+--max-per-trial`; pass `0 0` to uncap (see §2).
 
 | # | Question | Driver | Analysis | Figures |
 |---|---|---|---|---|
@@ -60,7 +69,12 @@ gitignored; regenerate from the scripts.
 2. Engaged running bins only: in-trial and **velocity ≥ 2 cm/s**.
 3. An area needs **≥ 5 units**. Eight pairs (see any driver's `PAIRS`).
 4. Third-area control: all *other* recorded areas regressed out of both X and Y
-   (`partial.partial_out_cv`, train-only coefficients where the readout is cross-validated).
+   (`partial.partial_out` / `partial_out_cv`). ⚠ Corrected 2026-08-19 (audit §2.6): the
+   confound coefficients are train-only ONLY in `run_lag_subspaces` (`lag_subspace.lag_sweep`,
+   per fold). `run_lag_curves`, `run_lag_cosine`, `run_ifi_windows` residualise and PCA on
+   ALL rows before the per-fold held-out CCA (`preprocess.residual_pca_scores`) — unsupervised
+   w.r.t. the X–Y relation, but not train-only; `run_cc_label_track` uses all rows by design
+   and `run_fixed_subspace` the balanced fit trials. State this in any methods text.
 5. PCA to **k = 30** per area.
 6. CV: **5 folds split by WHOLE TRIALS**.
 7. **Sign convention: positive lag ⇒ the FIRST-named area leads.** `lag_slice` pairs

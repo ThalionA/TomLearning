@@ -79,7 +79,42 @@ units in titles), `HCV1_perdim_ifi_*`, `HCV1_lagcc_*`, `HCV1_cc_crosscorr_epochs
 
 **Open:** MEETING/STATE/HANDOFF numbers for item 1 and §3.0 finding 3 updated below; the
 per-epoch speed export for the offset finding is still the next thing.
-**2026-08-19: code audit report written — `audit/REPORT_2026-08-19.md` (entry below); awaiting Theo's pick of candidates.**
+**2026-08-19: code audit (`audit/REPORT_2026-08-19.md`) → the DEDUP passes are done and verified like-for-like (4 commits, 504 tests; entry below). Drivers now share `preprocess.py`/`_common.py`/`config.TEMPORAL`. Open: archive decision, P4 semantic fixes, METHOD.md.**
+
+---
+
+## ✓ DONE (2026-08-19, later) — DEDUP of the temporal method, zero behaviour change (4 commits)
+
+**Nothing is running. No result changed** — every pass was verified like-for-like before
+commit. Theo: "start with the massive dedup"; `duplication` logged as S in `~/.claude/MISTAKES.md`
+(new tag, user-flagged critical; rule candidate: grep before writing a helper in a script —
+exists in src → import, exists elsewhere → hoist with a test first).
+
+| commit | what | verification |
+|---|---|---|
+| `93028ae` src | `lagpairs.py` = THE within-trial lag pairer (was 9 copies; 5 live callers repointed: `lagged._segment_lagged_pairs`, `lag_subspace.segment_lag`, `fixed_subspace.variate_lag_curve/trial_lag_moments`); `core.pca_fit_flat/pca_project/pca_scores` (was 7 copies incl. 2 byte-identical driver copies); ONE `paired_stats.fdr_bh` (was 4; `lagged.fdr_bh`, `fixed_subspace._fdr_bh` are aliases); `lagged.ifi_sides` (kills 2 inline re-derivations of the clipped means) | `tests/test_dedup_equivalence.py`: 81 tests pin the shared functions to VERBATIM copies of every old implementation (1e-12); 414 old tests unchanged |
+| `6462813` drivers | `src/tom_cca/preprocess.py`: `RunningSession` + `load_running_session` (the 13-copy prep block: stream load with a printed skip REASON, running mask, ≥5-unit areas, cap, `pair(ax, ay) → X, Y, Z`), `cap_running_bins` (4 cap copies → 1; reproduces all three old selection rules), `residual_pca_scores`, `epoch_of_trial`; `config.TEMPORAL` (10 ms · σ 2.5 · K 30 · 5 folds · 200 shuf · ±25 · fdr_dims 10 · label_w 5 — ONE object), `PAIRS_TEMPORAL`/`PAIR_NAMES`, `FIGURE_MIRROR_DIR` (env `CCA_FIG_MIRROR`), `FIG_PREFIX`; `dataio.load_learning_points()` public; `scripts/_common.py` (sys.path once, `RES/FIGS`, `PAIRS`, `FS_CONDITIONS`, `temporal_parser`, `results_path`); 6 drivers rewritten (`run_lag_curves/ifi_windows/fixed_subspace/cc_label_track/lag_cosine/lag_subspaces`, ~40 % shorter, every flag shared) | one-animal (36) smoke harness, old vs new: **7 CSVs byte-identical** (incl. `run_lag_subspaces --epochs`); 9 more equivalence tests (caps, session, epoch map) |
+| `67683a4` analyze | 8 live `analyze_*` take `PAIRS/RES/EPOCHS/BIN_MS/LABEL_W/EXPECTED_LEARNERS` + the FS loop from `_common`/`config` | all 8 re-run → `git status results/` clean (every tracked output byte-identical) |
+| `374c0dd` figs | `figstyle.save(fig, "HCV1_x")` → `config.FIGURES_DIR` primary + vault mirror (a path stem still works for legacy scripts); 11 live `figs_*` drop `ATT/RES/PAIRS/sys.path` | 48/48 live PNGs (both FS) byte-identical before/after; vault mirror byte-identical |
+
+**Behaviour-preserving choices to know about:** `run_lag_subspaces`/`run_lag_cosine` keep
+their HISTORICAL cap (12 000 / 600 → first ~20 trials) and `run_fixed_subspace` its 600-per-trial
+cap as parser DEFAULTS — now printed at start and exposed as `--max-samples/--max-per-trial`
+(`0 0` uncaps). Uncapping them is a separate, numbers-changing decision (HANDOFF §2).
+`run_ifi_windows` default bin is now 10 (was 25; STATE §6 always passed 10 explicitly).
+
+**Docs fixed:** HANDOFF §1 (defaults/shared prep/caps) and §2.4 (partial-out is train-only
+ONLY in `run_lag_subspaces` — the old sentence overstated it); README quick-start (temporal
+arm first, 504 tests); `src/tom_cca/__init__.py` rewritten as the method map (20 modules
+exported, temporal first). Audit report status block updated (`audit/REPORT_2026-08-19.md`).
+
+**Still open from the audit (Theo's picks):** §1 archive of the spatial/landmark/kCCA arms +
+the original Arm-A/B pipeline to `legacy/` (biggest remaining simplification; `bin10_tables`
+chain needs a call); 1.7 `subspace_window` → `perdim_significance` swap (like-for-like first);
+2.8 one circshift null honouring `temporal_circshift_min_bins`; 2.9 route the 3 hand-rolled
+per-animal aggregations through `cc_aggregate` (n may change by one animal — report table);
+4.1 rename `cc_heldout` → `r_frozen`; 4.3 config sidecar per results CSV; `pyproject.toml`;
+4.7 `METHOD.md`.
 
 ---
 

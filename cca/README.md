@@ -41,11 +41,30 @@ See `UNDERSTANDING.md` for the full data contract.
 ## Quick start
 
 The package is a self-contained src-layout Python package. Tests use pytest;
-the package itself depends only on numpy, scipy, h5py, matplotlib and
+the package itself depends only on numpy, scipy, h5py, matplotlib, pandas and
 openpyxl (for the sweep summary xlsx).
 
     cd cca/
-    PYTHONPATH=src python -m pytest tests/ -q        # 109 tests, ~10 s
+    PYTHONPATH=src python -m pytest tests/ -q        # 504 tests, ~45 s
+
+### Temporal arm (PRIMARY) — the method that carries the write-up
+
+Every script imports `scripts/_common.py` first, which puts `src/` on the path, so
+`python scripts/<x>.py` works without `PYTHONPATH`. Defaults are the canonical
+temporal config (`config.TEMPORAL`: 10 ms bins, σ 2.5 ms, K 30, 5 folds, 200 shuffles,
+±25 lags); `--include-fs` writes the co-primary FS-included file.
+
+    python scripts/run_lag_curves.py      [--include-fs]   # refit-per-lag held-out curves (uncapped; ~3 h / FS; or scripts/run_lag_curves_uncapped_batch.sh)
+    python scripts/run_cc_label_track.py  [--include-fs]   # frozen axes, FF/FB labels, per-epoch curves
+    python scripts/run_fixed_subspace.py  [--include-fs]   # frozen epoch-balanced subspace (historical cap: 600 bins/trial)
+    python scripts/run_lag_subspaces.py   [--epochs] [--include-fs]   # refit-per-lag subspaces (historical cap 12000/600)
+    python scripts/run_lag_cosine.py      [--include-fs]   # CC self-cosine across lags   (historical cap 12000/600)
+    python scripts/analyze_*.py                            # CSV -> stats CSV + md tables (both FS in one run)
+    python scripts/figs_*.py [fsincl]                      # -> cca/figures/HCV1_*.{svg,png} (+ vault mirror)
+
+`HANDOFF.md` maps script → CSV → figure and lists the column dictionary; the method
+layer is `src/tom_cca/{preprocess,lagpairs,core,lagged,lag_subspace,fixed_subspace,
+perdim_ifi,cc_aggregate,paired_stats}.py` (see `src/tom_cca/__init__.py`).
 
 To run on real data (mount or symlink `HC_V1_data/` first):
 
