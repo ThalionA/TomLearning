@@ -1,0 +1,16 @@
+CC LABEL+TRACK | bin=10ms smooth=2.5ms K=30 | label at ±50 ms | 200 shuffles | FS=excl
+
+  animal 28: 6120 rows total
+  animal 34: 8874 rows total
+  animal 36: 10404 rows total
+  animal 41: 13464 rows total
+  animal 52: 21726 rows total
+  animal 61: 30906 rows total
+  animal 63: 32436 rows total
+  animal 66: 41616 rows total
+  animal 68: 47736 rows total
+  animal 73: 56916 rows total
+  animal 75: 66096 rows total
+  animal 77: 72675 rows total
+
+-> /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/cc_label_track_bin10.csv

@@ -4,7 +4,7 @@ Frozen-axes lag curves (`cc_label_track_bin10*.csv`), averaged over each animal'
 
 ### FS-excluded — cross-correlograms by epoch, all significant CCs (frozen axes, per-animal-first)
 
-Label column for the FF/FB split: `label` — whole-session fit at ±50 ms (as on slide 10) — NOT cross-validated: the plotted epochs contributed to the label. Paired *t* across animals on each animal's mean over its significant CCs of the per-CC reduction already in `cc_label_track_epoch_*` (IFI at ±50 ms; peak r). Positive IFI ⇒ first-named area leads. Per-pair families; BH across the 8 pairs is a sensitivity column.
+Label column for the FF/FB split: `label_int` — sign of the INTERMEDIATE epoch's own IFI at ±50 ms — 10 trials disjoint from both plotted epochs (Tom's suggestion; noisy, few trials). Paired *t* across animals on each animal's mean over its significant CCs of the per-CC reduction already in `cc_label_track_epoch_*` (IFI at ±50 ms; peak r). Positive IFI ⇒ first-named area leads. Per-pair families; BH across the 8 pairs is a sensitivity column.
 
 > ⚠ **Curve-height (peak r) contrasts against naive are not a learning readout on this all-trials fit** — see the script docstring: naive is uniquely low, ~60 % of that is a lag-independent OFFSET (`far_r`, the |lag| ≥ 200 ms baseline, moves with it — slow co-modulation, speed the obvious candidate), the rise is LP-independent, and intermediate (pre-LP) already equals expert. `peak_minus_far` is the coupling-specific statistic; `intermediate-naive` sits next to `expert-naive`. IFI (shape) is the naive-vs-expert statistic and is null.
 
@@ -67,53 +67,55 @@ Label column for the FF/FB split: `label` — whole-session fit at ±50 ms (as o
 
 | pair | naive | intermediate | expert |
 |---|---|---|---|
-| CA1-RSC | 8/8/7 | 8/8/7 | 8/8/7 |
+| CA1-RSC | 8/8/8 | 8/8/8 | 8/8/8 |
 | CA1-CA3 | 6/6/6 | 6/6/6 | 6/6/6 |
 | CA1-DG | 8/8/8 | 8/8/8 | 8/8/8 |
 | CA1-V1 | 10/10/10 | 10/10/10 | 10/10/10 |
 | CA3-DG | 4/4/4 | 4/4/4 | 4/4/4 |
-| CA1-SUB | 4/2/4 | 4/2/4 | 4/2/4 |
+| CA1-SUB | 4/4/4 | 4/4/4 | 4/4/4 |
 | RSC-SUB | 4/4/4 | 4/4/4 | 4/4/4 |
 | V1-RSC | 6/6/6 | 6/6/6 | 6/6/6 |
 
-**Per-label expert − naive (label = `label`), animals-as-n:**
+**Per-label expert − naive (label = `label_int`), animals-as-n:**
 
 | pair | label | metric | n | naive → expert | Δ | t | p |
 |---|---|---|---|---|---|---|---|
-| CA1-RSC | FF | ifi | 8 | +0.004 → +0.039 | +0.035 | +0.57 | 0.586 |
-| CA1-CA3 | FF | ifi | 6 | +0.059 → +0.233 | +0.174 | +2.23 | 0.0765 |
-| CA1-DG | FF | ifi | 8 | +0.232 → +0.182 | -0.050 | -0.64 | 0.545 |
-| CA1-V1 | FF | ifi | 10 | -0.010 → +0.035 | **+0.045** | +2.61 | **0.0284** |
-| CA3-DG | FF | ifi | 4 | -0.047 → +0.138 | +0.185 | +1.09 | 0.355 |
-| RSC-SUB | FF | ifi | 4 | +0.185 → -0.048 | -0.233 | -1.83 | 0.164 |
-| V1-RSC | FF | ifi | 6 | +0.083 → +0.082 | -0.001 | -0.08 | 0.939 |
-| CA1-RSC | FB | ifi | 7 | -0.031 → -0.060 | -0.029 | -0.37 | 0.727 |
-| CA1-CA3 | FB | ifi | 6 | +0.000 → -0.094 | -0.095 | -0.85 | 0.436 |
-| CA1-DG | FB | ifi | 8 | -0.177 → -0.076 | +0.101 | +1.29 | 0.238 |
-| CA1-V1 | FB | ifi | 10 | -0.011 → -0.032 | -0.020 | -1.21 | 0.256 |
-| CA3-DG | FB | ifi | 4 | -0.177 → -0.221 | -0.044 | -0.56 | 0.617 |
-| CA1-SUB | FB | ifi | 4 | -0.355 → -0.151 | +0.204 | +1.69 | 0.189 |
-| RSC-SUB | FB | ifi | 4 | -0.099 → -0.057 | +0.042 | +0.66 | 0.554 |
-| V1-RSC | FB | ifi | 6 | -0.021 → +0.046 | +0.067 | +1.13 | 0.308 |
-| CA1-RSC | FF | peak_r | 8 | +0.031 → +0.049 | **+0.018** | +3.41 | **0.0112** |
-| CA1-CA3 | FF | peak_r | 6 | +0.055 → +0.069 | +0.014 | +1.77 | 0.137 |
-| CA1-DG | FF | peak_r | 8 | +0.046 → +0.052 | +0.006 | +1.86 | 0.105 |
-| CA1-V1 | FF | peak_r | 10 | +0.035 → +0.052 | **+0.017** | +4.02 | **0.00303** |
-| CA3-DG | FF | peak_r | 4 | +0.114 → +0.131 | +0.017 | +1.12 | 0.346 |
-| RSC-SUB | FF | peak_r | 4 | +0.045 → +0.051 | +0.006 | +1.93 | 0.15 |
-| V1-RSC | FF | peak_r | 6 | +0.091 → +0.120 | +0.029 | +2.24 | 0.0757 |
-| CA1-RSC | FB | peak_r | 7 | +0.026 → +0.043 | **+0.016** | +3.55 | **0.0121** |
-| CA1-CA3 | FB | peak_r | 6 | +0.057 → +0.067 | +0.010 | +2.25 | 0.0741 |
-| CA1-DG | FB | peak_r | 8 | +0.056 → +0.062 | +0.007 | +1.72 | 0.129 |
-| CA1-V1 | FB | peak_r | 10 | +0.034 → +0.058 | **+0.024** | +4.20 | **0.00229** |
-| CA3-DG | FB | peak_r | 4 | +0.107 → +0.120 | +0.013 | +18.78 | 0.00033 |
-| CA1-SUB | FB | peak_r | 4 | +0.029 → +0.038 | +0.009 | +1.36 | 0.268 |
-| RSC-SUB | FB | peak_r | 4 | +0.052 → +0.070 | +0.018 | +2.81 | 0.0674 |
-| V1-RSC | FB | peak_r | 6 | +0.065 → +0.096 | **+0.031** | +3.12 | **0.0261** |
+| CA1-RSC | FF | ifi | 8 | -0.003 → +0.029 | +0.032 | +0.55 | 0.598 |
+| CA1-CA3 | FF | ifi | 6 | +0.002 → +0.168 | +0.165 | +1.16 | 0.297 |
+| CA1-DG | FF | ifi | 8 | +0.198 → +0.205 | +0.007 | +0.12 | 0.908 |
+| CA1-V1 | FF | ifi | 10 | -0.026 → -0.012 | +0.015 | +0.87 | 0.408 |
+| CA3-DG | FF | ifi | 4 | -0.106 → +0.042 | +0.148 | +0.62 | 0.579 |
+| CA1-SUB | FF | ifi | 4 | -0.152 → +0.066 | +0.217 | +1.33 | 0.276 |
+| RSC-SUB | FF | ifi | 4 | +0.097 → -0.048 | -0.145 | -1.21 | 0.312 |
+| V1-RSC | FF | ifi | 6 | +0.075 → +0.078 | +0.002 | +0.07 | 0.946 |
+| CA1-RSC | FB | ifi | 8 | +0.032 → -0.025 | -0.056 | -1.03 | 0.337 |
+| CA1-CA3 | FB | ifi | 6 | -0.079 → -0.062 | +0.017 | +0.16 | 0.876 |
+| CA1-DG | FB | ifi | 8 | -0.171 → -0.095 | +0.075 | +0.73 | 0.488 |
+| CA1-V1 | FB | ifi | 10 | +0.000 → +0.005 | +0.004 | +0.24 | 0.818 |
+| CA3-DG | FB | ifi | 4 | -0.190 → -0.229 | -0.038 | -0.72 | 0.522 |
+| CA1-SUB | FB | ifi | 4 | -0.383 → -0.181 | +0.202 | +1.50 | 0.231 |
+| RSC-SUB | FB | ifi | 4 | -0.044 → -0.052 | -0.008 | -0.34 | 0.758 |
+| V1-RSC | FB | ifi | 6 | -0.029 → +0.071 | +0.100 | +1.95 | 0.109 |
+| CA1-RSC | FF | peak_r | 8 | +0.032 → +0.052 | **+0.020** | +3.79 | **0.00678** |
+| CA1-CA3 | FF | peak_r | 6 | +0.064 → +0.079 | +0.015 | +1.98 | 0.104 |
+| CA1-DG | FF | peak_r | 8 | +0.044 → +0.048 | +0.004 | +1.78 | 0.119 |
+| CA1-V1 | FF | peak_r | 10 | +0.042 → +0.061 | **+0.019** | +2.89 | **0.0178** |
+| CA3-DG | FF | peak_r | 4 | +0.115 → +0.129 | +0.014 | +2.00 | 0.139 |
+| CA1-SUB | FF | peak_r | 4 | +0.030 → +0.032 | +0.002 | +0.33 | 0.766 |
+| RSC-SUB | FF | peak_r | 4 | +0.051 → +0.053 | +0.002 | +0.48 | 0.665 |
+| V1-RSC | FF | peak_r | 6 | +0.083 → +0.110 | +0.027 | +2.00 | 0.101 |
+| CA1-RSC | FB | peak_r | 8 | +0.025 → +0.040 | **+0.015** | +3.15 | **0.0162** |
+| CA1-CA3 | FB | peak_r | 6 | +0.069 → +0.070 | +0.001 | +0.35 | 0.74 |
+| CA1-DG | FB | peak_r | 8 | +0.051 → +0.061 | **+0.010** | +2.91 | **0.0227** |
+| CA1-V1 | FB | peak_r | 10 | +0.036 → +0.055 | **+0.020** | +4.11 | **0.00263** |
+| CA3-DG | FB | peak_r | 4 | +0.098 → +0.112 | +0.014 | +22.50 | 0.000192 |
+| CA1-SUB | FB | peak_r | 4 | +0.030 → +0.042 | +0.013 | +1.64 | 0.199 |
+| RSC-SUB | FB | peak_r | 4 | +0.055 → +0.076 | +0.021 | +2.70 | 0.0737 |
+| V1-RSC | FB | peak_r | 6 | +0.058 → +0.086 | **+0.028** | +4.14 | **0.00897** |
 
 ### FS-included — cross-correlograms by epoch, all significant CCs (frozen axes, per-animal-first)
 
-Label column for the FF/FB split: `label` — whole-session fit at ±50 ms (as on slide 10) — NOT cross-validated: the plotted epochs contributed to the label. Paired *t* across animals on each animal's mean over its significant CCs of the per-CC reduction already in `cc_label_track_epoch_*` (IFI at ±50 ms; peak r). Positive IFI ⇒ first-named area leads. Per-pair families; BH across the 8 pairs is a sensitivity column.
+Label column for the FF/FB split: `label_int` — sign of the INTERMEDIATE epoch's own IFI at ±50 ms — 10 trials disjoint from both plotted epochs (Tom's suggestion; noisy, few trials). Paired *t* across animals on each animal's mean over its significant CCs of the per-CC reduction already in `cc_label_track_epoch_*` (IFI at ±50 ms; peak r). Positive IFI ⇒ first-named area leads. Per-pair families; BH across the 8 pairs is a sensitivity column.
 
 > ⚠ **Curve-height (peak r) contrasts against naive are not a learning readout on this all-trials fit** — see the script docstring: naive is uniquely low, ~60 % of that is a lag-independent OFFSET (`far_r`, the |lag| ≥ 200 ms baseline, moves with it — slow co-modulation, speed the obvious candidate), the rise is LP-independent, and intermediate (pre-LP) already equals expert. `peak_minus_far` is the coupling-specific statistic; `intermediate-naive` sits next to `expert-naive`. IFI (shape) is the naive-vs-expert statistic and is null.
 
@@ -181,43 +183,43 @@ Label column for the FF/FB split: `label` — whole-session fit at ±50 ms (as o
 | CA1-DG | 8/8/8 | 8/8/8 | 8/8/8 |
 | CA1-V1 | 10/10/10 | 10/10/10 | 10/10/10 |
 | CA3-DG | 4/4/4 | 4/4/4 | 4/4/4 |
-| CA1-SUB | 4/3/4 | 4/3/4 | 4/3/4 |
-| RSC-SUB | 4/3/4 | 4/3/4 | 4/3/4 |
+| CA1-SUB | 4/4/4 | 4/4/4 | 4/4/4 |
+| RSC-SUB | 4/4/4 | 4/4/4 | 4/4/4 |
 | V1-RSC | 6/6/6 | 6/6/6 | 6/6/6 |
 
-**Per-label expert − naive (label = `label`), animals-as-n:**
+**Per-label expert − naive (label = `label_int`), animals-as-n:**
 
 | pair | label | metric | n | naive → expert | Δ | t | p |
 |---|---|---|---|---|---|---|---|
-| CA1-RSC | FF | ifi | 8 | +0.061 → +0.154 | +0.093 | +1.25 | 0.25 |
-| CA1-CA3 | FF | ifi | 7 | +0.069 → +0.198 | +0.129 | +1.05 | 0.336 |
-| CA1-DG | FF | ifi | 8 | +0.038 → +0.085 | +0.047 | +0.61 | 0.562 |
-| CA1-V1 | FF | ifi | 10 | +0.042 → +0.009 | -0.032 | -0.54 | 0.6 |
-| CA3-DG | FF | ifi | 4 | +0.026 → +0.079 | +0.053 | +0.85 | 0.457 |
-| CA1-SUB | FF | ifi | 3 | -0.270 → +0.550 | +0.820 | +10.03 | 0.0098 |
-| RSC-SUB | FF | ifi | 3 | +0.092 → +0.031 | -0.061 | -1.49 | 0.276 |
-| V1-RSC | FF | ifi | 6 | +0.070 → +0.062 | -0.008 | -0.37 | 0.73 |
-| CA1-RSC | FB | ifi | 7 | -0.386 → -0.020 | +0.366 | +2.39 | 0.0538 |
-| CA1-CA3 | FB | ifi | 7 | -0.089 → -0.154 | -0.065 | -0.62 | 0.559 |
-| CA1-DG | FB | ifi | 8 | -0.133 → -0.063 | +0.071 | +0.80 | 0.45 |
-| CA1-V1 | FB | ifi | 10 | +0.001 → -0.060 | -0.061 | -1.42 | 0.19 |
-| CA3-DG | FB | ifi | 4 | -0.219 → -0.195 | +0.023 | +0.36 | 0.74 |
-| CA1-SUB | FB | ifi | 4 | -0.318 → -0.127 | +0.190 | +1.16 | 0.329 |
-| RSC-SUB | FB | ifi | 4 | -0.074 → -0.088 | -0.014 | -0.59 | 0.595 |
-| V1-RSC | FB | ifi | 6 | -0.016 → -0.040 | -0.024 | -1.08 | 0.328 |
-| CA1-RSC | FF | peak_r | 8 | +0.039 → +0.056 | **+0.017** | +2.78 | **0.0272** |
-| CA1-CA3 | FF | peak_r | 7 | +0.072 → +0.088 | +0.016 | +1.82 | 0.118 |
-| CA1-DG | FF | peak_r | 8 | +0.057 → +0.059 | +0.003 | +0.80 | 0.452 |
-| CA1-V1 | FF | peak_r | 10 | +0.041 → +0.059 | **+0.019** | +5.49 | **0.000385** |
-| CA3-DG | FF | peak_r | 4 | +0.163 → +0.175 | +0.012 | +4.13 | 0.0258 |
-| CA1-SUB | FF | peak_r | 3 | +0.019 → +0.033 | +0.014 | +1.26 | 0.334 |
-| RSC-SUB | FF | peak_r | 3 | +0.041 → +0.041 | -0.000 | -0.01 | 0.992 |
-| V1-RSC | FF | peak_r | 6 | +0.108 → +0.136 | **+0.028** | +2.81 | **0.0378** |
-| CA1-RSC | FB | peak_r | 7 | +0.036 → +0.056 | +0.020 | +2.05 | 0.0863 |
-| CA1-CA3 | FB | peak_r | 7 | +0.085 → +0.092 | +0.006 | +0.91 | 0.4 |
-| CA1-DG | FB | peak_r | 8 | +0.058 → +0.061 | +0.002 | +0.75 | 0.478 |
-| CA1-V1 | FB | peak_r | 10 | +0.039 → +0.065 | **+0.025** | +4.15 | **0.00249** |
-| CA3-DG | FB | peak_r | 4 | +0.114 → +0.132 | +0.017 | +7.91 | 0.00421 |
-| CA1-SUB | FB | peak_r | 4 | +0.035 → +0.045 | +0.010 | +1.35 | 0.27 |
-| RSC-SUB | FB | peak_r | 4 | +0.062 → +0.079 | +0.017 | +2.90 | 0.0627 |
-| V1-RSC | FB | peak_r | 6 | +0.068 → +0.099 | **+0.031** | +2.89 | **0.0344** |
+| CA1-RSC | FF | ifi | 8 | +0.031 → +0.119 | +0.089 | +1.27 | 0.246 |
+| CA1-CA3 | FF | ifi | 7 | +0.008 → +0.213 | +0.205 | +1.60 | 0.16 |
+| CA1-DG | FF | ifi | 8 | +0.121 → +0.166 | +0.045 | +0.39 | 0.707 |
+| CA1-V1 | FF | ifi | 10 | -0.034 → -0.012 | +0.022 | +0.74 | 0.476 |
+| CA3-DG | FF | ifi | 4 | +0.012 → -0.019 | -0.031 | -0.67 | 0.549 |
+| CA1-SUB | FF | ifi | 4 | -0.139 → +0.396 | +0.536 | +2.24 | 0.111 |
+| RSC-SUB | FF | ifi | 4 | +0.055 → +0.005 | -0.050 | -1.96 | 0.145 |
+| V1-RSC | FF | ifi | 6 | +0.059 → +0.040 | -0.019 | -0.74 | 0.495 |
+| CA1-RSC | FB | ifi | 7 | -0.112 → +0.036 | +0.148 | +2.22 | 0.0679 |
+| CA1-CA3 | FB | ifi | 7 | -0.014 → -0.166 | -0.152 | -1.13 | 0.302 |
+| CA1-DG | FB | ifi | 8 | -0.075 → -0.070 | +0.005 | +0.07 | 0.949 |
+| CA1-V1 | FB | ifi | 10 | +0.029 → -0.032 | -0.062 | -1.52 | 0.164 |
+| CA3-DG | FB | ifi | 4 | -0.260 → -0.163 | +0.097 | +0.92 | 0.426 |
+| CA1-SUB | FB | ifi | 4 | -0.278 → -0.227 | +0.051 | +0.52 | 0.639 |
+| RSC-SUB | FB | ifi | 4 | -0.073 → -0.090 | -0.017 | -0.47 | 0.672 |
+| V1-RSC | FB | ifi | 6 | -0.033 → -0.024 | +0.009 | +0.52 | 0.624 |
+| CA1-RSC | FF | peak_r | 8 | +0.041 → +0.057 | **+0.016** | +2.78 | **0.0273** |
+| CA1-CA3 | FF | peak_r | 7 | +0.090 → +0.107 | +0.017 | +1.61 | 0.159 |
+| CA1-DG | FF | peak_r | 8 | +0.059 → +0.058 | -0.001 | -0.14 | 0.895 |
+| CA1-V1 | FF | peak_r | 10 | +0.043 → +0.066 | **+0.023** | +3.00 | **0.0149** |
+| CA3-DG | FF | peak_r | 4 | +0.158 → +0.175 | +0.017 | +4.82 | 0.017 |
+| CA1-SUB | FF | peak_r | 4 | +0.028 → +0.029 | +0.001 | +0.55 | 0.62 |
+| RSC-SUB | FF | peak_r | 4 | +0.053 → +0.053 | +0.000 | +0.01 | 0.992 |
+| V1-RSC | FF | peak_r | 6 | +0.101 → +0.131 | **+0.030** | +3.13 | **0.0261** |
+| CA1-RSC | FB | peak_r | 7 | +0.035 → +0.048 | +0.013 | +1.86 | 0.113 |
+| CA1-CA3 | FB | peak_r | 7 | +0.080 → +0.086 | +0.006 | +1.34 | 0.23 |
+| CA1-DG | FB | peak_r | 8 | +0.071 → +0.073 | +0.003 | +0.57 | 0.587 |
+| CA1-V1 | FB | peak_r | 10 | +0.039 → +0.059 | **+0.020** | +6.21 | **0.000157** |
+| CA3-DG | FB | peak_r | 4 | +0.109 → +0.125 | +0.016 | +6.28 | 0.00814 |
+| CA1-SUB | FB | peak_r | 4 | +0.033 → +0.048 | +0.015 | +1.89 | 0.155 |
+| RSC-SUB | FB | peak_r | 4 | +0.068 → +0.083 | +0.015 | +1.53 | 0.222 |
+| V1-RSC | FB | peak_r | 6 | +0.055 → +0.083 | +0.027 | +2.13 | 0.0866 |

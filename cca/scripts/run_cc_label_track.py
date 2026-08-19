@@ -77,8 +77,8 @@ EPOCHS = ["naive", "intermediate", "expert"]
 PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
          ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
 FIELDS = ["animal", "learner", "pair", "dim", "epoch", "bin_ms", "lag_bins", "lag_ms",
-          "r", "label", "ifi_fit", "label_loo", "ifi_loo", "sig", "p_perdim",
-          "cc_heldout", "n_bins", "n_fit_trials"]
+          "r", "label", "ifi_fit", "label_loo", "ifi_loo", "label_xv", "ifi_xv",
+          "n_trials_xv", "sig", "p_perdim", "cc_heldout", "n_bins", "n_fit_trials"]
 
 
 def parse_args():
@@ -202,6 +202,20 @@ def main():
                 r_fit = fixed_subspace.curve_from_moments(M)
                 ifi_fit = lagged.information_flow_index(lags[m_lab], r_fit[m_lab])
                 label = "FF" if ifi_fit > 0 else ("FB" if ifi_fit < 0 else "none")
+                # Cross-validated label (Tom, 2026-08-18): the sign of the IFI on the
+                # trials OUTSIDE both plotted epochs (everything but naive and expert),
+                # so a naive-vs-expert cross-correlogram split by this label never saw
+                # the data it is plotted on. ⚠ The frozen WEIGHTS still come from all
+                # trials; only the FF/FB assignment is held out.
+                plot_trials = [t for t, e in epoch_of_trial.items()
+                               if e in ("naive", "expert")]
+                sel_xv = ~np.isin(trials_m, plot_trials)
+                r_xv = fixed_subspace.curve_from_moments(M, sel_xv)
+                ifi_xv = (lagged.information_flow_index(lags[m_lab], r_xv[m_lab])
+                          if np.any(np.isfinite(r_xv)) else float("nan"))
+                label_xv = ("FF" if ifi_xv > 0 else ("FB" if ifi_xv < 0 else "none")
+                            if np.isfinite(ifi_xv) else "none")
+                n_trials_xv = int(sel_xv.sum())
 
                 for epoch in EPOCHS:
                     ep_trials = [t for t, e in epoch_of_trial.items() if e == epoch]
@@ -231,6 +245,10 @@ def main():
                             "label_loo": label_out,
                             "ifi_loo": round(float(ifi_out), 5)
                                        if np.isfinite(ifi_out) else "",
+                            "label_xv": label_xv,
+                            "ifi_xv": round(float(ifi_xv), 5)
+                                      if np.isfinite(ifi_xv) else "",
+                            "n_trials_xv": n_trials_xv,
                             "sig": int(sig_mask[dim]) if dim < sig_mask.size else 0,
                             "p_perdim": round(float(pvals[dim]), 5)
                                         if dim < pvals.size else "",

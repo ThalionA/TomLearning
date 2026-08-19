@@ -29,7 +29,7 @@ Frozen axes, so the SAME components are compared across epochs. r is IN-SAMPLE f
 the whole session: a contrast statistic, not a coupling strength.
 Positive lag = the FIRST-named area leads.
 
-Usage: PYTHONPATH=src python scripts/figs_cc_crosscorr_epochs.py [fsincl]
+Usage: PYTHONPATH=src python scripts/figs_cc_crosscorr_epochs.py [fsincl] [--label-col label|label_int|label_xv|label_loo]
 """
 from __future__ import annotations
 
@@ -44,7 +44,8 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import figstyle  # noqa: E402
-from analyze_cc_crosscorr_epochs import EPOCHS, PAIRS, cross_animal  # noqa: E402
+from analyze_cc_crosscorr_epochs import (  # noqa: E402
+    EPOCHS, LABEL_DESC, LABEL_TAGS, PAIRS, cross_animal, _label_col_from_argv)
 
 figstyle.apply()
 ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
@@ -130,7 +131,7 @@ def fig_all(curves: pd.DataFrame, stats: pd.DataFrame, fs: str):
     print(f"wrote HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
 
 
-def _label_panel(ax, curves, pair, group, ls):
+def _label_panel(ax, curves, pair, group, ls, label_col="label"):
     """One panel: naive vs expert cross-correlograms of the ``group``-labelled CCs of
     ``pair``; title carries item 2's per-label expert − naive IFI test. Returns the
     number of curves drawn (0 = no data, panel switched off)."""
@@ -145,13 +146,18 @@ def _label_panel(ax, curves, pair, group, ls):
     ax.axvline(0, color="k", lw=0.7, ls=":", zorder=0)
     ax.axhline(0, color="k", lw=0.7, ls=":", zorder=0)
     ax.axvspan(-HEADLINE_MS, HEADLINE_MS, color="#000", alpha=0.03, zorder=0)
-    title = f"{pair} — {group}-labelled CCs ({leader} leads at ±{HEADLINE_MS} ms)"
-    if ls is not None and pair in ls.index:
-        r = ls.loc[pair]
-        n, d, pv = r.get(f"n_{group}_ifi"), r.get(f"d_{group}_ifi"), r.get(f"p_{group}_ifi")
-        if np.isfinite(pv):
-            title += (f"\nexpert − naive IFI@±50: Δ{d:+.3f} p={pv:.2g}"
-                      f"{'*' if pv < 0.05 else ''} (n={int(n)} animals)")
+    lab_desc = {"label": "whole-session label", "label_loo": "leave-epoch-out label",
+                "label_int": "label from INTERMEDIATE trials only",
+                "label_xv": "label from all trials OUTSIDE naive/expert"}[label_col]
+    title = (f"{pair} — {group} CCs ({leader} leads at ±{HEADLINE_MS} ms)\n"
+             f"{lab_desc}")
+    if ls is not None:
+        r = ls[(ls["pair"] == pair) & (ls["group"] == group) & (ls["metric"] == "ifi") &
+               (ls["contrast"] == "expert-naive")]
+        if not r.empty and np.isfinite(r.iloc[0]["p"]):
+            r = r.iloc[0]
+            title += (f"\nexpert − naive IFI@±50: Δ{r['delta']:+.3f} p={r['p']:.2g}"
+                      f"{'*' if r['p'] < 0.05 else ''} (n={int(r['n'])} animals)")
     ax.set_title(title, fontsize=8)
     ax.set_xlabel(f"lag (ms)   +: {a1} leads", fontsize=8)
     ax.set_ylabel(f"mean r over {group} CCs (frozen, in-sample)", fontsize=8)
@@ -159,62 +165,81 @@ def _label_panel(ax, curves, pair, group, ls):
     return drawn
 
 
-_LABEL_CAVEAT = ("label from the whole-session fit at ±{w} ms (as on slide 10) — the "
-                 "asymmetry inside the shaded band is circular by construction\n"
-                 "per-animal-first mean ± SEM (bands only for n ≥ 3); frozen axes; titles: "
-                 "item-2 paired t of the per-label IFI, animals-as-n; the naive-vs-expert "
-                 "HEIGHT caveat of the all-CC figure applies (baseline offset, not learning)")
-
-
-def fig_fffb(curves: pd.DataFrame, fs: str, label_stats: pd.DataFrame | None = None):
+def fig_fffb(curves: pd.DataFrame, fs: str, label_stats: pd.DataFrame | None = None,
+             label_col: str = "label"):
     """Tom's 2026-08-18 layout: per pair, TWO panels side by side — the naive vs expert
     cross-correlograms of the FF-labelled CCs (first-named area leads at ±50 ms) in one,
     of the FB-labelled CCs (second-named area leads) in the other. 8 pairs x 2 = 16
     panels, two pairs per row. :func:`fig_label` gives each direction its own figure.
     """
     fig, axes = figstyle.grid(2 * len(PAIRS), ncols=4)
-    ls = label_stats.set_index("pair") if label_stats is not None else None
+    ls = _per_label_rows(label_stats)
     for k, ax in enumerate(axes):
-        _label_panel(ax, curves, PAIRS[k // 2], ("FF", "FB")[k % 2], ls)
+        _label_panel(ax, curves, PAIRS[k // 2], ("FF", "FB")[k % 2], ls, label_col)
+    tag = LABEL_TAGS[label_col]
     fig.suptitle(f"Cross-correlograms, naive vs expert, ONE DIRECTION PER PANEL — {fs}\n"
                  f"per pair: left = FF-labelled CCs (+IFI, first-named area leads), right = "
-                 f"FB-labelled CCs (−IFI, second-named area leads); "
-                 + _LABEL_CAVEAT.format(w=HEADLINE_MS), fontsize=10)
-    figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_fffb_{fs}_bin10.png")
-    print(f"wrote HCV1_cc_crosscorr_epochs_fffb_{fs}_bin10.png")
+                 f"FB-labelled CCs (−IFI, second-named area leads)\n"
+                 + _label_caveat(label_col), fontsize=10)
+    figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_fffb{tag}_{fs}_bin10.png")
+    print(f"wrote HCV1_cc_crosscorr_epochs_fffb{tag}_{fs}_bin10.png")
 
 
 def fig_label(curves: pd.DataFrame, fs: str, group: str,
-              label_stats: pd.DataFrame | None = None):
+              label_stats: pd.DataFrame | None = None, label_col: str = "label"):
     """One direction per FIGURE: 8 panels (one per pair), naive vs expert of the
-    ``group``-labelled CCs only. HCV1_cc_crosscorr_epochs_{FF,FB}_<fs>_bin10."""
+    ``group``-labelled CCs only. HCV1_cc_crosscorr_epochs_{FF,FB}<tag>_<fs>_bin10,
+    tag = "" (whole-session label) / _labint / _labxv / _loo."""
     fig, axes = figstyle.grid(len(PAIRS), ncols=4)
-    ls = label_stats.set_index("pair") if label_stats is not None else None
+    ls = _per_label_rows(label_stats)
     for ax, pair in zip(axes, PAIRS):
-        _label_panel(ax, curves, pair, group, ls)
+        _label_panel(ax, curves, pair, group, ls, label_col)
     what = ("FF-labelled CCs (+IFI: the FIRST-named area leads)" if group == "FF"
             else "FB-labelled CCs (−IFI: the SECOND-named area leads)")
+    tag = LABEL_TAGS[label_col]
     fig.suptitle(f"Cross-correlograms, naive vs expert — {what} — {fs}\n"
-                 + _LABEL_CAVEAT.format(w=HEADLINE_MS), fontsize=10)
-    figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_{group}_{fs}_bin10.png")
-    print(f"wrote HCV1_cc_crosscorr_epochs_{group}_{fs}_bin10.png")
+                 + _label_caveat(label_col), fontsize=10)
+    figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_{group}{tag}_{fs}_bin10.png")
+    print(f"wrote HCV1_cc_crosscorr_epochs_{group}{tag}_{fs}_bin10.png")
+
+
+def _per_label_rows(stats):
+    """The FF/FB rows of the tagged stats file (group != 'all'), or None."""
+    if stats is None or "group" not in stats.columns:
+        return None
+    sub = stats[stats["group"].isin(["FF", "FB"])]
+    return sub if not sub.empty else None
+
+
+def _label_caveat(label_col: str) -> str:
+    xv = label_col in ("label_int", "label_xv")
+    circ = ("the label never saw the plotted trials, so the asymmetry inside the shaded "
+            "band is NOT circular" if xv else
+            "the asymmetry inside the shaded band is circular by construction")
+    return (f"label = {LABEL_DESC[label_col]} — {circ}\n"
+            f"per-animal-first mean ± SEM (bands only for n ≥ 3); frozen axes (weights "
+            f"from ALL trials — only the FF/FB assignment is held out); titles: paired t "
+            f"of the per-label IFI, animals-as-n; the naive-vs-expert HEIGHT caveat of the "
+            f"all-CC figure applies (baseline offset, not learning)")
 
 
 def main():
     fsincl = "fsincl" in sys.argv[1:]
     suf = "_fsincl" if fsincl else ""
     fs = "fsincl" if fsincl else "fsexcl"
-    src = RES / f"cc_crosscorr_epochs_bin10{suf}.csv"
+    label_col = _label_col_from_argv(sys.argv[1:])
+    tag = LABEL_TAGS[label_col]
+    src = RES / f"cc_crosscorr_epochs{tag}_bin10{suf}.csv"
     if not src.exists():
-        sys.exit(f"{src} not found — run scripts/analyze_cc_crosscorr_epochs.py first")
+        sys.exit(f"{src} not found — run scripts/analyze_cc_crosscorr_epochs.py "
+                 f"--label-col {label_col} first")
     curves = pd.read_csv(src)
-    stats = pd.read_csv(RES / f"cc_crosscorr_epochs_stats_bin10{suf}.csv")
-    fig_all(curves, stats, fs)
-    ls_csv = RES / f"cc_label_track_stats_bin10{suf}.csv"
-    label_stats = pd.read_csv(ls_csv) if ls_csv.exists() else None
-    fig_fffb(curves, fs, label_stats)
-    fig_label(curves, fs, "FF", label_stats)
-    fig_label(curves, fs, "FB", label_stats)
+    stats = pd.read_csv(RES / f"cc_crosscorr_epochs_stats{tag}_bin10{suf}.csv")
+    if label_col == "label":              # the all-CC figure is label-independent
+        fig_all(curves, stats, fs)
+    fig_fffb(curves, fs, stats, label_col)
+    fig_label(curves, fs, "FF", stats, label_col)
+    fig_label(curves, fs, "FB", stats, label_col)
 
 
 if __name__ == "__main__":

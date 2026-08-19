@@ -57,7 +57,10 @@ Writes:
     results/cc_crosscorr_epochs_stats_bin10{,_fsincl}.csv  per pair: expert−naive, group=all
     results/cc_crosscorr_epochs_tables.md
 
-Usage: PYTHONPATH=src python scripts/analyze_cc_crosscorr_epochs.py [--loo]
+Usage: PYTHONPATH=src python scripts/analyze_cc_crosscorr_epochs.py [--label-col label|label_loo|label_int|label_xv]
+    label      whole-session label (default; NOT cross-validated)
+    label_int  intermediate-epoch IFI sign — disjoint from naive/expert (Tom)
+    label_xv   IFI sign on all trials outside naive ∪ expert (needs the 2026-08-18 driver)
 """
 from __future__ import annotations
 
@@ -239,10 +242,65 @@ def per_cc_curve_metrics(df: pd.DataFrame, far_ms: int = 200,
     return pd.DataFrame(rows)
 
 
+LABEL_TAGS = {"label": "", "label_loo": "_loo", "label_int": "_labint", "label_xv": "_labxv"}
+LABEL_DESC = {
+    "label": "whole-session fit at ±50 ms (as on slide 10) — NOT cross-validated: the "
+             "plotted epochs contributed to the label",
+    "label_loo": "leave-the-scored-epoch-out (each epoch's curve labelled without its own "
+                 "trials; the FF set can differ between the naive and expert panels)",
+    "label_int": "sign of the INTERMEDIATE epoch's own IFI at ±50 ms — 10 trials disjoint "
+                 "from both plotted epochs (Tom's suggestion; noisy, few trials)",
+    "label_xv": "sign of the IFI at ±50 ms on ALL trials outside naive ∪ expert (~100+ "
+                "trials, disjoint from both plotted epochs) — the cross-validated label",
+}
+
+
+def attach_label(df: pd.DataFrame, red: pd.DataFrame, label_col: str) -> pd.DataFrame:
+    """Make ``label_col`` available on the raw curve table.
+
+    ``label`` / ``label_loo`` / ``label_xv`` are columns the driver writes;
+    ``label_int`` is derived here from the intermediate epoch's per-CC IFI in the
+    reduced epoch file (`cc_label_track_epoch_*`): FF if > 0, FB if < 0.
+    """
+    if label_col == "label_int":
+        mid = red[red["epoch"] == "intermediate"][["animal", "pair", "dim", "ifi"]].copy()
+        mid["label_int"] = np.where(mid["ifi"] > 0, "FF",
+                                    np.where(mid["ifi"] < 0, "FB", "none"))
+        return df.merge(mid[["animal", "pair", "dim", "label_int"]],
+                        on=["animal", "pair", "dim"], how="left")
+    if label_col not in df.columns:
+        raise KeyError(f"{label_col} not in the label-track file — re-run "
+                       f"run_cc_label_track.py (label_xv was added 2026-08-18)")
+    return df
+
+
+def label_contrast(red: pd.DataFrame, labels: pd.DataFrame, label_col: str,
+                   metric: str = "ifi", a: str = "naive", b: str = "expert") -> pd.DataFrame:
+    """Per pair and per label group (FF / FB): the ``b − a`` paired contrast on the
+    per-animal mean of ``metric`` over that animal's CCs carrying that label — the
+    per-label version of :func:`epoch_contrast`, for whichever label column is in
+    use, so the figure titles never quote a test made with a different label.
+    ``labels`` = one row per (animal, pair, dim) with ``label_col``."""
+    lab = labels[["animal", "pair", "dim", label_col]].drop_duplicates()
+    r = red.drop(columns=[c for c in (label_col,) if c in red.columns]).merge(
+        lab, on=["animal", "pair", "dim"], how="left")
+    parts = []
+    for grp in ("FF", "FB"):
+        sub = r[r[label_col] == grp]
+        if sub.empty:
+            continue
+        s = epoch_contrast(sub, metric, a=a, b=b)
+        if not s.empty:
+            s.insert(1, "group", grp)
+            parts.append(s)
+    return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
+
+
 def _md(stats: pd.DataFrame, curves: pd.DataFrame, fs: str, label_col: str) -> str:
     lines = [f"### {fs} — cross-correlograms by epoch, all significant CCs "
              f"(frozen axes, per-animal-first)", "",
-             f"Label column for the FF/FB split: `{label_col}`. Paired *t* across "
+             f"Label column for the FF/FB split: `{label_col}` — {LABEL_DESC[label_col]}. "
+             f"Paired *t* across "
              f"animals on each animal's mean over its significant CCs of the per-CC "
              f"reduction already in `cc_label_track_epoch_*` (IFI at ±50 ms; peak r). "
              f"Positive IFI ⇒ first-named area leads. Per-pair families; BH across the "
@@ -264,8 +322,9 @@ def _md(stats: pd.DataFrame, curves: pd.DataFrame, fs: str, label_col: str) -> s
              "| pair | metric | contrast | a → b (animals) | Δ | animals: n, t, p, BH | "
              "CCs: n, Δ, t, p, BH |",
              "|---|---|---|---|---|---|---|"]
-    an = stats[stats["unit"] == "animals"].set_index(["pair", "metric", "contrast"])
-    cc = stats[stats["unit"] == "ccs"].set_index(["pair", "metric", "contrast"])
+    g_all = stats[stats["group"] == "all"] if "group" in stats.columns else stats
+    an = g_all[g_all["unit"] == "animals"].set_index(["pair", "metric", "contrast"])
+    cc = g_all[g_all["unit"] == "ccs"].set_index(["pair", "metric", "contrast"])
     for key, r in an.iterrows():
         star = "**" if (r["p"] < 0.05 and r["n"] > 4) else ""
         c = cc.loc[key] if key in cc.index else None
@@ -289,13 +348,32 @@ def _md(stats: pd.DataFrame, curves: pd.DataFrame, fs: str, label_col: str) -> s
                 ns.append(str(s["animal"].nunique()))
             cells.append("/".join(ns))
         lines.append(f"| {pair} | " + " | ".join(cells) + " |")
+    if "group" in stats.columns and (stats["group"] != "all").any():
+        lines += ["", f"**Per-label expert − naive (label = `{label_col}`), animals-as-n:**",
+                  "", "| pair | label | metric | n | naive → expert | Δ | t | p |",
+                  "|---|---|---|---|---|---|---|---|"]
+        for _, r in stats[stats["group"] != "all"].iterrows():
+            star = "**" if (r["p"] < 0.05 and r["n"] > 4) else ""
+            lines.append(f"| {r['pair']} | {r['group']} | {r['metric']} | {int(r['n'])} | "
+                         f"{r['mean_a']:+.3f} → {r['mean_b']:+.3f} | {star}{r['delta']:+.3f}{star} | "
+                         f"{r['t']:+.2f} | {star}{r['p']:.3g}{star} |")
     return "\n".join(lines) + "\n"
 
 
+def _label_col_from_argv(argv) -> str:
+    if "--loo" in argv:
+        return "label_loo"
+    if "--label-col" in argv:
+        v = argv[argv.index("--label-col") + 1]
+        if v not in LABEL_TAGS:
+            sys.exit(f"--label-col must be one of {sorted(LABEL_TAGS)}")
+        return v
+    return "label"
+
+
 def main():
-    loo = "--loo" in sys.argv[1:]
-    label_col = "label_loo" if loo else "label"
-    tag = "_loo" if loo else ""
+    label_col = _label_col_from_argv(sys.argv[1:])
+    tag = LABEL_TAGS[label_col]
     md = ["# 2026-08-07 ask 2 — cross-correlograms of naive and expert, whole and by "
           "FF/FB label", "",
           "Frozen-axes lag curves (`cc_label_track_bin10*.csv`), averaged over each "
@@ -307,10 +385,11 @@ def main():
         if not src.exists() or not red_src.exists():
             print(f"skip {fs}: {src.name} or {red_src.name} missing"); continue
         df = pd.read_csv(src)
+        red = pd.read_csv(red_src)
+        df = attach_label(df, red, label_col)
         curves = build_curves(df, label_col=label_col)
         curves.to_csv(RES / f"cc_crosscorr_epochs{tag}_bin10{suf}.csv", index=False,
                       lineterminator="\n")
-        red = pd.read_csv(red_src)
         # the epoch file has no `sig` column: it was written sig-gated already
         cm = curve_metrics(curves)                 # per animal (mean curve)
         pcm = per_cc_curve_metrics(df)             # per CC (raw curves)
@@ -325,6 +404,11 @@ def main():
             parts.append(epoch_contrast(src_an, metric, a=ea, b=eb))
             parts.append(epoch_contrast_ccs(src_cc, metric, a=ea, b=eb))
         stats = pd.concat(parts, ignore_index=True)
+        stats.insert(1, "group", "all")
+        labels = df[["animal", "pair", "dim", label_col]].drop_duplicates()
+        stats = pd.concat([stats, label_contrast(red, labels, label_col, "ifi"),
+                           label_contrast(red, labels, label_col, "peak_r")],
+                          ignore_index=True)
         stats.to_csv(RES / f"cc_crosscorr_epochs_stats{tag}_bin10{suf}.csv",
                      index=False, lineterminator="\n")
         md.append(_md(stats, curves, fs, label_col))
@@ -333,8 +417,9 @@ def main():
         print(f"\n[{fs}] {n_sig}/{n_cells} (animal, pair, dim) cells significant; "
               f"{len(curves)} curve rows")
         print("  contrasts (paired t) — animals-as-n | CCs-as-n:")
-        an = stats[stats["unit"] == "animals"].set_index(["pair", "metric", "contrast"])
-        cc = stats[stats["unit"] == "ccs"].set_index(["pair", "metric", "contrast"])
+        g_all = stats[stats["group"] == "all"]
+        an = g_all[g_all["unit"] == "animals"].set_index(["pair", "metric", "contrast"])
+        cc = g_all[g_all["unit"] == "ccs"].set_index(["pair", "metric", "contrast"])
         for key, r in an.iterrows():
             flag = " *" if r["p"] < 0.05 else ""
             c = cc.loc[key] if key in cc.index else None
