@@ -17,31 +17,26 @@ Figure 2  HCV1_lagsubspace_evolution_curves_<fs>_bin10
 principal angle never clears the split-half noise floor, 0/8 pairs, both FS). So the gap plotted
 here is an asymmetry in coupling strength WITHIN one subspace, not two streams.
 
-Usage: PYTHONPATH=src python scripts/figs_lag_subspaces_epochs.py [fsincl]
+Usage: python scripts/figs_lag_subspaces_epochs.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
+from _common import EPOCHS, RES, TEMPORAL, config, fs_from_argv
+import figstyle
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
+
+PAIRS = list(config.PAIR_NAMES)
 EPOCH_COLOUR = {"naive": "#2c6fbb", "intermediate": "#95a5a6", "expert": "#c0392b"}
 C_FF, C_FB = "#c0392b", "#2c6fbb"
-TAU_MS = 50
+TAU_MS = TEMPORAL.label_w_bins * TEMPORAL.bin_ms   # 50 ms
 
 
 def _mean_sem(vals):
@@ -87,7 +82,7 @@ def fig_evolution(df: pd.DataFrame, evo: pd.DataFrame, fs: str):
         f"Feedforward vs feedback coupling across learning — {fs}, 10 ms smoothed | "
         "the GAP is the directional asymmetry; item 4 asks whether it moves "
         "(it does not: 0/8 pairs)", fontsize=11.5)
-    figstyle.save(fig, ATT / f"HCV1_lagsubspace_evolution_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_lagsubspace_evolution_{fs}_bin10.png")
     print(f"wrote HCV1_lagsubspace_evolution_{fs}_bin10.png")
 
 
@@ -122,14 +117,13 @@ def fig_epoch_curves(df: pd.DataFrame, fs: str):
         ax.legend(fontsize=6.5, loc="upper right", framealpha=0.6)
     fig.suptitle(f"Held-out lagged CC₁ curves by learning epoch — {fs}, 10 ms smoothed | "
                  f"dashed lines mark the ±{TAU_MS} ms FF/FB readouts", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_lagsubspace_evolution_curves_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_lagsubspace_evolution_curves_{fs}_bin10.png")
     print(f"wrote HCV1_lagsubspace_evolution_curves_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"lag_subspaces_bin10_epochs{suf}.csv"
     evo_src = RES / f"lag_subspaces_evolution_bin10{suf}.csv"
     if not src.exists():

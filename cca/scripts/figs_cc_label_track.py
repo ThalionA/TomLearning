@@ -23,28 +23,23 @@ Figure 2  HCV1_cc_label_persistence_<fs>_bin10
           the label excludes the epoch being scored — against the whole-session label the
           construction floor is ~0.60.
 
-Usage: PYTHONPATH=src python scripts/figs_cc_label_track.py [fsincl]
+Usage: python scripts/figs_cc_label_track.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
+from _common import EPOCHS, RES, config, fs_from_argv
+import figstyle
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
+
+PAIRS = list(config.PAIR_NAMES)
 EX = {"naive": 0, "intermediate": 1, "expert": 2}
 C_FF, C_FB = "#c0392b", "#2c6fbb"
 
@@ -97,7 +92,7 @@ def fig_track(tab: pd.DataFrame, anova: pd.DataFrame, fs: str):
     fig.suptitle(f"FF/FB CCs labelled once, followed across learning — {fs} | frozen "
                  f"axes | titles carry the 2-way RM-ANOVA (epoch × label); the label "
                  f"term on signed IFI is circular by construction", fontsize=10)
-    figstyle.save(fig, ATT / f"HCV1_cc_label_track_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_label_track_{fs}_bin10.png")
     print(f"wrote HCV1_cc_label_track_{fs}_bin10.png")
 
 
@@ -145,7 +140,7 @@ def fig_persistence(tab: pd.DataFrame, fs: str):
     fig.suptitle(f"Does a CC keep the direction it was labelled with? — {fs} | label "
                  f"recomputed WITHOUT the epoch being scored, so 0.5 is genuine chance",
                  fontsize=11)
-    figstyle.save(fig, ATT / f"HCV1_cc_label_persistence_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_label_persistence_{fs}_bin10.png")
     print(f"wrote HCV1_cc_label_persistence_{fs}_bin10.png")
 
 
@@ -205,14 +200,13 @@ def fig_anova(anova: pd.DataFrame, fs: str):
     fig.suptitle(f"2-way RM-ANOVA per pair: epoch × FF/FB label — {fs} | bold = "
                  f"p < 0.05 | the epoch column is where the effect lives; the "
                  f"interaction is empty", fontsize=10.5)
-    figstyle.save(fig, ATT / f"HCV1_cc_label_anova_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_label_anova_{fs}_bin10.png")
     print(f"wrote HCV1_cc_label_anova_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"cc_label_track_epoch_bin10{suf}.csv"
     st = RES / f"cc_label_anova_bin10{suf}.csv"
     if not src.exists():

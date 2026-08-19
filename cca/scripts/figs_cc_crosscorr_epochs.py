@@ -29,27 +29,24 @@ Frozen axes, so the SAME components are compared across epochs. r is IN-SAMPLE f
 the whole session: a contrast statistic, not a coupling strength.
 Positive lag = the FIRST-named area leads.
 
-Usage: PYTHONPATH=src python scripts/figs_cc_crosscorr_epochs.py [fsincl] [--label-col label|label_int|label_xv|label_loo]
+Usage: python scripts/figs_cc_crosscorr_epochs.py [fsincl] [--label-col label|label_int|label_xv|label_loo]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
-from analyze_cc_crosscorr_epochs import (  # noqa: E402
+from _common import RES, fs_from_argv
+import figstyle
+from analyze_cc_crosscorr_epochs import (
     EPOCHS, LABEL_DESC, LABEL_TAGS, PAIRS, cross_animal, _label_col_from_argv)
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
+
 EPOCH_COLOUR = {"naive": "#2c6fbb", "intermediate": "#95a5a6", "expert": "#c0392b"}
 HEADLINE_MS = 50
 
@@ -127,7 +124,7 @@ def fig_all(curves: pd.DataFrame, stats: pd.DataFrame, fs: str):
                  f"held-out refits show no strength change) — titles: Δ and p with "
                  f"animals as n, then p with significant CCs as n (power check; CCs are "
                  f"nested in animals)", fontsize=9.5)
-    figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
     print(f"wrote HCV1_cc_crosscorr_epochs_{fs}_bin10.png")
 
 
@@ -181,7 +178,7 @@ def fig_fffb(curves: pd.DataFrame, fs: str, label_stats: pd.DataFrame | None = N
                  f"per pair: left = FF-labelled CCs (+IFI, first-named area leads), right = "
                  f"FB-labelled CCs (−IFI, second-named area leads)\n"
                  + _label_caveat(label_col), fontsize=10)
-    figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_fffb{tag}_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_crosscorr_epochs_fffb{tag}_{fs}_bin10.png")
     print(f"wrote HCV1_cc_crosscorr_epochs_fffb{tag}_{fs}_bin10.png")
 
 
@@ -199,7 +196,7 @@ def fig_label(curves: pd.DataFrame, fs: str, group: str,
     tag = LABEL_TAGS[label_col]
     fig.suptitle(f"Cross-correlograms, naive vs expert — {what} — {fs}\n"
                  + _label_caveat(label_col), fontsize=10)
-    figstyle.save(fig, ATT / f"HCV1_cc_crosscorr_epochs_{group}{tag}_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_crosscorr_epochs_{group}{tag}_{fs}_bin10.png")
     print(f"wrote HCV1_cc_crosscorr_epochs_{group}{tag}_{fs}_bin10.png")
 
 
@@ -224,9 +221,8 @@ def _label_caveat(label_col: str) -> str:
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     label_col = _label_col_from_argv(sys.argv[1:])
     tag = LABEL_TAGS[label_col]
     src = RES / f"cc_crosscorr_epochs{tag}_bin10{suf}.csv"

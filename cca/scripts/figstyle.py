@@ -8,7 +8,13 @@ significance-star helper that always draws above the data. Usage:
     import figstyle
     figstyle.apply()                     # once, before creating figures
     ...
-    figstyle.save(fig, ATT / "HCV1_X")   # writes HCV1_X.png (<=1600 px) + HCV1_X.svg
+    figstyle.save(fig, "HCV1_X")         # -> cca/figures/HCV1_X.{png,svg} (PNG <= 1600 px),
+                                         #    mirrored into config.FIGURE_MIRROR_DIR (the vault)
+
+A bare name goes to ``config.FIGURES_DIR`` and is mirrored to ``config.FIGURE_MIRROR_DIR``
+(set env ``CCA_FIG_MIRROR="" `` to disable the mirror on a machine without the vault). A
+stem WITH a directory is written there and mirrored into ``cca/figures/`` — the pre-2026-08-19
+contract, kept for the legacy scripts.
 """
 
 from __future__ import annotations
@@ -20,15 +26,14 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from _common import config
+
 MAX_PX = 1600          # repo rule: PNG longest side <= 1600 px
 STAR_COLOR = "#c0392b"
-# Every figure is ALSO written here, so the project folder holds its own figures
-# rather than them existing only inside the Obsidian vault. The temporal-arm scripts
-# each hardcoded the vault attachments as their only destination, which meant a
-# checkout of this repo had no temporal figures at all. Mirroring at the single
-# shared saver fixes it for every script at once. (Gitignored, like the landmark and
-# spatial figures — they regenerate from the scripts.)
-REPO_FIGURES = Path(__file__).resolve().parents[1] / "figures"
+# Destinations come from config (one place): the repo's figures/ is the primary home,
+# the vault attachments folder the mirror. Both gitignored — they regenerate.
+REPO_FIGURES = config.FIGURES_DIR
+MIRROR_DIR = config.FIGURE_MIRROR_DIR      # None -> no vault mirror
 
 
 def apply():
@@ -141,9 +146,9 @@ def save(fig, stem, max_px: int = MAX_PX, mirror: bool = True):
     ``stem`` may include or omit a ``.png`` suffix; it is stripped. The PNG dpi is
     chosen so the longest side is capped at ``max_px`` (never upscaled past 150).
 
-    The pair is ALSO mirrored into :data:`REPO_FIGURES` (unless ``mirror=False``) so the
-    project folder holds every figure, not just the vault. Pass ``mirror=False`` for a
-    figure that is genuinely vault-only.
+    A bare ``stem`` (no directory) is written to :data:`REPO_FIGURES` and mirrored into
+    :data:`MIRROR_DIR`; a stem with a directory is written there and mirrored into
+    :data:`REPO_FIGURES`. ``mirror=False`` disables the copy either way.
 
     Before writing, :func:`check_text_overflow` runs and PRINTS a ``[figstyle] ⚠`` line
     for every text artist that falls outside the figure or every pair of axes titles
@@ -152,25 +157,30 @@ def save(fig, stem, max_px: int = MAX_PX, mirror: bool = True):
     stem = str(stem)
     if stem.endswith(".png") or stem.endswith(".svg"):
         stem = stem[:-4]
+    bare = Path(stem).parent == Path(".")          # name only -> canonical homes
+    if bare:
+        primary, mirror_dir = REPO_FIGURES / stem, MIRROR_DIR
+    else:
+        primary, mirror_dir = Path(stem), REPO_FIGURES
     w_in, h_in = fig.get_size_inches()
     dpi = min(150.0, max_px / max(w_in, h_in))
     for line in check_text_overflow(fig):
-        print(f"  [figstyle] ⚠ {Path(stem).name}: {line}")
-    fig.savefig(f"{stem}.png", dpi=dpi)
-    fig.savefig(f"{stem}.svg")
-    if mirror:
+        print(f"  [figstyle] ⚠ {primary.name}: {line}")
+    primary.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(f"{primary}.png", dpi=dpi)
+    fig.savefig(f"{primary}.svg")
+    if mirror and mirror_dir is not None:
         try:
-            REPO_FIGURES.mkdir(parents=True, exist_ok=True)
-            name = Path(stem).name
-            if Path(stem).resolve().parent != REPO_FIGURES.resolve():
+            mirror_dir.mkdir(parents=True, exist_ok=True)
+            if primary.resolve().parent != mirror_dir.resolve():
                 # COPY the rendered files rather than calling savefig again.
                 # constrained_layout re-solves on every draw, so a second render can
                 # settle sub-pixel differently and the two copies would not be
                 # byte-identical (4 of 24 were not). Copying also halves the cost.
                 for ext in ("png", "svg"):
-                    shutil.copyfile(f"{stem}.{ext}", REPO_FIGURES / f"{name}.{ext}")
+                    shutil.copyfile(f"{primary}.{ext}", mirror_dir / f"{primary.name}.{ext}")
         except Exception as exc:                            # noqa: BLE001
-            print(f"  [figstyle] repo mirror failed for {stem}: {exc}")
+            print(f"  [figstyle] mirror failed for {primary.name}: {exc}")
     plt.close(fig)
 
 

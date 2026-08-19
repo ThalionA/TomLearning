@@ -10,28 +10,24 @@ Figure 2  HCV1_perdim_ifi_cc1vstail_<fs>_bin10 — per animal, CC1's IFI against
 
 Positive IFI = the FIRST-named area leads.
 
-Usage: PYTHONPATH=src python scripts/figs_perdim_ifi.py [fsincl]
+Usage: python scripts/figs_perdim_ifi.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
-from tom_cca import perdim_ifi  # noqa: E402
+from _common import RES, config, fs_from_argv
+import figstyle
+from tom_cca import perdim_ifi
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
+
+PAIRS = list(config.PAIR_NAMES)
 C_MEAN, C_ANIM, C_CC1 = "#c0392b", "#95a5a6", "#2c6fbb"
 MIN_FRAC_ANIMALS = 0.5      # a rank joins the connected mean only if >=half contribute
 
@@ -102,7 +98,7 @@ def fig_rank(df: pd.DataFrame, fs: str):
         ax.legend(fontsize=6, loc="upper right", framealpha=0.6)
     fig.suptitle(f"Information Flow Index by canonical rank — {fs}, 10 ms smoothed | "
                  "significant dims only; +IFI = first area leads", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_perdim_ifi_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_perdim_ifi_{fs}_bin10.png")
     print(f"wrote HCV1_perdim_ifi_{fs}_bin10.png")
 
 
@@ -138,14 +134,13 @@ def fig_cc1_vs_tail(df: pd.DataFrame, fs: str):
         ax.set_ylabel(f"IFI   +: {x_lead} leads", fontsize=8)
     fig.suptitle(f"CC₁ vs the rest of the significant spectrum — {fs}, 10 ms smoothed | "
                  "one line per animal", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_perdim_ifi_cc1vstail_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_perdim_ifi_cc1vstail_{fs}_bin10.png")
     print(f"wrote HCV1_perdim_ifi_cc1vstail_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"perdim_ifi_bin10{suf}.csv"
     if not src.exists():
         sys.exit(f"{src} not found — run scripts/analyze_perdim_ifi.py first")

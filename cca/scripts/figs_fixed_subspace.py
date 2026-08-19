@@ -14,29 +14,24 @@ Figure 2  HCV1_fixedsubspace_windows_<fs>_bin10
 
 Positive lag = the FIRST-named area leads.
 
-Usage: PYTHONPATH=src python scripts/figs_fixed_subspace.py [fsincl]
+Usage: python scripts/figs_fixed_subspace.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
+from _common import EPOCHS, RES, config, fs_from_argv
+import figstyle
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
+
+PAIRS = list(config.PAIR_NAMES)
 EPOCH_COLOUR = {"naive": "#2c6fbb", "intermediate": "#95a5a6", "expert": "#c0392b"}
-EPOCHS = ["naive", "intermediate", "expert"]
 
 
 def fig_curves(df: pd.DataFrame, fs: str):
@@ -70,7 +65,7 @@ def fig_curves(df: pd.DataFrame, fs: str):
     fig.suptitle(f"One canonical component lagged across time, FIXED subspace — {fs}, "
                  "10 ms smoothed | weights identical across epochs (in-sample r)",
                  fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_fixedsubspace_lagcurves_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_fixedsubspace_lagcurves_{fs}_bin10.png")
     print(f"wrote HCV1_fixedsubspace_lagcurves_{fs}_bin10.png")
 
 
@@ -96,14 +91,13 @@ def fig_windows(tab: pd.DataFrame, fs: str):
         ax.set_title(f"{pair}  (n={len(common)})", fontsize=10)
     fig.suptitle(f"Integration window of the frozen component, naive vs expert — {fs}, "
                  "10 ms smoothed | one line per animal", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_fixedsubspace_windows_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_fixedsubspace_windows_{fs}_bin10.png")
     print(f"wrote HCV1_fixedsubspace_windows_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"fixed_subspace_bin10{suf}.csv"
     red = RES / f"fixed_subspace_epoch_bin10{suf}.csv"
     if not src.exists():

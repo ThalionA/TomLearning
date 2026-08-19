@@ -8,28 +8,23 @@ Per area-pair (8-pair grid) two curves are overlaid, both mean ± shaded SEM:
 x = bin lag in ms; POSITIVE lag = the FIRST-named area leads (X leads Y). The vertical
 line marks lag 0; the horizontal line marks CC = 0.
 
-Usage: PYTHONPATH=src python scripts/figs_lag_curves.py [fsincl]
+Usage: python scripts/figs_lag_curves.py [fsincl]
        (default FS-excl; pass 'fsincl' for the FS-included variant)
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
+from _common import RES, config, fs_from_argv
+import figstyle
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
+
+PAIRS = list(config.PAIR_NAMES)
 C_ANIM, C_DIM = "#c0392b", "#2c6fbb"
 
 
@@ -46,9 +41,8 @@ def _mean_sem(piv):
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     df = pd.read_csv(RES / f"lag_curves_bin10{suf}.csv")
     df["cc"] = pd.to_numeric(df["cc"], errors="coerce")
 
@@ -80,7 +74,7 @@ def main():
         ax.legend(fontsize=6.5, loc="upper right", framealpha=0.6)
     fig.suptitle(f"Lagged canonical correlation (held-out, segment-aware) — {fs}, "
                  f"10 ms smoothed | +lag = first area leads", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_lagcc_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_lagcc_{fs}_bin10.png")
     print(f"wrote HCV1_lagcc_{fs}_bin10.png")
 
 

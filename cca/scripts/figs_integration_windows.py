@@ -20,28 +20,24 @@ Figure 2  HCV1_integration_window_summary_<fs>_bin10
           Pairs at high ringing fraction (upper region) have widths that are half-periods;
           only the low-ringing pairs have widths readable as integration windows.
 
-Usage: PYTHONPATH=src python scripts/figs_integration_windows.py [fsincl]
+Usage: python scripts/figs_integration_windows.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
-from tom_cca import fixed_subspace  # noqa: E402
+from _common import RES, config, fs_from_argv
+import figstyle
+from tom_cca import fixed_subspace
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
+
+PAIRS = list(config.PAIR_NAMES)
 C_CURVE, C_HALF, C_RING = "#c0392b", "#2c6fbb", "#8e44ad"
 RING_RATIO = 0.5          # same gate analyze_fixed_subspace uses
 MAJORITY = 0.5
@@ -119,7 +115,7 @@ def fig_anatomy(df: pd.DataFrame, red: pd.DataFrame, fs: str):
         f"What the integration window actually measures — {fs}, 10 ms smoothed | blue = "
         "half-max level and the contiguous region `curve_half_width` returns; purple = "
         "detected ring", fontsize=11.5)
-    figstyle.save(fig, ATT / f"HCV1_integration_window_anatomy_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_integration_window_anatomy_{fs}_bin10.png")
     print(f"wrote HCV1_integration_window_anatomy_{fs}_bin10.png")
 
 
@@ -159,14 +155,13 @@ def fig_summary(red: pd.DataFrame, fs: str):
                  "only pairs LEFT of the line have a width readable as an "
                  "integration window", fontsize=10.5)
     ax.legend(fontsize=8, loc="center right", framealpha=0.7)
-    figstyle.save(fig, ATT / f"HCV1_integration_window_summary_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_integration_window_summary_{fs}_bin10.png")
     print(f"wrote HCV1_integration_window_summary_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"fixed_subspace_bin10{suf}.csv"
     red_src = RES / f"fixed_subspace_epoch_bin10{suf}.csv"
     if not src.exists() or not red_src.exists():

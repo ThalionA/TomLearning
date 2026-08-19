@@ -13,29 +13,25 @@ Figure 2  HCV1_lagsubspace_fffb_<fs>_bin10
           FF-vs-FB subspace angle against the same floor — the gate on whether FF and FB
           are separable at all.
 
-Usage: PYTHONPATH=src python scripts/figs_lag_subspaces.py [fsincl]
+Usage: python scripts/figs_lag_subspaces.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
+from _common import RES, TEMPORAL, config, fs_from_argv
+import figstyle
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
+
+PAIRS = list(config.PAIR_NAMES)
 C_X, C_Y, C_FLOOR = "#c0392b", "#2c6fbb", "#95a5a6"
-TAU_MS = 50
+TAU_MS = TEMPORAL.label_w_bins * TEMPORAL.bin_ms   # 50 ms
 
 
 def _mean_sem(piv, lags):
@@ -85,7 +81,7 @@ def fig_stability(df: pd.DataFrame, fs: str):
     fig.suptitle(f"Subspace stability across lag — {fs}, 10 ms smoothed | solid = CC₁, "
                  "dotted = 3-dim (not estimable) | grey band = CC₁ split-half floor",
                  fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_lagsubspace_stability_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_lagsubspace_stability_{fs}_bin10.png")
     print(f"wrote HCV1_lagsubspace_stability_{fs}_bin10.png")
 
 
@@ -118,14 +114,13 @@ def fig_fffb(df: pd.DataFrame, fs: str):
     fig.suptitle(f"Feedforward vs feedback subspace — {fs}, 10 ms smoothed | "
                  "one line per animal; title compares the FF/FB angle to the noise "
                  "floor", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_lagsubspace_fffb_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_lagsubspace_fffb_{fs}_bin10.png")
     print(f"wrote HCV1_lagsubspace_fffb_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"lag_subspaces_bin10{suf}.csv"
     if not src.exists():
         sys.exit(f"{src} not found — run scripts/run_lag_subspaces.py first")

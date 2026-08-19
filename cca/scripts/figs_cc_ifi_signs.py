@@ -18,12 +18,11 @@ Figure 2  HCV1_cc_ifi_signmap_<fs>_bin10
 
 Positive IFI => the FIRST-named area leads.
 
-Usage: PYTHONPATH=src python scripts/figs_cc_ifi_signs.py [fsincl]
+Usage: python scripts/figs_cc_ifi_signs.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
@@ -31,19 +30,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
-from tom_cca import cc_aggregate  # noqa: E402
+from _common import RES, TEMPORAL, config, fs_from_argv
+import figstyle
+from tom_cca import cc_aggregate
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-HEADLINE_W = 5         # bins = +/-50 ms
-REF_W = 5              # window (bins) at which CCs are labelled +IFI / -IFI
-BIN_MS = 10
+
+PAIRS = list(config.PAIR_NAMES)
+HEADLINE_W = TEMPORAL.label_w_bins         # bins = +/-50 ms
+REF_W = TEMPORAL.label_w_bins              # window (bins) at which CCs are labelled +IFI / -IFI
+BIN_MS = TEMPORAL.bin_ms
 MAP_DIMS = 8
 
 
@@ -151,7 +147,7 @@ def fig_windows(df: pd.DataFrame, fs: str, overall_test: pd.DataFrame | None = N
                  f"| title: one-sample t of the all-CC mean vs 0 at ±{REF_W * BIN_MS} ms, "
                  f"animals-as-n (n = animals with ≥1 sig. CC), no cross-pair correction | "
                  f"data = whole session (uncapped)", fontsize=10)
-    figstyle.save(fig, ATT / f"HCV1_cc_ifi_windows_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_ifi_windows_{fs}_bin10.png")
     print(f"wrote HCV1_cc_ifi_windows_{fs}_bin10.png")
 
 
@@ -197,14 +193,13 @@ def fig_signmap(df: pd.DataFrame, fs: str):
     fig.suptitle(f"Sign of each CC's IFI per animal, ±{HEADLINE_W * 10} ms window — "
                  f"{fs} | ONLY CCs beating the null (grey = not significant) | "
                  "◀ = that animal's significant CCs disagree in direction", fontsize=12)
-    figstyle.save(fig, ATT / f"HCV1_cc_ifi_signmap_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_cc_ifi_signmap_{fs}_bin10.png")
     print(f"wrote HCV1_cc_ifi_signmap_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"cc_ifi_windows_bin10{suf}.csv"
     if not src.exists():
         sys.exit(f"{src} not found — run scripts/analyze_cc_ifi_signs.py first")

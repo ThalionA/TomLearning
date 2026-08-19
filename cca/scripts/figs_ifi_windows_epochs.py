@@ -17,28 +17,23 @@ Figure 2  HCV1_ifi_windows_epochs_fffb_<fs>_bin10
 Positive IFI => the FIRST-named area leads. Correlations are in-sample (frozen fit),
 so these are contrast statistics.
 
-Usage: PYTHONPATH=src python scripts/figs_ifi_windows_epochs.py [fsincl]
+Usage: python scripts/figs_ifi_windows_epochs.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
+from _common import EPOCHS, RES, config, fs_from_argv
+import figstyle
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
-EPOCHS = ["naive", "intermediate", "expert"]
+
+PAIRS = list(config.PAIR_NAMES)
 EPOCH_COLOUR = {"naive": "#2c6fbb", "intermediate": "#95a5a6", "expert": "#c0392b"}
 HEADLINE_MS = 50
 
@@ -87,7 +82,7 @@ def fig_cc1(df, fs):
         ax.set_title(pair, fontsize=10)
     fig.suptitle(f"Integration window vs IFI, by learning epoch — {fs} | CC1, FROZEN "
                  f"axes so the same component is compared across epochs", fontsize=11)
-    figstyle.save(fig, ATT / f"HCV1_ifi_windows_epochs_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_ifi_windows_epochs_{fs}_bin10.png")
     print(f"wrote HCV1_ifi_windows_epochs_{fs}_bin10.png")
 
 
@@ -129,14 +124,13 @@ def fig_fffb(df, fs):
     fig.suptitle(f"Integration window vs IFI by epoch, split by FF/FB label — {fs} | "
                  f"solid = FF, dashed = FB; signed IFI never averaged across labels",
                  fontsize=10.5)
-    figstyle.save(fig, ATT / f"HCV1_ifi_windows_epochs_fffb_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_ifi_windows_epochs_fffb_{fs}_bin10.png")
     print(f"wrote HCV1_ifi_windows_epochs_fffb_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"ifi_windows_epochs_bin10{suf}.csv"
     if not src.exists():
         sys.exit(f"{src} not found — run scripts/analyze_ifi_windows_epochs.py first")

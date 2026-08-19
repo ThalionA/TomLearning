@@ -16,12 +16,11 @@ Figure 2  HCV1_lag_cosine_swap_<fs>_bin10
           rank-swap rate. This is the quantity that silently breaks any analysis
           matching dimensions across fits by bare rank.
 
-Usage: PYTHONPATH=src python scripts/figs_lag_cosine.py [fsincl]
+Usage: python scripts/figs_lag_cosine.py [fsincl]
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
@@ -29,15 +28,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import figstyle  # noqa: E402
+from _common import RES, config, fs_from_argv
+import figstyle
 
 figstyle.apply()
-ATT = Path.home() / "Documents" / "ResearchVault" / "attachments"
-RES = Path(__file__).resolve().parents[1] / "results"
-PAIRS = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG", "CA1-SUB",
-         "RSC-SUB", "V1-RSC"]
+
+PAIRS = list(config.PAIR_NAMES)
 SHOW_DIMS = 4
 
 
@@ -108,7 +104,7 @@ def fig_cosine(df, fs):
     fig.suptitle(f"Is it the same canonical component at every lag? — {fs} | BOTH terms "
                  f"are half-data fits, so the dotted line at lag 0 is pure sampling "
                  f"noise, not a lag effect", fontsize=10.5)
-    figstyle.save(fig, ATT / f"HCV1_lag_cosine_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_lag_cosine_{fs}_bin10.png")
     print(f"wrote HCV1_lag_cosine_{fs}_bin10.png")
 
 
@@ -145,14 +141,13 @@ def fig_swap(df, fs):
     ax.legend(fontsize=7, framealpha=0.6)
     fig.suptitle(f"Canonical-order swapping across lag — {fs} | the gap between the two "
                  f"bars is what bare-rank matching gets wrong", fontsize=11)
-    figstyle.save(fig, ATT / f"HCV1_lag_cosine_swap_{fs}_bin10.png")
+    figstyle.save(fig, f"HCV1_lag_cosine_swap_{fs}_bin10.png")
     print(f"wrote HCV1_lag_cosine_swap_{fs}_bin10.png")
 
 
 def main():
-    fsincl = "fsincl" in sys.argv[1:]
-    suf = "_fsincl" if fsincl else ""
-    fs = "fsincl" if fsincl else "fsexcl"
+    suf = fs_from_argv()                       # "" (FS-excluded) or "_fsincl"
+    fs = "fsincl" if suf else "fsexcl"
     src = RES / f"lag_cosine_bin10{suf}.csv"
     if not src.exists():
         sys.exit(f"{src} not found — run scripts/run_lag_cosine.py first")
