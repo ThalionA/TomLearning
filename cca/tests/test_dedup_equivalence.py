@@ -354,3 +354,110 @@ def test_ifi_sides_matches_inline_derivation_and_ifi():
         ifi = lagged.information_flow_index(lags, cc)
         tot = pm + nm
         assert ifi == pytest.approx(0.0 if tot <= 0 else (pm - nm) / tot, abs=0)
+
+
+# ---------------------------------------------------------------------------
+# 2.4  Sample cap: run_lag_curves._capped_index / run_lag_subspaces & run_lag_cosine
+#      _capped_index(12000, 600) / run_fixed_subspace._cap_bins(600)  ->  preprocess.cap_running_bins
+# ---------------------------------------------------------------------------
+from tom_cca import preprocess  # noqa: E402
+
+
+def _ref_capped_index_lag_curves(trial_ids, max_samples=0, max_per_trial=0):
+    """Verbatim scripts/run_lag_curves.py:89 (pre-2026-08-19)."""
+    trial_ids = np.asarray(trial_ids)
+    if not max_samples and not max_per_trial:
+        return np.arange(trial_ids.size)
+    keep, total = [], 0
+    for t in np.unique(trial_ids):
+        pos = np.where(trial_ids == t)[0]
+        if max_per_trial:
+            pos = pos[:max_per_trial]
+        keep.append(pos)
+        total += pos.size
+        if max_samples and total >= max_samples:
+            break
+    return np.sort(np.concatenate(keep))
+
+
+def _ref_capped_index_12k(trial_ids, max_samples=12000, max_per_trial=600):
+    """Verbatim scripts/run_lag_subspaces.py:80 == run_lag_cosine.py:88 (pre-2026-08-19)."""
+    keep, total = [], 0
+    for t in np.unique(trial_ids):
+        pos = np.where(trial_ids == t)[0][:max_per_trial]
+        keep.append(pos)
+        total += pos.size
+        if total >= max_samples:
+            break
+    return np.sort(np.concatenate(keep))
+
+
+def _ref_cap_bins(trial_ids, max_per_trial=600):
+    """Verbatim scripts/run_fixed_subspace.py:58 (pre-2026-08-19)."""
+    keep = [np.where(trial_ids == t)[0][:max_per_trial]
+            for t in np.unique(trial_ids)]
+    return np.sort(np.concatenate(keep)) if keep else np.array([], dtype=int)
+
+
+@pytest.mark.parametrize("seed", range(6))
+def test_cap_running_bins_reproduces_all_three_old_caps(seed):
+    rng = np.random.default_rng(seed)
+    # ~40 trials of 100-900 bins: the 12k/600 cap stops inside the first ~20-30 trials
+    trial_ids = np.repeat(np.arange(40), rng.integers(100, 900, 40)).astype(float)
+    for ms, mpt in [(0, 0), (12000, 600), (0, 600), (5000, 0), (12000, 0), (3000, 50)]:
+        np.testing.assert_array_equal(
+            preprocess.cap_running_bins(trial_ids, ms, mpt),
+            _ref_capped_index_lag_curves(trial_ids, ms, mpt))
+    np.testing.assert_array_equal(preprocess.cap_running_bins(trial_ids, 12000, 600),
+                                  _ref_capped_index_12k(trial_ids))
+    np.testing.assert_array_equal(preprocess.cap_running_bins(trial_ids, 0, 600),
+                                  _ref_cap_bins(trial_ids))
+    # the two old 600-per-trial caps select DIFFERENT samples (the audit's point)
+    assert not np.array_equal(_ref_capped_index_12k(trial_ids), _ref_cap_bins(trial_ids))
+
+
+def test_cap_running_bins_empty():
+    assert preprocess.cap_running_bins(np.array([]), 100, 10).size == 0
+    assert preprocess.cap_running_bins(np.array([])).size == 0
+
+
+# ---------------------------------------------------------------------------
+# 2.5  Shared session prep: RunningSession.pair reproduces the inline Z construction;
+#      epoch_of_trial reproduces the inline epoch map
+# ---------------------------------------------------------------------------
+def test_running_session_pair_and_subset():
+    rng = np.random.default_rng(0)
+    n = 50
+    areas = {a: rng.standard_normal((n, 3 + i)) for i, a in enumerate(["CA1", "V1", "RSC", "SUB"])}
+    trial_ids = np.repeat(np.arange(5), 10)
+    s = preprocess.RunningSession(animal_id=1, learner=True, lp=20, areas=areas,
+                                  trial_ids=trial_ids, n_running_total=n,
+                                  cap_index=np.arange(n))
+    X, Y, Z = s.pair("CA1", "RSC")
+    np.testing.assert_array_equal(X, areas["CA1"]); np.testing.assert_array_equal(Y, areas["RSC"])
+    # inline rule: others in dict (= config.AREAS) order
+    np.testing.assert_array_equal(Z, np.concatenate([areas["V1"], areas["SUB"]], axis=1))
+    assert s.pair("CA1", "DG") is None
+    only = {"CA1": areas["CA1"], "V1": areas["V1"]}
+    s2 = preprocess.RunningSession(1, True, 20, only, trial_ids, n, np.arange(n))
+    assert s2.pair("CA1", "V1")[2] is None
+    sub = s.subset(trial_ids == 2)
+    assert sub.n_bins == 10 and set(sub.trials) == {2}
+    np.testing.assert_array_equal(sub.areas["V1"], areas["V1"][20:30])
+
+
+def test_epoch_of_trial_matches_inline_map():
+    from tom_cca import config, dataio
+    cfg = config.DEFAULT
+    trials = np.arange(3, 60)                       # running trials present (ids 3..59)
+    for lp in (25, 40):
+        uniq = np.unique(trials)
+        ew = dataio.epoch_windows(lp, uniq.size, cfg)
+        ref = {}
+        for epoch in ["naive", "intermediate", "expert"]:
+            pos = ew[epoch]
+            pos = pos[(pos >= 0) & (pos < uniq.size)]
+            for t in uniq[pos]:
+                ref[int(t)] = epoch
+        assert preprocess.epoch_of_trial(lp, trials, cfg) == ref
+    assert preprocess.epoch_of_trial(5, trials, cfg) is None   # lp < 2e

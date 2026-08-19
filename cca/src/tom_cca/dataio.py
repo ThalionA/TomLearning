@@ -246,6 +246,16 @@ def _read_companion(data_dir: str | Path) -> dict | None:
     return {"regions": regions, "lp": lp}
 
 
+def load_learning_points(data_dir: Path | None = None) -> dict:
+    """Per-animal learning points from ``<data_dir>/animal_behaviour.mat`` (or its JSON
+    companion). Returns ``{('period_experienced', animal_id): int LP}`` — the lookup
+    :func:`classify_cohort` takes as ``behaviour_lookup``. The ONE public entry point;
+    before 2026-08-19 sixteen scripts re-spelled the filename and called the private reader.
+    """
+    data_dir = Path(config.DATA_DIR if data_dir is None else data_dir)
+    return _read_behaviour_file(data_dir / config.LEARNING_FILE)
+
+
 def _read_behaviour_file(path: Path) -> dict:
     """Read learning points -- one per animal.
 

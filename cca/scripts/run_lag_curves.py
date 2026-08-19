@@ -16,8 +16,8 @@ canonical dimension. The per-dim curves can then be pooled two ways in the figur
 Writes one row per (animal, pair, lag, dim):
     results/lag_curves_bin{10,25,50}{,_fsincl}.csv
 
-Usage: PYTHONPATH=src python scripts/run_lag_curves.py --bin-ms 10 --max-lag 25 \
-       --smooth-ms 2.5 [--include-fs]
+Usage: python scripts/run_lag_curves.py [--include-fs] [--animals 36 --max-samples 3000]
+       (defaults = config.TEMPORAL: 10 ms, sigma 2.5 ms, K 30, +/-25 lags, 200 shuffles, uncapped)
 Significance uses a PER-DIM null computed HELD-OUT: dimension j's observed held-out CC
 is compared to the shuffled distribution of dimension j, evaluated through the same
 fold structure. The earlier dominant-dim null compared a held-out observed value to an
@@ -27,99 +27,39 @@ leaving 0.7 significant dims per cell.
 Expensive: the null costs n_shuffles x n_folds CCA fits per pair on top of the 51-lag
 curve (~70 min per FS condition at 200 shuffles). Launch detached.
 """
+
 from __future__ import annotations
 
-import argparse
 import csv
-import dataclasses
-import sys
-from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import config, core, dataio, lagged, partial  # noqa: E402
+from _common import (PAIRS, TEMPORAL, animals_filter, cap_desc, cfg_from_args, config,
+                     fs_suffix, temporal_parser)
+from tom_cca import dataio, lagged, preprocess
 
-K = 30
-N_FOLDS = 5
-# ⚠ Sample cap. Until 2026-08-15 the DEFAULT was 12 000 bins taken as the first
-# <= 600 bins of each whole trial in temporal order — i.e. the first ~20 trials' onset
-# phase, NOT the session. Every per-CC IFI result built on this file (item 1, the
-# 2026-08-07 asks 1/3) inherited that. Default is now UNCAPPED (0 = all running bins);
-# the cap remains available (--max-samples / --max-per-trial) for smoke tests only.
-MAX_SAMPLES = 0              # 0 = no cap; sessions run to ~370k engaged bins
-MAX_BINS_PER_TRIAL = 0       # 0 = whole trials; consecutive blocks keep lag adjacency
-PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
-         ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
-FDR_DIMS = 10                # BH family = leading dims; see lagged.perdim_significance
+K = TEMPORAL.k
+N_FOLDS = TEMPORAL.n_folds
+FDR_DIMS = TEMPORAL.fdr_dims       # BH family = leading dims; see lagged.perdim_significance
 FIELDS = ["animal", "learner", "pair", "bin_ms", "lag_bins", "lag_ms",
           "dim", "cc", "sig", "sig_uncorr", "p_perdim", "n_sig"]
 
 
 def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument("--bin-ms", type=int, default=10)
-    p.add_argument("--include-fs", action="store_true")
-    p.add_argument("--max-lag", type=int, default=25,
-                   help="widest lag (bins); curve spans -max_lag..+max_lag")
-    p.add_argument("--smooth-ms", type=float, default=0.0,
-                   help="Gaussian s.d. (ms) for spike-train smoothing (Buzsáki = 2.5)")
-    p.add_argument("--n-shuffles", type=int, default=200,
-                   help="circular-shift surrogates for the per-dim null. The empirical "
-                        "p floor is 1/(n+1); BH over FDR_DIMS needs it below "
-                        "alpha/FDR_DIMS, i.e. >199 for 10 dims at alpha=0.05.")
-    p.add_argument("--out", default="", help="output CSV stem override")
-    p.add_argument("--max-samples", type=int, default=MAX_SAMPLES,
-                   help="cap on running bins per pair, taken as consecutive within-trial "
-                        "blocks from the FIRST trials onward (0 = no cap, the default). "
-                        "The old default of 12000 kept only the first ~20 trials.")
-    p.add_argument("--max-per-trial", type=int, default=MAX_BINS_PER_TRIAL,
-                   help="max consecutive bins kept per trial when capping (0 = whole trial)")
-    p.add_argument("--animals", default="",
-                   help="comma-separated animal ids to run (smoke tests / timing)")
-    return p.parse_args()
-
-
-
-def _capped_index(trial_ids, max_samples=MAX_SAMPLES, max_per_trial=MAX_BINS_PER_TRIAL):
-    """Indices keeping a CONSECUTIVE within-trial block (<= max_per_trial bins) from
-    each whole trial in turn until ~max_samples — bounds cost on these long sessions
-    while preserving the bin adjacency the segment-aware lag pairing needs (an even
-    stride would break it). ``0`` for either limit means "no limit"; with both 0 every
-    bin is kept (the default since 2026-08-15). ⚠ Any cap takes the EARLIEST trials."""
-    trial_ids = np.asarray(trial_ids)
-    if not max_samples and not max_per_trial:
-        return np.arange(trial_ids.size)
-    keep, total = [], 0
-    for t in np.unique(trial_ids):
-        pos = np.where(trial_ids == t)[0]                   # temporal order within trial
-        if max_per_trial:
-            pos = pos[:max_per_trial]
-        keep.append(pos)
-        total += pos.size
-        if max_samples and total >= max_samples:
-            break
-    return np.sort(np.concatenate(keep))
+    return temporal_parser(__doc__.splitlines()[0]).parse_args()
 
 
 def main():
     args = parse_args()
-    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs,
-                              gaussian_sd_ms=args.smooth_ms)
-    suffix = "_fsincl" if args.include_fs else ""
-    stem = args.out or f"lag_curves_bin{args.bin_ms}{suffix}"
+    cfg = cfg_from_args(args)
+    stem = args.out or f"lag_curves_bin{args.bin_ms}{fs_suffix(args.include_fs)}"
     animals = dataio.load_animals(config.DATA_DIR)
-    behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
-    entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)
-    thr = cfg.velocity_thresh_cm_s
-    cap_desc = ("NONE (all running bins)" if not args.max_samples and not args.max_per_trial
-                else f"{args.max_samples or 'inf'} bins, <= {args.max_per_trial or 'all'} "
-                     f"per trial, EARLIEST trials first")
+    entries = dataio.classify_cohort(animals, cfg,
+                                     behaviour_lookup=dataio.load_learning_points())
     print(f"LAG-CC curves | bin={args.bin_ms}ms smooth={args.smooth_ms}ms K={K} "
           f"max_lag={args.max_lag} ({args.max_lag * args.bin_ms} ms) | "
-          f"FS={'incl' if args.include_fs else 'excl'} | cap: {cap_desc}\n")
-    only = {int(x) for x in args.animals.split(",") if x.strip()} if args.animals else None
+          f"FS={'incl' if args.include_fs else 'excl'} | cap: {cap_desc(args)}\n")
+    only = animals_filter(args.animals)
 
     out = config.RESULTS_DIR / f"{stem}.csv"
     rows = []
@@ -132,38 +72,25 @@ def main():
     for a in animals:
         if only is not None and int(a.animal_id) not in only:
             continue
-        try:
-            streams = dataio._load_temporal_streams(a, cfg)
-        except Exception:
-            continue
-        run = (~np.isnan(streams.trial_idx_50ms)) & (streams.vel_50ms >= thr)
-        trial_ids_full = streams.trial_idx_50ms[run]
-        if np.unique(trial_ids_full).size < N_FOLDS + 1:
-            continue
-        cap = _capped_index(trial_ids_full, args.max_samples, args.max_per_trial)
-        trial_ids = trial_ids_full[cap]
-        tr = np.unique(trial_ids)
-        print(f"  animal {a.animal_id}: {cap.size} of {trial_ids_full.size} running bins, "
+        sess = preprocess.load_running_session(
+            a, cfg, entries, max_samples=args.max_samples, max_per_trial=args.max_per_trial,
+            min_trials=N_FOLDS + 1)
+        if isinstance(sess, str):
+            print(f"  animal {a.animal_id}: SKIP — {sess}"); continue
+        tr = sess.trials
+        print(f"  animal {a.animal_id}: {sess.n_bins} of {sess.n_running_total} running bins, "
               f"trials {int(tr.min())}..{int(tr.max())} ({tr.size} trials)")
-        is_learner = a.animal_id in entries
-        present = {}
-        for area in config.AREAS:
-            m, idx = dataio.area_activity_50ms(a, area, cfg)
-            if len(idx) >= cfg.min_units:
-                present[area] = m[run][cap]
+        is_learner = sess.learner
+        trial_ids = sess.trial_ids
 
         for ax, ay in PAIRS:
-            if ax not in present or ay not in present:
+            pair = sess.pair(ax, ay)
+            if pair is None:
                 continue
-            X, Y = present[ax], present[ay]
-            others = [present[z] for z in present if z not in (ax, ay)]
-            Z = np.concatenate(others, axis=1) if others else None
+            X, Y, Z = pair
             # full-session residualise + PCA -> scores (PCA fit once; the CCA in the
             # lag curve is held-out per fold, so the directionality CC is unbiased)
-            Xr = partial.partial_out(X, Z) if Z is not None else X
-            Yr = partial.partial_out(Y, Z) if Z is not None else Y
-            Sx, _ = core.pca_scores(Xr, min(K, Xr.shape[1]))
-            Sy, _ = core.pca_scores(Yr, min(K, Yr.shape[1]))
+            Sx, Sy = preprocess.residual_pca_scores(X, Y, Z, K)
             d = int(min(Sx.shape[1], Sy.shape[1]))
             try:
                 lags, cc = lagged.heldout_lag_curve_flat_perdim(

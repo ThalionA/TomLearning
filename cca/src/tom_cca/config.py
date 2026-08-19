@@ -21,6 +21,7 @@ not swept.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 
 # --- Paths -------------------------------------------------------------------
@@ -41,6 +42,19 @@ COMPANION_FILE = "cca_labels.json"
 CCA_DIR = _REPO_ROOT / "cca"
 RESULTS_DIR = CCA_DIR / "results"
 FIGURES_DIR = CCA_DIR / "figures"
+
+# Temporal-arm figures are written to FIGURES_DIR and MIRRORED (byte-identical copy)
+# into the research vault so Obsidian notes can embed them. Set the environment
+# variable CCA_FIG_MIRROR to another directory, or to "" to disable the mirror —
+# e.g. on a machine without the vault. (Before 2026-08-19 the vault path was
+# hard-coded in 24 figure scripts, 7 of them as /Users/theoamvr/...)
+_mirror_env = os.environ.get("CCA_FIG_MIRROR")
+FIGURE_MIRROR_DIR: Path | None = (
+    (Path(_mirror_env).expanduser() if _mirror_env else None) if _mirror_env is not None
+    else Path.home() / "Documents" / "ResearchVault" / "attachments"
+)
+# Figure filename prefix for this dataset (``HCV1_<stem>_<fs>_bin10.svg``).
+FIG_PREFIX = "HCV1"
 
 # --- Areas and pairs ---------------------------------------------------------
 # Six areas appear in the Tom cohort. The first element of each pair tuple is
@@ -66,6 +80,15 @@ PAIRS: tuple[tuple[str, str], ...] = (
 # SUB have no FS flags. The Tom MATLAB scripts apply the FS mask only to those
 # four areas; we copy that convention verbatim.
 FS_AREAS: tuple[str, ...] = ("V1", "RSC", "CA1", "CA3")
+
+# The SAME eight pairs in the panel/table order every temporal-arm script has used
+# since 2026-06 (figures, md tables, CSV iteration). ``PAIRS`` above keeps the MATLAB
+# order for the spatial arm. Before 2026-08-19 this list was re-declared in 51 scripts.
+PAIRS_TEMPORAL: tuple[tuple[str, str], ...] = (
+    ("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
+    ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC"),
+)
+PAIR_NAMES: tuple[str, ...] = tuple(f"{x}-{y}" for x, y in PAIRS_TEMPORAL)
 
 # --- Surrogate / significance ------------------------------------------------
 # Shuffle count for the circular-shift surrogate used to test canonical-dimension
@@ -220,6 +243,33 @@ class Config:
 
 
 DEFAULT = Config()
+
+
+@dataclass(frozen=True)
+class TemporalDefaults:
+    """The canonical running-state (temporal-arm) configuration — ONE object.
+
+    These are the values every live temporal driver ran with (HANDOFF.md §2); until
+    2026-08-19 each script re-declared them as module constants with three different
+    ``--bin-ms`` defaults and two shuffle counts. ``Config`` above still carries the
+    older per-field knobs the spatial/landmark arms read (``temporal_bin_ms = 50``
+    is that legacy default, NOT the temporal arm's).
+    """
+
+    bin_ms: int = 10            # Gaussian-smoothed spike density, 10 ms bins
+    smooth_ms: float = 2.5      # sigma of the 1 ms smoothing kernel (Gonzalez & Buzsáki)
+    k: int = 30                 # PCs per area before CCA
+    n_folds: int = 5            # CV folds, split by WHOLE trials
+    n_shuffles: int = 200       # circular-shift surrogates (p floor 1/201 < 0.05/10)
+    fdr_dims: int = 10          # BH family = the leading dims (p-floor arithmetic)
+    max_lag_bins: int = 25      # +/-250 ms at 10 ms
+    label_w_bins: int = 5       # FF/FB label window: IFI over |lag| <= 5 bins (+/-50 ms)
+    min_trials: int = 6         # an animal needs > n_folds running trials
+    velocity_thresh_cm_s: float = 2.0
+    min_units: int = 5
+
+
+TEMPORAL = TemporalDefaults()
 
 
 # ---- Derived temporal quantities -------------------------------------------

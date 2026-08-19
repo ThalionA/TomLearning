@@ -37,30 +37,25 @@ trial-onset bias is not in play.
 Writes one row per (animal, pair, dim, lag):
     results/lag_cosine_bin10{,_fsincl}.csv
 
-Usage: PYTHONPATH=src python scripts/run_lag_cosine.py --bin-ms 10 --smooth-ms 2.5
-       [--include-fs]
+Usage: python scripts/run_lag_cosine.py [--include-fs]
+       (defaults = config.TEMPORAL; ⚠ this driver's historical cap is --max-samples 12000
+       --max-per-trial 600 = the first ~20 trials — kept as the default so numbers reproduce;
+       pass --max-samples 0 --max-per-trial 0 to uncap. HANDOFF.md §2.)
 """
+
 from __future__ import annotations
 
-import argparse
 import csv
-import dataclasses
-import sys
-from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import (config, core, dataio, fixed_subspace, lag_subspace,  # noqa: E402
-                     partial)
+from _common import (PAIRS, TEMPORAL, animals_filter, cap_desc, cfg_from_args, config,
+                     fs_suffix, temporal_parser)
+from tom_cca import core, dataio, fixed_subspace, lag_subspace, preprocess
 
-K = 30
-MAX_SAMPLES = 12000
-MAX_BINS_PER_TRIAL = 600
+K = TEMPORAL.k
 N_DIMS = 10
-FDR_DIMS = 10
-PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
-         ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
+FDR_DIMS = TEMPORAL.fdr_dims
 FIELDS = ["animal", "learner", "pair", "dim", "bin_ms", "lag_bins", "lag_ms",
           "cos_same_x", "cos_best_x", "best_dim_x",
           "cos_same_y", "cos_best_y", "best_dim_y",
@@ -69,27 +64,9 @@ FIELDS = ["animal", "learner", "pair", "dim", "bin_ms", "lag_bins", "lag_ms",
 
 
 def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument("--bin-ms", type=int, default=10)
-    p.add_argument("--include-fs", action="store_true")
-    p.add_argument("--smooth-ms", type=float, default=2.5)
-    p.add_argument("--max-lag", type=int, default=25)
-    p.add_argument("--n-shuffles", type=int, default=200)
-    p.add_argument("--out", default="")
+    p = temporal_parser(__doc__.splitlines()[0])
+    p.set_defaults(max_samples=12000, max_per_trial=600)   # historical cap (see docstring)
     return p.parse_args()
-
-
-
-def _capped_index(trial_ids, max_samples=MAX_SAMPLES,
-                  max_per_trial=MAX_BINS_PER_TRIAL):
-    keep, total = [], 0
-    for t in np.unique(trial_ids):
-        pos = np.where(trial_ids == t)[0][:max_per_trial]
-        keep.append(pos)
-        total += pos.size
-        if total >= max_samples:
-            break
-    return np.sort(np.concatenate(keep))
 
 
 def _abs_cos(a, B):
@@ -105,18 +82,16 @@ def _abs_cos(a, B):
 
 def main():
     args = parse_args()
-    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs,
-                              gaussian_sd_ms=args.smooth_ms)
-    suffix = "_fsincl" if args.include_fs else ""
-    stem = args.out or f"lag_cosine_bin{args.bin_ms}{suffix}"
+    cfg = cfg_from_args(args)
+    stem = args.out or f"lag_cosine_bin{args.bin_ms}{fs_suffix(args.include_fs)}"
     animals = dataio.load_animals(config.DATA_DIR)
-    behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
-    entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)
-    thr = cfg.velocity_thresh_cm_s
+    entries = dataio.classify_cohort(animals, cfg,
+                                     behaviour_lookup=dataio.load_learning_points())
     lags = np.arange(-args.max_lag, args.max_lag + 1)
     print(f"LAG COSINE | bin={args.bin_ms}ms smooth={args.smooth_ms}ms K={K} | "
-          f"lags ±{args.max_lag} bins | FS={'incl' if args.include_fs else 'excl'}\n")
+          f"lags ±{args.max_lag} bins | FS={'incl' if args.include_fs else 'excl'} | "
+          f"cap: {cap_desc(args)}\n")
+    only = animals_filter(args.animals)
 
     out = config.RESULTS_DIR / f"{stem}.csv"
     rows = []
@@ -127,33 +102,21 @@ def main():
             w.writeheader(); w.writerows(rows)
 
     for a in animals:
-        try:
-            streams = dataio._load_temporal_streams(a, cfg)
-        except Exception:
+        if only is not None and int(a.animal_id) not in only:
             continue
-        run = (~np.isnan(streams.trial_idx_50ms)) & (streams.vel_50ms >= thr)
-        tid_full = streams.trial_idx_50ms[run]
-        if np.unique(tid_full).size < 6:
-            continue
-        cap = _capped_index(tid_full)
-        trial_ids = tid_full[cap]
-        is_learner = a.animal_id in entries
-        present = {}
-        for area in config.AREAS:
-            m, idx = dataio.area_activity_50ms(a, area, cfg)
-            if len(idx) >= cfg.min_units:
-                present[area] = m[run][cap]
+        sess = preprocess.load_running_session(
+            a, cfg, entries, max_samples=args.max_samples, max_per_trial=args.max_per_trial)
+        if isinstance(sess, str):
+            print(f"  animal {a.animal_id}: SKIP — {sess}"); continue
+        trial_ids = sess.trial_ids
+        is_learner = sess.learner
 
         for ax, ay in PAIRS:
-            if ax not in present or ay not in present:
+            pair = sess.pair(ax, ay)
+            if pair is None:
                 continue
-            X, Y = present[ax], present[ay]
-            others = [present[z] for z in present if z not in (ax, ay)]
-            Z = np.concatenate(others, axis=1) if others else None
-            Xr = partial.partial_out(X, Z) if Z is not None else X
-            Yr = partial.partial_out(Y, Z) if Z is not None else Y
-            Sx, _ = core.pca_scores(Xr, min(K, Xr.shape[1]))
-            Sy, _ = core.pca_scores(Yr, min(K, Yr.shape[1]))
+            X, Y, Z = pair
+            Sx, Sy = preprocess.residual_pca_scores(X, Y, Z, K)
 
             # --- SPLIT-HALF control ------------------------------------------
             # A cross-lag cosine is uninterpretable without knowing how much two CCA

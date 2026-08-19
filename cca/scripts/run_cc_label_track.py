@@ -42,29 +42,24 @@ ACTIVITY rather than in the fit.
 Writes one row per (animal, pair, dim, epoch, lag):
     results/cc_label_track_bin10{,_fsincl}.csv
 
-Usage: PYTHONPATH=src python scripts/run_cc_label_track.py --bin-ms 10 --smooth-ms 2.5
-       [--include-fs]
+Usage: python scripts/run_cc_label_track.py [--include-fs]   (defaults = config.TEMPORAL; no cap)
 """
+
 from __future__ import annotations
 
-import argparse
 import csv
-import dataclasses
-import sys
-from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import (config, dataio, fixed_subspace, lagged,  # noqa: E402
-                     partial)
+from _common import (PAIRS, TEMPORAL, animals_filter, cfg_from_args, config, fs_suffix,
+                     temporal_parser)
+from tom_cca import dataio, fixed_subspace, lagged, partial, preprocess
 
-K = 30
-N_FOLDS = 5
-MAX_LAG = 25                 # +/-250 ms at 10 ms bins
-LABEL_W = 5                  # bins = +/-50 ms — the window the FF/FB label is taken at
-N_DIMS = 10                  # dims carried through (FDR family is the same 10)
-FDR_DIMS = 10
+K = TEMPORAL.k
+N_FOLDS = TEMPORAL.n_folds
+LABEL_W = TEMPORAL.label_w_bins   # bins = +/-50 ms — the window the FF/FB label is taken at
+N_DIMS = 10                       # dims carried through (FDR family is the same 10)
+FDR_DIMS = TEMPORAL.fdr_dims
 # NO SAMPLE CAP. The other drivers cap at ~12k bins because they refit CCA 255 times
 # per pair (51 lags x 5 folds); this one fits ONCE, so the cap bought nothing and cost a
 # great deal. A trial is ~2900 bins (~30 s of running); the previous cap kept 44-184 of
@@ -73,36 +68,23 @@ FDR_DIMS = 10
 # against +6.6 cm/s over whole trials, so the cap DOUBLED the speed confound on the very
 # contrast being measured. Measured cost of the full session (370k bins): residualise
 # 4.3 s, PCA 1.1 s, one CCA fit 0.9 s.
-EPOCHS = ["naive", "intermediate", "expert"]
-PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
-         ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
+EPOCHS = list(config.EPOCH_NAMES)
 FIELDS = ["animal", "learner", "pair", "dim", "epoch", "bin_ms", "lag_bins", "lag_ms",
           "r", "label", "ifi_fit", "label_loo", "ifi_loo", "label_xv", "ifi_xv",
           "n_trials_xv", "sig", "p_perdim", "cc_heldout", "n_bins", "n_fit_trials"]
 
 
 def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument("--bin-ms", type=int, default=10)
-    p.add_argument("--include-fs", action="store_true")
-    p.add_argument("--smooth-ms", type=float, default=2.5)
-    p.add_argument("--n-shuffles", type=int, default=200)
-    p.add_argument("--max-lag", type=int, default=MAX_LAG)
-    p.add_argument("--out", default="")
-    return p.parse_args()
+    return temporal_parser(__doc__.splitlines()[0], cap=False).parse_args()
 
 
 def main():
     args = parse_args()
-    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs,
-                              gaussian_sd_ms=args.smooth_ms)
-    suffix = "_fsincl" if args.include_fs else ""
-    stem = args.out or f"cc_label_track_bin{args.bin_ms}{suffix}"
+    cfg = cfg_from_args(args)
+    stem = args.out or f"cc_label_track_bin{args.bin_ms}{fs_suffix(args.include_fs)}"
     animals = dataio.load_animals(config.DATA_DIR)
-    behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
-    entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)
-    thr = cfg.velocity_thresh_cm_s
+    entries = dataio.classify_cohort(animals, cfg,
+                                     behaviour_lookup=dataio.load_learning_points())
     lags = np.arange(-args.max_lag, args.max_lag + 1)
     # lags are in BINS, so the label window is a bin comparison (LABEL_W = 5 bins =
     # +/-50 ms at 10 ms). information_flow_index only uses the sign of the lag, but
@@ -111,6 +93,7 @@ def main():
     print(f"CC LABEL+TRACK | bin={args.bin_ms}ms smooth={args.smooth_ms}ms K={K} | "
           f"label at ±{LABEL_W * args.bin_ms} ms | {args.n_shuffles} shuffles | "
           f"FS={'incl' if args.include_fs else 'excl'}\n")
+    only = animals_filter(args.animals)
 
     out = config.RESULTS_DIR / f"{stem}.csv"
     rows = []
@@ -123,41 +106,21 @@ def main():
     for a in animals:
         if a.animal_id not in entries:              # epochs need a learning point
             continue
-        try:
-            streams = dataio._load_temporal_streams(a, cfg)
-        except Exception:
+        if only is not None and int(a.animal_id) not in only:
             continue
-        run = (~np.isnan(streams.trial_idx_50ms)) & (streams.vel_50ms >= thr)
-        trial_ids_full = streams.trial_idx_50ms[run]
-        uniq_full = np.unique(trial_ids_full)
-        if uniq_full.size < 6:
-            continue
-        ew = dataio.epoch_windows(int(entries[a.animal_id].lp), uniq_full.size, cfg)
-        if ew is None:
+        sess = preprocess.load_running_session(a, cfg, entries)     # every bin, every trial
+        if isinstance(sess, str):
+            print(f"  animal {a.animal_id}: SKIP — {sess}"); continue
+        epoch_of_trial = preprocess.epoch_of_trial(sess.lp, sess.trials_full, cfg, EPOCHS)
+        if epoch_of_trial is None:
             print(f"  animal {a.animal_id}: epoch_windows None (skip)"); continue
-        sel = np.arange(trial_ids_full.size)      # every bin of every trial
-        trial_ids = trial_ids_full
-        epoch_of_trial = {}
-        for epoch in EPOCHS:
-            pos = ew[epoch]
-            pos = pos[(pos >= 0) & (pos < uniq_full.size)]
-            for t in uniq_full[pos]:
-                epoch_of_trial[int(t)] = epoch
-        if not epoch_of_trial:
-            continue
-
-        present = {}
-        for area in config.AREAS:
-            m, idx = dataio.area_activity_50ms(a, area, cfg)
-            if len(idx) >= cfg.min_units:
-                present[area] = m[run][sel]
+        trial_ids = sess.trial_ids
 
         for ax, ay in PAIRS:
-            if ax not in present or ay not in present:
+            pair = sess.pair(ax, ay)
+            if pair is None:
                 continue
-            X, Y = present[ax], present[ay]
-            others = [present[z] for z in present if z not in (ax, ay)]
-            Z = np.concatenate(others, axis=1) if others else None
+            X, Y, Z = pair
             # Residualise once, on the fit rows (= all rows here), and fit/project in
             # that same space. Z=None below so fit_fixed does not residualise again.
             if Z is not None:

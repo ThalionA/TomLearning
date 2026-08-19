@@ -26,34 +26,29 @@ within-trial cap, partial against all other recorded areas, PCA K=30, 5-fold by-
 Writes one row per (animal, pair, lag):
     results/lag_subspaces_bin{10}{,_fsincl}.csv
 
-Usage: PYTHONPATH=src python scripts/run_lag_subspaces.py --bin-ms 10 --smooth-ms 2.5
-       [--include-fs]
+Usage: python scripts/run_lag_subspaces.py [--epochs] [--include-fs]
+       (defaults = config.TEMPORAL; ⚠ this driver's historical cap is --max-samples 12000
+       --max-per-trial 600 = the first ~20 trials (per epoch in --epochs mode) — kept as
+       the default so numbers reproduce; pass --max-samples 0 --max-per-trial 0 to uncap.)
 """
+
 from __future__ import annotations
 
-import argparse
 import csv
-import dataclasses
-import sys
-from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from tom_cca import (config, dataio, lag_subspace, membership,  # noqa: E402
-                     subspace_window)
+from _common import (PAIRS, TEMPORAL, animals_filter, cap_desc, cfg_from_args, config,
+                     fs_suffix, temporal_parser)
+from tom_cca import dataio, lag_subspace, membership, preprocess, subspace_window
 
-K = 30
-N_FOLDS = 5
-MAX_SAMPLES = 12000
-MAX_BINS_PER_TRIAL = 600
-TAU_BINS = 5                  # +/-50 ms at 10 ms bins — the report's headline IFI window
+K = TEMPORAL.k
+N_FOLDS = TEMPORAL.n_folds
+TAU_BINS = TEMPORAL.label_w_bins  # +/-50 ms at 10 ms bins — the report's headline IFI window
 ANGLE_DIMS = 3                # subspace dimensionality for the principal-angle readout
 LAGS = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 7, -7, 10, -10, 15, -15, 20, -20,
         25, -25]
-PAIRS = [("CA1", "RSC"), ("CA1", "CA3"), ("CA1", "DG"), ("CA1", "V1"),
-         ("CA3", "DG"), ("CA1", "SUB"), ("RSC", "SUB"), ("V1", "RSC")]
-EPOCHS = ["naive", "intermediate", "expert"]
+EPOCHS = list(config.EPOCH_NAMES)
 FIELDS = ["animal", "learner", "pair", "epoch", "bin_ms", "lag_bins", "lag_ms",
           "n_samples",
           "cc1", "cc_mean3", "n_sig", "angle_x", "angle_y", "angle_x_cc1",
@@ -63,49 +58,30 @@ FIELDS = ["animal", "learner", "pair", "epoch", "bin_ms", "lag_bins", "lag_ms",
 
 
 def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument("--bin-ms", type=int, default=10)
-    p.add_argument("--include-fs", action="store_true")
-    p.add_argument("--smooth-ms", type=float, default=2.5)
+    p = temporal_parser(__doc__.splitlines()[0], shuffles=False, max_lag=False)
+    p.set_defaults(max_samples=12000, max_per_trial=600)   # historical cap (see docstring)
     p.add_argument("--epochs", action="store_true",
                    help="resolve every readout by learning epoch (naive/intermediate/"
                         "expert) instead of pooling the session. Learners only — an "
                         "epoch split needs a learning point. Serves meeting items 4 "
                         "and 6 (lagged curves and integration windows, naive vs exp) "
                         "and the FF/FB evolution in item 2.")
-    p.add_argument("--out", default="")
     return p.parse_args()
-
-
-def _capped_index(trial_ids, max_samples=MAX_SAMPLES,
-                  max_per_trial=MAX_BINS_PER_TRIAL):
-    """CONSECUTIVE within-trial blocks of whole trials until ~max_samples — preserves
-    the bin adjacency the segment-aware lag pairing needs (see GOTCHAS.md)."""
-    keep, total = [], 0
-    for t in np.unique(trial_ids):
-        pos = np.where(trial_ids == t)[0][:max_per_trial]
-        keep.append(pos)
-        total += pos.size
-        if total >= max_samples:
-            break
-    return np.sort(np.concatenate(keep))
 
 
 def main():
     args = parse_args()
-    cfg = dataclasses.replace(config.DEFAULT, temporal_bin_ms=args.bin_ms,
-                              exclude_fast_spiking=not args.include_fs,
-                              gaussian_sd_ms=args.smooth_ms)
-    suffix = "_fsincl" if args.include_fs else ""
+    cfg = cfg_from_args(args)
     ep = "_epochs" if args.epochs else ""
-    stem = args.out or f"lag_subspaces_bin{args.bin_ms}{ep}{suffix}"
+    stem = args.out or f"lag_subspaces_bin{args.bin_ms}{ep}{fs_suffix(args.include_fs)}"
     animals = dataio.load_animals(config.DATA_DIR)
-    behaviour = dataio._read_behaviour_file(config.DATA_DIR / "animal_behaviour.mat")
-    entries = dataio.classify_cohort(animals, cfg, behaviour_lookup=behaviour)
-    thr = cfg.velocity_thresh_cm_s
+    entries = dataio.classify_cohort(animals, cfg,
+                                     behaviour_lookup=dataio.load_learning_points())
     print(f"LAG SUBSPACES | bin={args.bin_ms}ms smooth={args.smooth_ms}ms K={K} | "
           f"{len(LAGS)} lags, tau={TAU_BINS} bins | "
-          f"FS={'incl' if args.include_fs else 'excl'}\n")
+          f"FS={'incl' if args.include_fs else 'excl'} | cap: {cap_desc(args)}"
+          f"{' (applied WITHIN each epoch)' if args.epochs else ''}\n")
+    only = animals_filter(args.animals)
 
     out = config.RESULTS_DIR / f"{stem}.csv"
     rows = []
@@ -116,33 +92,26 @@ def main():
             w.writeheader(); w.writerows(rows)
 
     for a in animals:
-        try:
-            streams = dataio._load_temporal_streams(a, cfg)
-        except Exception:
+        if only is not None and int(a.animal_id) not in only:
             continue
-        run = (~np.isnan(streams.trial_idx_50ms)) & (streams.vel_50ms >= thr)
-        trial_ids_full = streams.trial_idx_50ms[run]
-        if np.unique(trial_ids_full).size < N_FOLDS + 1:
-            continue
-        is_learner = a.animal_id in entries
-        segments = _segments(a, trial_ids_full, entries, cfg, args.epochs)
+        # load UNCAPPED; the cap is applied per analysis segment in _segments
+        full = preprocess.load_running_session(a, cfg, entries, min_trials=N_FOLDS + 1)
+        if isinstance(full, str):
+            print(f"  animal {a.animal_id}: SKIP — {full}"); continue
+        is_learner = full.learner
+        segments = _segments(full, cfg, args)
         if not segments:
             continue
-        area_full = {}
-        for area in config.AREAS:
-            m, idx = dataio.area_activity_50ms(a, area, cfg)
-            if len(idx) >= cfg.min_units:
-                area_full[area] = m[run]
 
         for epoch, sel in segments:
-            trial_ids = trial_ids_full[sel]
+            sess = full.subset(sel)
+            trial_ids = sess.trial_ids
             if np.unique(trial_ids).size < N_FOLDS + 1:
                 continue
-            present = {k: v[sel] for k, v in area_full.items()}
             n_tr = int(np.unique(trial_ids).size)
             print(f"    {a.animal_id} [{epoch}]: {sel.size} bins from {n_tr} trials "
                   f"(ids {int(trial_ids.min())}-{int(trial_ids.max())})")
-            _do_pairs(rows, a, is_learner, epoch, present, trial_ids, args)
+            _do_pairs(rows, a, is_learner, epoch, sess, args)
         _flush()
         print(f"  animal {a.animal_id} ({'L' if is_learner else 'n'}): "
               f"{len(rows)} rows total")
@@ -150,47 +119,46 @@ def main():
     print(f"\n-> {out}")
 
 
-def _segments(a, trial_ids_full, entries, cfg, by_epoch: bool):
+def _segments(full, cfg, args):
     """``[(label, index_into_running_bins)]`` — one entry per analysis segment.
 
-    ⚠ "session" IS A MISNOMER FOR WHAT THIS RETURNS. `_capped_index` stops once
-    MAX_SAMPLES = 12000 bins have accumulated at <= 600 bins/trial, so the "session"
-    segment is the FIRST ~20 TRIALS, not the whole session — for an animal whose learning
-    point is at trial 69 that is entirely pre-learning. Any statement derived from it is
-    about early behaviour, not about the session as a whole. The label is kept for
-    file-format stability; the driver prints the retained trial count so this is visible.
+    ⚠ "session" IS A MISNOMER under the historical cap (12 000 bins at <= 600 per
+    trial): that "session" segment is the FIRST ~20 TRIALS, not the whole session — for
+    an animal whose learning point is at trial 69 that is entirely pre-learning. The
+    driver prints the retained trial count so this is visible; pass
+    ``--max-samples 0 --max-per-trial 0`` for the true session.
 
     Epoch mode gives one segment per learning epoch, with the cap applied WITHIN each
     epoch rather than to the session — capping first would spend the whole budget on the
     earliest trials and leave the expert epoch empty.
     """
-    if not by_epoch:
-        return [("session", _capped_index(trial_ids_full))]
-    if a.animal_id not in entries:                 # an epoch split needs a learning pt
+    tid = full.trial_ids
+    if not args.epochs:
+        return [("session", preprocess.cap_running_bins(tid, args.max_samples, args.max_per_trial))]
+    if not full.learner or full.lp is None:        # an epoch split needs a learning pt
         return []
-    uniq = np.unique(trial_ids_full)
-    ew = dataio.epoch_windows(int(entries[a.animal_id].lp), uniq.size, cfg)
-    if ew is None:
+    eot = preprocess.epoch_of_trial(full.lp, full.trials_full, cfg, EPOCHS)
+    if eot is None:
         return []
     segs = []
     for epoch in EPOCHS:
-        pos = ew[epoch]
-        pos = pos[(pos >= 0) & (pos < uniq.size)]
-        idx = np.where(np.isin(trial_ids_full, uniq[pos]))[0]
+        trials = [t for t, e in eot.items() if e == epoch]
+        idx = np.flatnonzero(np.isin(tid, trials))
         if idx.size == 0:
             continue
-        segs.append((epoch, idx[_capped_index(trial_ids_full[idx])]))
+        segs.append((epoch, idx[preprocess.cap_running_bins(tid[idx], args.max_samples,
+                                                             args.max_per_trial)]))
     return segs
 
 
-def _do_pairs(rows, a, is_learner, epoch, present, trial_ids, args):
+def _do_pairs(rows, a, is_learner, epoch, sess, args):
     """Sweep every area pair for one animal-segment, appending rows in place."""
+    trial_ids = sess.trial_ids
     for ax, ay in PAIRS:
-        if ax not in present or ay not in present:
+        pair = sess.pair(ax, ay)
+        if pair is None:
             continue
-        X, Y = present[ax], present[ay]
-        others = [present[z] for z in present if z not in (ax, ay)]
-        Z = np.concatenate(others, axis=1) if others else None
+        X, Y, Z = pair
         tag = f"{a.animal_id} {ax}-{ay} [{epoch}]"
         try:
             fits = lag_subspace.lag_sweep(X, Y, trial_ids, Z=Z, lags=LAGS, k=K,
