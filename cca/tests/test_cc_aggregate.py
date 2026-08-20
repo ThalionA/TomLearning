@@ -180,3 +180,22 @@ def test_one_sample_keeps_requested_pair_order():
                     _per_animal("CA1-RSC", [0.1, 0.2, 0.3])], ignore_index=True)
     out = agg.one_sample_by_pair(pa, value="mean", pairs=["CA1-RSC", "V1-RSC"])
     assert out["pair"].tolist() == ["CA1-RSC", "V1-RSC"]
+
+
+def test_one_sample_wilcoxon_columns_are_additive():
+    """wilcoxon=True appends w_stat/w_p; the default columns are unchanged, and the
+    default output is byte-identical to the pre-flag behaviour."""
+    pa = _per_animal("CA1-RSC", [0.20, 0.30, 0.25, 0.10, 0.15, 0.22])
+    out0 = agg.one_sample_by_pair(pa, value="mean", pairs=["CA1-RSC"])
+    out1 = agg.one_sample_by_pair(pa, value="mean", pairs=["CA1-RSC"], wilcoxon=True)
+    assert list(out0.columns) == ["pair", "n", "mean", "sem", "t", "p", "bh_pass"]
+    assert list(out1.columns) == ["pair", "n", "mean", "sem", "t", "p",
+                                  "w_stat", "w_p", "bh_pass"]
+    pd.testing.assert_frame_equal(out1[out0.columns], out0)
+    assert np.isfinite(out1["w_p"].iloc[0])
+
+
+def test_one_sample_wilcoxon_nan_below_three_nonzero():
+    pa = _per_animal("CA1-RSC", [0.0, 0.0, 0.5])   # only one non-zero delta
+    out = agg.one_sample_by_pair(pa, value="mean", pairs=["CA1-RSC"], wilcoxon=True)
+    assert np.isnan(out["w_p"].iloc[0])

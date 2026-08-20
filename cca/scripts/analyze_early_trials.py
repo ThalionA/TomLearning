@@ -155,7 +155,9 @@ def angle_vs_floor(df, blocks=("t1-5", "t1-7", "t1-10")):
 
 
 def main():
-    tag = "_fsincl" if (len(sys.argv) > 1 and "fsincl" in sys.argv[1]) else ""
+    args = sys.argv[1:]
+    tag = ("_bin10" if any("bin10" in a for a in args) else "") + \
+          ("_fsincl" if any("fsincl" in a for a in args) else "")
     proj_p = config.RESULTS_DIR / f"early_trials_projected{tag}.csv"
     block_p = config.RESULTS_DIR / f"early_trials_blocks{tag}.csv"
     if not proj_p.is_file() or not block_p.is_file():
@@ -167,8 +169,10 @@ def main():
           f"{block_p.name}: {len(block)} rows\n")
 
     rows = []
-    rows += _contrasts(proj, "ordinal", 1, [4, 7, 10], PROJ_METRICS,
-                       "PROJECTED per-trial (trial 1 vs 4/7/10)", lmm_axis=True)
+    ords = sorted(o for o in proj["ordinal"].unique() if o != 1)
+    rows += _contrasts(proj, "ordinal", 1, ords, PROJ_METRICS,
+                       f"PROJECTED per-trial (trial 1 vs {'/'.join(map(str, ords))})",
+                       lmm_axis=True)
     print()
     rows += _contrasts(block, "block", "late", ["t1-5", "t1-7", "t1-10"], BLOCK_METRICS,
                        "BLOCK refit (early block vs late reference)")

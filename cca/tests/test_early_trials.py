@@ -104,3 +104,19 @@ def test_participation_gini_in_range_and_short_trial_nan():
     short = early_trials.early_trial_metrics(X, Y, tids, [999], train, k=6, min_bins=10)
     assert np.isnan(short[0]["cc1"])
     assert short[0]["n_bins"] == 0
+
+
+def test_variates_matches_manual_projection_and_dims_subset():
+    """`variates` (public since 2026-08-20, was `_variates`) is the frozen projection:
+    (S - model mean) @ coef, with an optional dim subset."""
+    rng = np.random.default_rng(5)
+    X, Y, tids = _two_areas(rng, 200, 8, 6, 6, coupled_from=0)
+    train = np.isin(tids, np.arange(4, 8))
+    fit = early_trials.reference_fit(X, Y, train, k=4)
+    bins = np.where(tids == 1)[0]
+    u, v = early_trials.variates(fit, bins)
+    np.testing.assert_allclose(u, (fit.Sx[bins] - fit.model.x_mean) @ fit.model.A)
+    np.testing.assert_allclose(v, (fit.Sy[bins] - fit.model.y_mean) @ fit.model.B)
+    u0, v0 = early_trials.variates(fit, bins, dims=[0])
+    np.testing.assert_array_equal(u0, u[:, [0]])
+    np.testing.assert_array_equal(v0, v[:, [0]])

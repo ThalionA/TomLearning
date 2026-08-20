@@ -21,8 +21,9 @@ is exactly what the cross-lag subspace-stability analysis (meeting item 3) tests
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 
-from . import lagged
+from . import config, lagged
 
 
 def curve_ifi(lag: np.ndarray, cc: np.ndarray) -> float:
@@ -159,3 +160,44 @@ def ifi_windows_by_dim(lag, cc, dim, max_window: int | None = None):
             pm, nm = lagged.ifi_sides(lg[sel], c[sel])
             degen[i, j] = (pm + nm) <= 0
     return dims, windows, ifi, degen
+
+
+def windows_table(df: pd.DataFrame, *, value: str = "cc",
+                  group_keys=("animal", "learner", "pair"), sig: str = "sig",
+                  bin_ms: int = config.TEMPORAL.bin_ms) -> pd.DataFrame:
+    """Long per-(group, dim, lag) frame → one row per (group, dim, integration window).
+
+    Hoisted from ``analyze_cc_ifi_signs.build_windows`` (2026-08-20) so every consumer
+    of the per-dim window sweep shares one implementation. ``df`` needs columns
+    ``lag_bins`` (BIN units), ``dim``, ``value`` and ``sig``; grouping is by
+    ``group_keys`` (``dim`` must NOT be among them — dims are looped internally by
+    :func:`ifi_windows_by_dim`). Output columns: ``*group_keys, dim, window_bins,
+    window_ms, ifi, degenerate, cc_peak, sig`` — ``cc_peak`` is the per-dim max of
+    ``value`` (whatever ``value`` is named), so a sign can be weighed against whether
+    the dim carries any coupling at all; ``sig`` is the per-dim max of the flag.
+    """
+    group_keys = list(group_keys)
+    if "dim" in group_keys:
+        raise ValueError("windows_table: `dim` must not be a group key — dims are "
+                         "looped internally")
+    df = df.copy()
+    df[value] = pd.to_numeric(df[value], errors="coerce")
+    rows = []
+    for key, g in df.groupby(group_keys, sort=True):
+        if not isinstance(key, tuple):
+            key = (key,)
+        dims, wins, ifi, degen = ifi_windows_by_dim(
+            g["lag_bins"].to_numpy(), g[value].to_numpy(), g["dim"].to_numpy())
+        cc_peak = g.groupby("dim")[value].max()
+        sig_dim = g.groupby("dim")[sig].max()
+        for i, d in enumerate(dims):
+            for j, w in enumerate(wins):
+                rows.append({
+                    **dict(zip(group_keys, key)),
+                    "dim": int(d), "window_bins": int(w),
+                    "window_ms": int(w) * bin_ms,
+                    "ifi": ifi[i, j], "degenerate": int(degen[i, j]),
+                    "cc_peak": float(cc_peak.get(d, np.nan)),
+                    "sig": int(sig_dim.get(d, 0)),
+                })
+    return pd.DataFrame(rows)

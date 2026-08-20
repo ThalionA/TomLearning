@@ -74,32 +74,6 @@ def check_sig_consistency(df: pd.DataFrame) -> dict:
             "ok": neg == 0 and (not np.isfinite(subset) or subset == 0)}
 
 
-def build_windows(df: pd.DataFrame) -> pd.DataFrame:
-    """Long file -> one row per (animal, pair, dim, integration window)."""
-    df = df.copy()
-    df["cc"] = pd.to_numeric(df["cc"], errors="coerce")
-    rows = []
-    for (animal, learner, pair), g in df.groupby(["animal", "learner", "pair"],
-                                                 sort=True):
-        dims, wins, ifi, degen = perdim_ifi.ifi_windows_by_dim(
-            g["lag_bins"].to_numpy(), g["cc"].to_numpy(), g["dim"].to_numpy())
-        # per-dim CC magnitude, so a sign can be weighed against whether the dim
-        # carries any coupling at all
-        cc_peak = g.groupby("dim")["cc"].max()
-        sig = g.groupby("dim")["sig"].max()
-        for i, d in enumerate(dims):
-            for j, w in enumerate(wins):
-                rows.append({
-                    "animal": animal, "learner": learner, "pair": pair,
-                    "dim": int(d), "window_bins": int(w),
-                    "window_ms": int(w) * BIN_MS,
-                    "ifi": ifi[i, j], "degenerate": int(degen[i, j]),
-                    "cc_peak": float(cc_peak.get(d, np.nan)),
-                    "sig": int(sig.get(d, 0)),
-                })
-    return pd.DataFrame(rows)
-
-
 def sign_counts(tab: pd.DataFrame, lead_only: bool = True) -> pd.DataFrame:
     """Per (animal, pair, window): how many CCs lead, how many lag, are signs MIXED?
 
@@ -501,7 +475,7 @@ def main():
         md.append(f"> **`sig` consistency check ({fs}):** {status} — "
                   f"{chk['sig_with_nonpositive_cc']}/{chk['n_sig']} flagged dims with "
                   f"non-positive lag-0 CC.\n")
-        tab = build_windows(raw)
+        tab = perdim_ifi.windows_table(raw, bin_ms=BIN_MS)   # hoisted 2026-08-20
         counts = sign_counts(tab)
         tab.to_csv(RES / f"cc_ifi_windows_bin10{suf}.csv", index=False,
                    lineterminator="\n")

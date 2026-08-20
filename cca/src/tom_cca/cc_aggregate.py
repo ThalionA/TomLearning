@@ -70,7 +70,7 @@ def per_animal_mean(tab: pd.DataFrame, value: str, by: Sequence[str],
 
 
 def one_sample_by_pair(per_animal: pd.DataFrame, value: str, pairs: Sequence[str],
-                       min_n: int = 3) -> pd.DataFrame:
+                       min_n: int = 3, wilcoxon: bool = False) -> pd.DataFrame:
     """Per pair: one-sample *t* of the per-animal ``value`` against 0.
 
     ``per_animal`` must be one row per animal within each pair (the output of
@@ -82,7 +82,10 @@ def one_sample_by_pair(per_animal: pd.DataFrame, value: str, pairs: Sequence[str
     Columns: ``pair, n, mean, sem, t, p, bh_pass`` — ``bh_pass`` is Benjamini-
     Hochberg across the pairs returned. Project policy treats the 8 pairs as
     separate families with no cross-pair correction, so ``bh_pass`` is a
-    sensitivity column, not the inferential statement.
+    sensitivity column, not the inferential statement. With ``wilcoxon=True`` two
+    columns ``w_stat, w_p`` are appended (signed-rank as the assumption-light
+    cross-check; NaN below 3 non-zero values, p-floor 0.0625 at n = 5 — it cannot
+    reach 0.05 there, Methods §2.10). The default output is unchanged.
     """
     dup = per_animal.duplicated(subset=["pair", "animal"])
     if dup.any():
@@ -97,9 +100,14 @@ def one_sample_by_pair(per_animal: pd.DataFrame, value: str, pairs: Sequence[str
             continue
         n, _, t, p = paired_stats.paired_t(v)
         sem = float(np.std(v, ddof=1) / np.sqrt(v.size)) if v.size > 1 else np.nan
-        rows.append({"pair": pair, "n": int(n), "mean": float(np.mean(v)),
-                     "sem": sem, "t": t, "p": p})
-    out = pd.DataFrame(rows, columns=["pair", "n", "mean", "sem", "t", "p"])
+        row = {"pair": pair, "n": int(n), "mean": float(np.mean(v)),
+               "sem": sem, "t": t, "p": p}
+        if wilcoxon:
+            _, _, w_stat, w_p = paired_stats.wilcoxon_signed(v)
+            row["w_stat"], row["w_p"] = w_stat, w_p
+        rows.append(row)
+    cols = ["pair", "n", "mean", "sem", "t", "p"] + (["w_stat", "w_p"] if wilcoxon else [])
+    out = pd.DataFrame(rows, columns=cols)
     if out.empty:
         out["bh_pass"] = pd.Series(dtype=bool)
         return out

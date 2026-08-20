@@ -40,7 +40,7 @@ MAX_LAG = 10
 N_SHUFFLES = config.SURROGATE_SHUFFLES
 SAT = 0.99
 ROT_DIMS = 3
-EARLY_ORDINALS = [1, 4, 7, 10]        # the trials the user asked about
+EARLY_ORDINALS = [1, 2, 4, 7, 10]     # the trials the user asked about (2 added 2026-08-20)
 BLOCK_SIZES = [5, 7, 10]              # cumulative early blocks [1..n]
 LATE_N = 10                           # late reference = last LATE_N trials
 KCCA_CAP, KCCA_REG, KCCA_LAG, KCCA_D, KCCA_SHUF = 900, 10.0, 4, 3, 10

@@ -461,3 +461,75 @@ def test_epoch_of_trial_matches_inline_map():
                 ref[int(t)] = epoch
         assert preprocess.epoch_of_trial(lp, trials, cfg) == ref
     assert preprocess.epoch_of_trial(5, trials, cfg) is None   # lp < 2e
+
+
+def test_running_session_subset_slices_velocity_in_lockstep():
+    """`velocity` (added 2026-08-20) must be sliced by `subset` together with
+    `trial_ids` — a desync would silently attach the wrong speeds to bins."""
+    rng = np.random.default_rng(1)
+    n = 50
+    areas = {"CA1": rng.standard_normal((n, 4))}
+    trial_ids = np.repeat(np.arange(5), 10)
+    vel = rng.uniform(2.0, 30.0, n)
+    s = preprocess.RunningSession(animal_id=1, learner=True, lp=20, areas=areas,
+                                  trial_ids=trial_ids, n_running_total=n,
+                                  cap_index=np.arange(n), velocity=vel)
+    sub = s.subset(trial_ids == 3)
+    np.testing.assert_array_equal(sub.velocity, vel[30:40])
+    np.testing.assert_array_equal(sub.trial_ids, trial_ids[30:40])
+    # constructions without velocity keep None through subset
+    s0 = preprocess.RunningSession(1, True, 20, areas, trial_ids, n, np.arange(n))
+    assert s0.subset(trial_ids == 0).velocity is None
+
+
+# ---------------------------------------------------------------------------
+# 2.6  windows_table (hoisted 2026-08-20) pins to a VERBATIM copy of the old
+#      analyze_cc_ifi_signs.build_windows (as of 374c0dd)
+# ---------------------------------------------------------------------------
+def test_windows_table_matches_old_analyze_build_windows():
+    import pandas as pd
+
+    from tom_cca import perdim_ifi
+    BIN_MS = 10
+
+    def _old_build_windows(df):
+        df = df.copy()
+        df["cc"] = pd.to_numeric(df["cc"], errors="coerce")
+        rows = []
+        for (animal, learner, pair), g in df.groupby(["animal", "learner", "pair"],
+                                                     sort=True):
+            dims, wins, ifi, degen = perdim_ifi.ifi_windows_by_dim(
+                g["lag_bins"].to_numpy(), g["cc"].to_numpy(), g["dim"].to_numpy())
+            cc_peak = g.groupby("dim")["cc"].max()
+            sig = g.groupby("dim")["sig"].max()
+            for i, d in enumerate(dims):
+                for j, w in enumerate(wins):
+                    rows.append({
+                        "animal": animal, "learner": learner, "pair": pair,
+                        "dim": int(d), "window_bins": int(w),
+                        "window_ms": int(w) * BIN_MS,
+                        "ifi": ifi[i, j], "degenerate": int(degen[i, j]),
+                        "cc_peak": float(cc_peak.get(d, np.nan)),
+                        "sig": int(sig.get(d, 0)),
+                    })
+        return pd.DataFrame(rows)
+
+    rng = np.random.default_rng(2)
+    rows = []
+    for animal in (1, 2):
+        for pair in ("CA1-RSC", "V1-RSC"):
+            for dim in (1, 2, 3):
+                for lag in range(-6, 7):
+                    # dim 3: negative at every lag -> exercises the degenerate flag;
+                    # a few NaNs exercise the coerce path
+                    cc = (-abs(rng.uniform(0.05, 0.3)) if dim == 3
+                          else rng.uniform(-0.2, 0.6))
+                    if animal == 2 and dim == 1 and lag == 4:
+                        cc = np.nan
+                    rows.append(dict(animal=animal, learner=1, pair=pair, dim=dim,
+                                     lag_bins=lag, cc=cc, sig=int(dim <= 2)))
+    df = pd.DataFrame(rows)
+    pd.testing.assert_frame_equal(perdim_ifi.windows_table(df, bin_ms=BIN_MS),
+                                  _old_build_windows(df))
+    with pytest.raises(ValueError):
+        perdim_ifi.windows_table(df, group_keys=("animal", "dim"))
