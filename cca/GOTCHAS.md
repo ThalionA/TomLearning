@@ -2,6 +2,50 @@
 
 One-line entries for non-obvious bugs, so they are not reintroduced.
 
+- **Trial 1 is not behaviourally comparable to trial 2: it is LONGER, SLOWER and more
+  FRAGMENTED.** Measured 2026-08-20 across 16 animals, both FS: trial 1 has **+650 running
+  bins (≈ +6.5 s, p = 5.5×10⁻⁶, 12/13 animals)**, runs **−3.3 cm/s slower**, and has **+6.8
+  more running gaps** than trial 2; speed and gaps survive BH in **8/8** pairs, duration in
+  7/8 (CA3-DG n = 5 fails). Any per-trial contrast in this project must bin-match before it
+  can be read as communication. ⚠ And bin-matching fixes ONLY duration: taking the leading
+  N bins equalises `n_bins` exactly (Δ = 0.000, 71/71 animal-pairs) but leaves speed
+  **undiminished or worse** (−3.30 raw → −3.51 matched) and gaps largely intact, because it
+  compares roughly the first 80 % of trial 1 against the whole of trial 2 — and the phase it
+  over-weights is the trial-onset phase already documented (HANDOFF §6) as carrying a doubled
+  speed confound. `analyze_trial12.py` therefore tests the three covariates on EVERY arm; it
+  originally tested them only on the raw arm, with a comment asserting matching removed them,
+  which hid this entirely.
+
+- **A frozen CCA projection can collapse on a single trial and read |r| ≈ 1 at EVERY rank.**
+  Animal 70, ordinals 1 and 9, pairs CA1-DG / CA1-SUB / CA1-V1 (2026-08-20): CC₁ = −0.941
+  with **CC₈ = −0.996 on the same trial**, on that animal's LONGEST trials (5773/6448 bins, so
+  not a short-trial clip), while its other three pairs read a normal 0.02–0.25. Genuine
+  held-out coupling DECAYS with rank; a flat |r| ≈ 1 profile is a rank/collinearity degeneracy
+  of the projection, not coupling. 131/15070 rows, and those cells alone inflated the delta SD
+  ~10× and made the strength result formally uninformative for exactly those three pairs.
+  Gate on the tail: `analyze_trial12.degenerate_trials` drops a cell when mean |r₀| over dims
+  6–10 exceeds 0.5.
+
+- **`frozen_perm_null` on a whole-session frozen fit is NOT a dimension selector — it passes
+  essentially everything.** Measured 2026-08-20: **100.00 %** of (animal, pair, dim) cells pass
+  FS-included and **99.56 %** FS-excluded, with ~99 % sitting exactly at the permutation p-floor
+  1/201. So "average over all SIGNIFICANT CCs" is arithmetically "average over all 10 CCs", and
+  any sentence contrasting the two is describing a distinction the data does not contain. The
+  null is well calibrated under a total null; what it cannot do is separate ranks when hundreds
+  of thousands of train bins make every rank beat a circular shift. Report the pass RATE
+  whenever a `sig` gate is invoked — and note that a low per-animal-pair `n_sig` usually means
+  FEWER DIMS WERE AVAILABLE, not that dims failed the test.
+
+- **Cumulative integration windows cannot be tested with a per-window BH — it manufactures
+  survivors.** Windows are nested (|lag| ≤ w), so 25 per-window tests are near-duplicates:
+  applying BH across pairs at each window separately yields "5 BH-surviving" window results on
+  the trial-1-vs-2 data, none of which survives the defensible statistic — **max |t| across
+  windows against a sign-flip permutation null on each animal's whole delta-vs-window profile**,
+  which preserves the nesting exactly (`analyze_trial12.sweep_test`, 0 BH survivors either FS).
+  Related: seed the permutation PER GROUP (`zlib.crc32` of the group key, never `hash()`, which
+  Python randomises per process) — a single stream consumed in group order silently changes
+  every later group's p when any upstream row is dropped, and moved two results across 0.05.
+
 - **On the ALL-TRIALS frozen fit (`run_cc_label_track`), curve HEIGHT is lower in the naive
   epoch at EVERY lag — a baseline offset, not learning.** Found 2026-08-15, adversarially
   verified: peak r "rises" expert − naive 8/8 pairs (both FS), but ~60 % of it is present at

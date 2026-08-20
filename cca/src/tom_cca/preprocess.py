@@ -43,6 +43,11 @@ class RunningSession:
     unit_counts: dict[str, int] = field(default_factory=dict)
     trials_full: np.ndarray | None = None   # unique running-trial ids BEFORE the cap
     velocity: np.ndarray | None = None      # (n_bins,) cm/s per kept running bin
+    stream_index: np.ndarray | None = None  # (n_bins,) position in the original binned
+    #                                         stream — kept running bins are contiguous
+    #                                         ROWS but not contiguous TIME; a jump > 1
+    #                                         here is a velocity/trial gap the lag
+    #                                         pairing steps across
 
     @property
     def n_bins(self) -> int:
@@ -63,7 +68,8 @@ class RunningSession:
             trial_ids=self.trial_ids[sel], n_running_total=self.n_running_total,
             cap_index=self.cap_index[sel], unit_counts=dict(self.unit_counts),
             trials_full=self.trials_full,
-            velocity=self.velocity[sel] if self.velocity is not None else None)
+            velocity=self.velocity[sel] if self.velocity is not None else None,
+            stream_index=self.stream_index[sel] if self.stream_index is not None else None)
 
     def pair(self, ax: str, ay: str):
         """``(X, Y, Z)`` for one pair — ``Z`` = the other present areas, concatenated in
@@ -140,7 +146,8 @@ def load_running_session(animal, cfg, entries: dict, *, max_samples: int = 0,
         areas=areas, trial_ids=np.asarray(trial_ids_full[cap]),
         n_running_total=int(trial_ids_full.size), cap_index=cap, unit_counts=counts,
         trials_full=np.unique(trial_ids_full),
-        velocity=np.asarray(streams.vel_50ms[run][cap], dtype=float))
+        velocity=np.asarray(streams.vel_50ms[run][cap], dtype=float),
+        stream_index=np.flatnonzero(run)[cap])
 
 
 def residual_pca_scores(X, Y, Z, k: int):

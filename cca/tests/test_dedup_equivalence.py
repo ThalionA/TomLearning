@@ -471,15 +471,19 @@ def test_running_session_subset_slices_velocity_in_lockstep():
     areas = {"CA1": rng.standard_normal((n, 4))}
     trial_ids = np.repeat(np.arange(5), 10)
     vel = rng.uniform(2.0, 30.0, n)
+    sidx = np.sort(rng.choice(500, n, replace=False))    # non-contiguous stream slots
     s = preprocess.RunningSession(animal_id=1, learner=True, lp=20, areas=areas,
                                   trial_ids=trial_ids, n_running_total=n,
-                                  cap_index=np.arange(n), velocity=vel)
+                                  cap_index=np.arange(n), velocity=vel,
+                                  stream_index=sidx)
     sub = s.subset(trial_ids == 3)
     np.testing.assert_array_equal(sub.velocity, vel[30:40])
+    np.testing.assert_array_equal(sub.stream_index, sidx[30:40])
     np.testing.assert_array_equal(sub.trial_ids, trial_ids[30:40])
-    # constructions without velocity keep None through subset
+    # constructions without velocity/stream_index keep None through subset
     s0 = preprocess.RunningSession(1, True, 20, areas, trial_ids, n, np.arange(n))
     assert s0.subset(trial_ids == 0).velocity is None
+    assert s0.subset(trial_ids == 0).stream_index is None
 
 
 # ---------------------------------------------------------------------------

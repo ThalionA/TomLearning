@@ -5,6 +5,9 @@ __pycache__/
 results/*.pkl
 results/*.tmp
 results/*.done
+# ~50 MB per FS condition, fully regenerable by scripts/run_trial12.py; every
+# downstream table IS committed, so nothing is lost (2026-08-20)
+results/trial12_curves_bin10*.csv
 results/.sandbox_scratch/
 figures/*.png
 figures/*.csv
