@@ -120,6 +120,19 @@ same recomputed **excluding the epoch being scored** (use this one for persisten
 **`cos_split_*`, `split_best_*` the matched split-half version — use these**, since the
 full-data ones start at 1.0 by construction at lag 0.
 
+**`trial12_trials_bin10*.csv`** — trial-1-vs-2 frozen-projection readout, one row per
+(animal, pair, dim, ordinal 1..10, `matched` arm). `r0` the per-trial **held-out** lag-0
+correlation of the frozen variates · `r_frozen` the fit's own **IN-SAMPLE** canonical r (never a
+per-trial quantity) · `n_bins`, `n_gaps`, `vel_mean/median` the behavioural covariates ·
+`in_fit` always 0 for ordinals 1..10. `matched`: 0 raw · 1 ordinals 1/2 cut to min(n₁,n₂)
+leading bins · 2 all ordinals cut to a common min. ⚠ **"ordinal" = the o-th RUNNING trial** — a
+trial with no supra-threshold bin never enters `trial_ids`, so ordinal 1 is the first trial the
+animal actually ran in; `trial_id` is exported so the mapping is auditable. Companion
+`trial12_curves_bin10*.csv` (the full lag curves) is **gitignored** — regenerate with
+`scripts/run_trial12.py`. ⚠ Read the four 2026-08-20 GOTCHAS before using any of this: the three
+behavioural confounds and what matching does/doesn't fix, the vacuous `sig` gate, the frozen-
+projection degeneracy, and why the window sweep needs `sweep_test`'s permutation null.
+
 **`lag_subspaces_bin10*.csv`** — refit-per-lag subspaces. `angle_x/y` (3-dim) and
 `angle_x_cc1/angle_y_cc1` (CC1) principal angles vs lag 0, with **per-area** floors
 `floor_x/floor_y` and `floor_x_cc1/floor_y_cc1`. **Use the CC1 columns**; the 3-dim floor

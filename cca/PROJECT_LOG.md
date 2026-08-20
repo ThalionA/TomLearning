@@ -12,7 +12,23 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-17) — lag curves re-run WHOLE-SESSION; asks 1/3 + item 1 re-answered; ➜ READ `HANDOFF.md` FIRST
+## CURRENT STATE (2026-08-20) — trial-1-vs-2 built and answered (no surviving communication
+## difference; the robust difference is behavioural); ➜ READ `HANDOFF.md` FIRST
+
+**Nothing is running.** Newest work is the 2026-08-20 entry directly below: `run_trial12.py` /
+`analyze_trial12.py` compare trials 1 and 2 through a frozen subspace fit on ordinals 11+.
+Headline: **0 BH survivors in 240 science tests per FS condition**, but the CIs are too wide to
+call it a null for *direction*; the strength null IS informative for CA1-CA3 / CA3-DG / CA1-RSC /
+V1-RSC. What is robust is that **trial 1 is longer, slower and more fragmented than trial 2**,
+and bin-matching fixes only the first of those three. One candidate kept: **V1-RSC**, whose 1→2
+strength step is the largest of 9 adjacent-trial steps in both FS conditions and is not speed-driven
+(does not survive BH; n = 9). Three traps recorded in GOTCHAS, including that the `sig` gate passes
+~100 % of dims, so "all significant CCs" means "all CCs". The 2026-08-17 entry below is unchanged
+and still current for the lag-curve arm.
+
+---
+
+## (2026-08-17) — lag curves re-run WHOLE-SESSION; asks 1/3 + item 1 re-answered
 
 **Nothing is running.** Two things happened on 2026-08-17 on top of the 08-15 entry below:
 
@@ -80,6 +96,104 @@ units in titles), `HCV1_perdim_ifi_*`, `HCV1_lagcc_*`, `HCV1_cc_crosscorr_epochs
 **Open:** MEETING/STATE/HANDOFF numbers for item 1 and §3.0 finding 3 updated below; the
 per-epoch speed export for the offset finding is still the next thing.
 **2026-08-19: code audit (`audit/REPORT_2026-08-19.md`) → the DEDUP passes are done and verified like-for-like (4 commits, 504 tests; entry below). Drivers now share `preprocess.py`/`_common.py`/`config.TEMPORAL`. Open: archive decision, P4 semantic fixes, METHOD.md.**
+
+---
+
+## ✓ DONE (2026-08-20) — TRIAL 1 vs TRIAL 2 through the temporal method: no communication
+## difference survives correction; the difference that IS robust is behavioural
+
+**Nothing is running.** Theo's ask: apply the temporal CCA to trials 1 and 2 only and compare
+them directly — strength, direction (IFI at CC₁, over all significant CCs, and across
+integration windows), both FS. Gini was dropped by decision (the weight-Gini needs a ≥5-trial
+refit; the per-trial participation proxy was declined).
+
+### Method (`scripts/run_trial12.py` → `analyze_trial12.py`, `commit 249edab`)
+
+A single trial (~500–2900 running bins) cannot refit a 30-dim CCA, so the subspace is fit ONCE
+per (animal, pair) on running-trial ordinals **11+** (`early_trials.reference_fit`) and
+ordinals 1..10 are PROJECTED through it. Trials 1–2 are leak-free **and** ordinals 3..10 are
+equally out-of-fit, which is what makes the adjacent-trial control like-for-like. Per-trial lag
+curves come from `fixed_subspace.variate_lag_curve`; the driver exports curves only and every
+IFI is derived downstream by `perdim_ifi.windows_table`, so the degenerate-zero convention
+cannot leak into a mean. Three arms (`matched` column): 0 raw, 1 ordinals 1/2 cut to
+min(n₁,n₂) leading bins, 2 all ordinals cut to a common min.
+
+**Cohort: 16 animals, 71 (FS-excl) / 73 (FS-incl) animal-pairs — the canonical temporal-arm
+cohort.** Verification before any reading: per-trial `r0` reproduces `early_trials_projected`'s
+independently-computed `cc1` across **all 720 (animal, pair, ordinal) cells to 5×10⁻⁵**
+(the rounding floor), bin counts identical; no fit or significance failures. Runtime ~25 min/FS.
+
+### Result — a failure to detect, NOT a demonstrated null
+
+**0 BH-surviving tests of 240 science tests in each FS condition**, and **0 BH survivors** in
+the window sweep under its proper nested-window test. But this must not be written up as "no
+change": the 95 % CIs are far too wide to exclude a project-scale effect. Median CI half-width
+on the headline IFI delta is **0.28 (FS-excl) / 0.15 (FS-incl) IFI units against a largest-ever
+session-level effect of 0.061** — i.e. the direction result excludes almost nothing.
+Power (MDES, 80 %, paired *t* at the real n): the **strength** null is genuinely informative for
+**CA1-CA3, CA3-DG, CA1-RSC, V1-RSC** (a first-trial deficit of 8–28 % of the pair's own coupling
+would have been caught) and marginal for RSC-SUB; the **direction** null is uninformative
+everywhere except V1-RSC. 4/8 pairs have n ≤ 7 and Wilcoxon cannot reach p < 0.05 at CA3-DG's n = 5.
+
+### The robust difference is behavioural, and matching only half-fixes it
+
+| trial 1 − trial 2 | raw | matched=1 | matched=2 |
+|---|---|---|---|
+| `n_bins` | **+650** (7/8 pairs BH) | **0.000** (0/8) | **0.000** (0/8) |
+| `vel_mean` | **−3.30 cm/s** (8/8 BH) | −3.51 (8/8) | −3.04 (7/8) |
+| `n_gaps` | **+6.8** (8/8 BH) | +6.2 (8/8) | +5.2 (7/8) |
+
+Trial 1 is longer (+6.5 s, p = 5.5×10⁻⁶), slower and more stop-start. Bin-matching removes the
+duration difference **exactly** and the other two **not at all** — it keeps LEADING bins, so it
+compares ~the first 80 % of trial 1 against all of trial 2, over-weighting the trial-onset phase
+that HANDOFF §6 already flags for a doubled speed confound. **No arm of this analysis is
+behaviour-free.** → GOTCHAS.
+
+### The one candidate worth keeping: V1-RSC
+
+Held-out CC₁ strength is lower in trial 1, **negative in all 6 (FS × arm) cells**, and the
+per-ordinal profile is a **step, not noise**: mean r₀ by ordinal (arm 2, FS-excl)
+`0.128 0.181 0.183 0.198 0.192 0.188 0.176 0.206 0.224 0.186`. The 1→2 step is **the largest of
+the 9 adjacent-ordinal steps in BOTH FS conditions (rank 1/9), 3.4× / 3.8× the mean of the other
+eight** (−0.053 p = 0.066 FS-excl; −0.059 p = 0.035 FS-incl, n = 9). **Not a speed artefact**:
+corr(Δr₀, Δspeed) = +0.19 / +0.16 (p = 0.63 / 0.68). It does **not** survive BH and n = 9 —
+a candidate for a targeted test, not a finding. CA1-DG `ifi_cc1` is the FS-included analogue
+(p_perm = 0.008–0.035 at 60–100 ms windows) but is absent FS-excluded, so it is FS-fragile.
+
+### ⚠ Three things that invalidate naive readings of these tables
+
+1. **The `sig` gate is VACUOUS**: 100.00 % (FS-incl) / 99.56 % (FS-excl) of dims pass, ~99 % at
+   the p-floor 1/201. "Average over all *significant* CCs" IS "average over all 10 CCs"; the
+   `ifi_cc1` vs `ifi_allsig` contrast is CC₁ vs a 10-dim mean, nothing more.
+2. **The adjacent-trial control is not an independent falsification arm**: it correlates
+   r = 0.85 with the primary statistic (it is the same delta rescaled per animal), and it tests
+   mean(z) vs 0 — a *directional* test — while the interpretation ("|z| ≈ 1 is ordinary jitter")
+   is a *magnitude* claim that is never actually tested. Its exchangeability assumption does hold
+   (no drift across ordinals 3..10: mean within-animal r = 0.005, p = 0.92).
+3. **The two co-primary FS conditions disagree on direction**: median cross-FS correlation of the
+   per-pair delta is 0.83 overall but only **0.40–0.51 for `ifi_cc1`** (4–6 of 8 pairs even agree
+   in sign). Strength agrees; direction does not.
+
+### Adversarial verification found all of this — it was not visible in the first pass
+
+A 7-agent workflow was run against the finished result **before** it was written up, and
+**refuted all five headline claims**. It caught two number-changing bugs (`cc_peak` meaning two
+different things while both fed the same weight; `drop_degenerate` dropping dims per-ordinal so
+the delta compared different dim-supports — 85/213 headline cells, and it flipped the CA1-V1
+sign), the untested window sweep, the raw-arm-only covariate tests, and a frozen-projection
+degeneracy (animal 70, |r| ≈ 1 at every rank, now gated). My own interim reading of the control
+table was **wrong in the opposite direction** and is logged in `~/.claude/MISTAKES.md`
+(2026-08-20, S, over-claimed — read one column of one pair and called the control "decisive").
+
+**Files:** `results/trial12_{trials,delta_tests,sweep,sweep_test,control,completeness,degenerate}_bin10{,_fsincl}.csv`,
+`trial12_fs_agreement_bin10.csv`, `trial12_tables.md`. Curves CSVs (~50 MB/condition) are
+gitignored and regenerable. **525 tests pass.**
+
+**Next, in order:** (1) a targeted V1-RSC test — it is the only pair with both power and a
+coherent signal; pre-register it, since it is currently a post-hoc pick out of 8; (2) a
+speed-matched arm (match on velocity, not bin count) — no current arm is behaviour-free;
+(3) decide whether `n_sig` is worth keeping at all given the vacuous gate; (4) `figs_trial12.py`
+is NOT written (the only analysis in the repo with no figure).
 
 ---
 
