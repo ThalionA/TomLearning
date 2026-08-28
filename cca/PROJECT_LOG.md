@@ -26,6 +26,49 @@ strength step is the largest of 9 adjacent-trial steps in both FS conditions and
 ~100 % of dims, so "all significant CCs" means "all CCs". The 2026-08-17 entry below is unchanged
 and still current for the lag-curve arm.
 
+**Since (2026-08-28, method layer only, no finding moves):** `subspace_window` now exports the
+CC1 lag curve (`lags`, `lag_cc1`) — back-ported from the StriatumACC `striatum_tcca` port, which
+also took `core.cca_fit`'s covariance route, `lagpairs`, the per-dim held-out lag curve +
+`perdim_significance`, and `paired_stats.paired_t` / `welch_t` from here. See the entry below.
+
+---
+
+## (2026-08-28) — two-way sync with the StriatumACC temporal port; `subspace_window` exports the lag curve
+
+**Nothing is running. No finding changes — this is the method layer only.**
+
+`StriatumACC/Striatum project/tcca` (`striatum_tcca`) is a port of this package frozen on
+2026-07-28; 37 commits of drift since. A module-by-module diff put 8 of its 19 numeric modules
+byte-identical to ours, and the shared numerics agree to ~3e-15 (both packages imported side by
+side: `cca_fit` 2.8e-15, held-out CC1 lag curve 3.3e-15, lag pairing bit-identical). Four things
+were resolved.
+
+**Taken from here into `striatum_tcca`** (their `NOTES.md` 2026-08-28 has the detail): the
+covariance-route `cca_fit` (`d3ffec4`), `lagpairs.py`, `ifi_sides` +
+`heldout_lag_curve_flat_perdim` + `perdim_significance`, and `paired_stats.paired_t` / `welch_t`.
+Their A/B on real striatum data (animal 1, DMS-DLS, 3 epochs, full `WindowSubspace`) puts the
+covariance route within **3.1e-13** of the frozen SVD route and **2.7× faster** — an independent
+confirmation of our 2026-08-17 `_cca_fit_svd` pinning on a second dataset.
+
+**Taken from `striatum_tcca` into here — the only code change in this repo:**
+`subspace_window.WindowSubspace` gains two fields, `lags` and `lag_cc1` (the in-sample CC1 lag
+curve and its lag axis, already computed inside `window_subspace` and previously discarded).
+Drivers can now export the curve per cell and recompute IFI at any integration window offline via
+`lagged.ifi_by_window`, instead of being locked to the `max_lag` the run used. Purely additive:
+one construction site, all-keyword, no existing field or number touched. Their driver test came
+with it (`test_lag_curve_exported_with_expected_shape`).
+
+Also added here: 9 tests for `paired_t` / `welch_t`, which had shipped untested since 2026-08-19
+(`tests/test_paired_stats.py`, identical file in both repos). **535 tests.**
+
+**Deliberately NOT unified.** `config.py` / `dataio.py` / drivers are the dataset boundary and
+stay separate. `membership.subspace_contribution_connection` and the `gini_*_conn` / `gini_*_sig`
+fields were not ported — worth knowing that the striatum project's "corrected Gini" is
+`gini_pearson_x/y` (the CCA-independent Pearson control, which we share), so our two
+*connection-specific* corrected definitions have never been run on that dataset. A shared
+installable core package is the obvious end state but should wait for the audit's P1/P3 passes
+(`audit/REPORT_2026-08-19.md` §5), which will reshape exactly the modules it would hold.
+
 ---
 
 ## (2026-08-17) — lag curves re-run WHOLE-SESSION; asks 1/3 + item 1 re-answered
