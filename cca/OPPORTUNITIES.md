@@ -52,7 +52,11 @@ spatial firing tensor. The export (`TF*_export.mat`) actually contains (verified
 | `analysis_behaviour/masks/*` | (7.9M,1) | movement / tunnel_cued / quiescence / darkness states |
 | `data_behaviour/*` | (7.9M,1) | position, velocity, licks, valve (reward), landmark, trial idx |
 | `params_main/cca` | — | **Tom already ran a CCA** (his `cca_pairs`, warp, folds) |
-| `units/tuning_score`, `reliability` | (206,137) | per-unit spatial tuning / reliability |
+| `analysis_spatial/tuning_score/score` (+ `/shuffled`) | (n_units, n_trials) [, 1000] | per-unit **per-trial** spatial tuning score with its own 1000-shuffle null |
+| `analysis_spatial/reliability/units/reliability_moving_window` (+ `_shuffled_mean/_sd`) | (n_trials, n_units) | per-unit per-trial spatial reliability, z-scoreable against its null |
+| `analysis_spatial/reliability/corr/trial` | (n_trials, n_trials, n_units) | per-unit trial×trial map correlation — reliability *and* drift/shifting |
+
+⚠ **Path corrected 2026-08-28** — these three were listed here under `units/`; they are not there. Verified against `TF073_export.mat` (214 trials × 168 units). Shapes are **transposed between `tuning_score` (units, trials) and `reliability` (trials, units)** — check before indexing. None of the three is loaded by `dataio` yet; they are what Fig. 5's "reliability / tuned population / shifting responses" needs.
 
 **Scope note (2026-06-05):** for now we do **not** load depth / ISI / waveforms; FS-vs-regular
 (`idx_fs`) is the only cell-type split. Those fields are catalogued here as a known, deferred
