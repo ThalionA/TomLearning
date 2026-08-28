@@ -1,6 +1,6 @@
 # STATE — Tom-learning CCA project
 
-**Last updated:** 2026-08-17 (finding 3: whole-session all-CC ±50 ms test; otherwise 2026-07-28). This is the entry point. It reconciles the three analysis
+**Last updated:** 2026-08-28 (finding 2 rewritten: connection-specific Gini re-test). This is the entry point. It reconciles the three analysis
 arms, names the canonical configs, and states the findings honestly. `README.md` is
 quick-start; `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` are the design specs;
 `PROJECT_LOG.md` is the state of play; `NOTES.md` is the older chronological log. When they
@@ -75,22 +75,37 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
 1. **Strength: NULL, and genuinely so.** All trajectory strength slopes n.s.; transition
    n.s.; flat even under dims-as-n (the most anti-conservative unit). This is a real null,
    not a power failure.
-2. **Membership: participation broadens — but see the metric caveat, this is now UNDER REVIEW.**
-   Weight-Gini ↓ over the session — CA1-RSC (LMM trajectory p = 4×10⁻⁵; epoch naive→intermediate
-   LMM p = 7×10⁻⁵, expert−intermediate n.s.) and CA1-DG (LMM p = 1.9×10⁻⁵). Early (by
-   intermediate), then plateaus. Parametric, FS-invariant, and **invisible to CC₁**.
+2. **Membership: participation broadens for CA1-RSC and CA1-V1 — CA1-DG does NOT survive
+   (re-tested 2026-08-28).** The original headline (Weight-Gini ↓ over the session; CA1-RSC LMM
+   trajectory p = 4×10⁻⁵, CA1-DG p = 1.9×10⁻⁵; early then plateauing) was measured with a
+   **partner-invariant** metric — see the caveat below. On the connection-specific replacements,
+   like-for-like on the same windows (`results/gini_conn_retest_tables.md`):
+   - **CA1-DG: dead.** n.s. under `_conn` and `_sig`, both axes, both FS. Drop it.
+   - **CA1-RSC: survives, but on the `performance` axis, not `trial_frac`.** Robust under every
+     definition, **both sides of the connection**, both FS (`gini_x_conn` p = 6.3×10⁻⁴ / 1.0×10⁻⁴;
+     `gini_y_sig` 1.4×10⁻³ / 2.7×10⁻⁴). On `trial_frac` only `_sig` survives (p = 0.019 / 0.038).
+   - **CA1-V1: new, on the V1 side.** `gini_y_conn` trial_frac p = 0.027 / 0.0056; performance
+     0.029 / 0.015. Invisible to the old `_x`-only battery. CA1 side n.s.
+   - ⚠ `gini_*_sig` is NaN when `n_sig` = 0 (56 % of CA1-RSC windows) — its slopes are
+     conditioned on windows with a significant dim. ⚠ n = 4 pairs (CA1-SUB, CA3-DG, RSC-SUB)
+     cannot star at the honest unit (Wilcoxon floor p = 0.125); their small LMM p-values come
+     from pooling windows within 4 animals.
    **⚠⚠ METRIC CAVEAT (2026-07-28) — the Gini that produced this result is partner-invariant.**
    `membership.subspace_contribution` takes an unweighted L2 row-norm over all retained dims, so
    the square-orthogonal `Uc` cancels and the partner area drops out exactly (verified
    analytically, on synthetic data to 4×10⁻¹⁵, and empirically: CA1 `gini_x` correlates at median
    r = 0.981 across five partners). It is an **area-intrinsic** readout of a population's own
    whitened-PCA loading geometry, **not** participation in a communication subspace. Two
-   connection-specific replacements (`gini_*_conn`, `gini_*_sig`) now exist and the trajectory
-   re-run is under way; **whether the broadening survives them is OPEN.** Until it is re-tested,
-   do not cite this as a communication-subspace finding. See `PROJECT_LOG.md` (2026-07-28).
-   **⚠ Attribution to learning is NOT established** either — non-learners de-sparsify comparably
-   and the `trial_frac × learner` interaction is n.s. for every pair. Most parsimonious reading is
-   **experience / time-on-task**, with an LP-locked component suggestive but unproven at this N.
+   connection-specific replacements (`gini_*_conn`, `gini_*_sig`) exist and **the re-test is now
+   done** (2026-08-28) — its outcome is the bullet list above, and it is what should be cited as
+   the communication-subspace result. The area-intrinsic numbers stay here only as the historical
+   headline. See `PROJECT_LOG.md` (2026-07-28 and 2026-08-28).
+   **⚠ Attribution to learning is NOT established** either, and the 2026-08-28 move to the
+   `performance` axis does **not** rescue it — non-learners de-sparsify with a *larger* median
+   slope than learners (CA1-RSC `gini_x_conn`: −0.287 vs −0.106, both FS), at n = 3–4 where the
+   p-values sit on the Wilcoxon floor, and with a non-learner `performance` range compressed
+   enough to inflate any slope taken w.r.t. it. The `trial_frac × learner` interaction is n.s. for
+   every pair. Most parsimonious reading remains **experience / time-on-task**.
 3. **Direction: a flow *exists*; its *change* is underpowered.** Held-out segment-aware IFI
    window sweep, animals-as-n: **CA1→RSC +0.079 at ±50 ms, t₁₁ = 5.0, p = 3.9×10⁻⁴** (survives
    Bonferroni across nested windows) — the Gonzalez & Buzsáki direction. **V1→RSC** and

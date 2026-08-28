@@ -260,3 +260,19 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   some well-conditioned areas and keeps some poor ones, and any count derived from such a
   gate is an analyst choice. Report the whole gate sweep and claim only what survives all of
   it. Found 2026-08-03.
+
+- **A metric that is NaN under a condition silently conditions its own slope on that
+  condition.** `gini_*_sig` (contribution Gini over significant dims only) is NaN whenever
+  `n_sig` = 0 — **56 % of CA1-RSC windows**. Every per-animal slope and LMM on it is therefore
+  computed on the subset of windows that HAD a significant dim, and the animal count can silently
+  drop (CA1-RSC FS-excl: 8 animals for `gini_x`, 7 for `gini_x_sig`). If `n_sig` itself drifts
+  over the session, that drift is inside the `_sig` slope. **Read `_sig` only beside the `n_sig`
+  slope, and report both animal counts.** Found 2026-08-28 in the connection-specific Gini
+  re-test.
+
+- **An LMM over windows will star at n = 4 animals where the animals-as-n test mathematically
+  cannot.** The two-sided Wilcoxon floor at n = 4 is p = 0.125, so CA1-SUB / CA3-DG / RSC-SUB can
+  never reach p < 0.05 at the honest unit — yet their LMM population slopes go to p = 6×10⁻⁶ by
+  pooling windows within those same 4 animals. The LMM's random slope does not buy back animals
+  that were never there. **At n = 4, treat any LMM p as descriptive only.** Found 2026-08-28.
+

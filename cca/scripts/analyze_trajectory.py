@@ -30,9 +30,17 @@ AXES = ["trial_frac", "performance", "lp_rel"]
 # gini_pearson_x = CCA-independent control for the gini_x de-sparsification headline.
 # It is interpreted via its within-animal SLOPE only — its absolute level carries a
 # partner-unit-count noise floor, so it is excluded from the cross-pair LEVELS table.
+# gini_*_conn / gini_*_sig = the CONNECTION-SPECIFIC contribution Ginis
+# (membership.subspace_contribution_connection). The plain gini_x/gini_y are
+# provably partner-invariant (area-intrinsic, PROJECT_LOG 2026-07-28), so the
+# "participation broadens" headline must be re-tested on these. ⚠ gini_*_sig is
+# NaN whenever n_sig = 0, so its slopes are conditioned on windows that had a
+# significant dim — read it alongside the n_sig slope, never alone.
 SLOPE_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "gini_x", "gini_pearson_x",
+                 "gini_x_conn", "gini_y_conn", "gini_x_sig", "gini_y_sig",
                  "rot_x", "jac_x"]
 LEVEL_METRICS = ["cc1", "n_sig", "mi_sig", "ifi", "optimal_lag", "gini_x",
+                 "gini_x_conn", "gini_x_sig",
                  "rot_x", "jac_x"]
 PAIR_ORDER = ["CA1-RSC", "CA1-CA3", "CA1-DG", "CA1-V1", "CA3-DG",
               "CA1-SUB", "RSC-SUB", "V1-RSC"]
@@ -162,7 +170,9 @@ def main():
     print("\n" + "=" * 70)
     print("PARAMETRIC slope tests (learners): Wilcoxon | t-test(slopes) | LMM(all windows)")
     print("=" * 70)
-    param_metrics = [m for m in ["gini_x", "gini_pearson_x", "ifi", "mi_sig",
+    param_metrics = [m for m in ["gini_x", "gini_x_conn", "gini_x_sig",
+                                 "gini_y_conn", "gini_y_sig",
+                                 "gini_pearson_x", "ifi", "mi_sig",
                                  "cc1", "n_sig"] if m in present]
     for metric in param_metrics:
         print(f"\n[{metric}]")

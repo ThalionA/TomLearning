@@ -26,10 +26,70 @@ strength step is the largest of 9 adjacent-trial steps in both FS conditions and
 ~100 % of dims, so "all significant CCs" means "all CCs". The 2026-08-17 entry below is unchanged
 and still current for the lag-curve arm.
 
-**Since (2026-08-28, method layer only, no finding moves):** `subspace_window` now exports the
-CC1 lag curve (`lags`, `lag_cc1`) — back-ported from the StriatumACC `striatum_tcca` port, which
-also took `core.cca_fit`'s covariance route, `lagpairs`, the per-dim held-out lag curve +
-`perdim_significance`, and `paired_stats.paired_t` / `welch_t` from here. See the entry below.
+**Since (2026-08-28):** (a) **FINDING MOVES — the participation-broadening headline was
+re-tested on the connection-specific Ginis and only half of it survives: CA1-DG is DEAD, CA1-RSC
+survives but on the *performance* axis, and a new FS-robust CA1-V1 effect appears on the V1 side.**
+See the entry directly below; `STATE.md` §3.0 finding 2 is rewritten. (b) Method layer only:
+`subspace_window` now exports the CC1 lag curve (`lags`, `lag_cc1`) — back-ported from the
+StriatumACC `striatum_tcca` port, which also took `core.cca_fit`'s covariance route, `lagpairs`,
+the per-dim held-out lag curve + `perdim_significance`, and `paired_stats.paired_t` / `welch_t`
+from here.
+
+---
+
+## (2026-08-28) — participation-broadening re-tested on the connection-specific Ginis: CA1-DG dies, CA1-RSC survives on *performance*, CA1-V1 appears
+
+**Nothing is running.** This closes the question left open on 2026-07-28 ("whether
+participation-broadening survives `gini_*_conn` / `gini_*_sig` is OPEN"). The trajectory CSVs
+that carry those columns had been complete since 2026-07-28 (both FS, 16 animals, 1927 / 1958
+window-rows) — `analyze_trajectory.py` simply never had the column names in its metric lists, so
+the re-test had never been run. **Code change: four metric names added to `SLOPE_METRICS`,
+`LEVEL_METRICS` and `param_metrics`.** No refits; same CSV, same rows, same windows for all five
+metrics, so this is a **like-for-like** comparison of definitions, not a new run.
+
+Full tables: **`results/gini_conn_retest_tables.md`** (LMM p per pair × axis × metric × FS).
+
+**1. CA1-DG is dead.** `gini_x` trial_frac LMM p = 0.0088 (FS-excl) / 0.0281 (FS-incl) →
+`gini_x_conn` p = 0.272 / 0.203, `gini_x_sig` p = 0.202 / 0.063. Same on `performance`
+(0.0039 / 0.024 → 0.293 / 0.200). Both sides, both FS, both connection-specific definitions:
+n.s. **Drop CA1-DG from the broadening claim.**
+
+**2. CA1-RSC survives — but the axis moves from time to performance.** On `trial_frac`
+(time-on-task) the effect that was p = 1.4e-05 under the area-intrinsic metric drops to
+p = 0.081 / 0.223 under `_conn`; only `_sig` survives, weakly (0.019 / 0.038). On `performance`
+it is robust under **every** definition, **both sides of the connection**, **both FS**:
+`gini_x_conn` 6.3e-04 / 1.0e-04, `gini_x_sig` 1.9e-03 / 1.9e-04, `gini_y_conn` 0.022 / 1.3e-03,
+`gini_y_sig` 1.4e-03 / 2.7e-04. This inverts the old reading: the *area-intrinsic* metric looked
+like a clock (trial_frac), the *connection-specific* one looks like a performance covariate.
+
+**3. New and previously invisible: CA1-V1, on the V1 side.** `gini_y_conn` trial_frac LMM
+0.0269 (FS-excl) / 0.0056 (FS-incl); performance 0.0293 / 0.0152. `gini_x` (CA1 side) is n.s.
+throughout. The old battery only ever tested `_x`, so a V1-side effect could not have been seen.
+Relevant to Fig. 5, where V1 is the focus area.
+
+**4. Learning attribution is STILL not established — the axis move does not rescue it.**
+Non-learners de-sparsify on `performance` with a *larger* median slope than learners
+(CA1-RSC `gini_x_conn`: learners med −0.106, non-learners med −0.287, both FS). n = 3–4 so the
+p-values are at the Wilcoxon floor and uninterpretable, and there is an unresolved confound: a
+non-learner's `performance` range is compressed, which inflates a slope taken w.r.t. it. Read
+this as "not evidence for learning-specificity", not as "evidence against".
+
+**5. Two traps in this table (→ GOTCHAS).** (a) `gini_*_sig` is NaN whenever `n_sig` = 0
+(56 % of CA1-RSC windows), so its slopes are conditioned on windows that had a significant dim
+and its animal count can drop (CA1-RSC FS-excl 8 → 7). Never read `_sig` without the `n_sig`
+slope beside it. (b) The n = 4 pairs (CA1-SUB, CA3-DG, RSC-SUB) cannot star at the honest unit —
+the two-sided Wilcoxon floor at n = 4 is p = 0.125 — yet their LMM p-values go to 6e-06 by
+pooling windows within those 4 animals. CA1-SUB `gini_x_conn` p = 7.6e-04 is that artefact, not
+a finding.
+
+**Next:** Fig. 5's "contributions to the communication subspace with experience" bullet is now
+answerable — CA1-RSC (both sides, performance axis) and CA1-V1 (V1 side) — with the
+learning-vs-experience caveat attached. The Tom-facing gap that remains is the second half of
+Fig. 5: `dataio` still does not load `analysis_spatial/tuning_score/score`,
+`analysis_spatial/reliability/units/reliability_moving_window`, or
+`analysis_spatial/reliability/corr/trial`, which are what "reliability / tuned population /
+shifting responses" need. (⚠ `OPPORTUNITIES.md` §2 lists these under `units/` — wrong path,
+verified against `TF073_export.mat`; they live under `analysis_spatial/`.)
 
 ---
 
