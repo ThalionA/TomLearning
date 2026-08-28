@@ -35,6 +35,19 @@ also took `core.cca_fit`'s covariance route, `lagpairs`, the per-dim held-out la
 
 ## (2026-08-28) — two-way sync with the StriatumACC temporal port; `subspace_window` exports the lag curve
 
+> **CORRECTION (same day, appended).** This entry's claim that the striatum-side A/B "confirms the
+> covariance-route `cca_fit` on a second dataset (3.1e-13, 2.7x)" rests on ONE cell and is too
+> strong. Re-measured on the whole striatum epoch grid, holding cell types fixed: **`cca_fit`'s
+> route makes no difference under plain CCA (0/153 cells) but moves 7/152 cells under partial CCA**,
+> worst cc1 0.40. Partialling out other areas destroys rank, and the directions the covariance route
+> cuts sit at relative singular values 1e-9 to 4e-9 — the SVD route was fitting canonical dimensions
+> on double-precision debris (a14's ACC: 21 units, Z=13, only 14 real directions, SVD fitted 17).
+> The covariance route is still the right rule; the equivalence claim is not "identical numbers", it
+> is **"identical unless you partial"**. **Relevant here:** `run_lag_subspaces.py` is the only
+> TomLearning driver that partials out a third area, and `d3ffec4`'s equivalence check was run on
+> the *unpartialled* lag-curve path — so the 2026-08-17 "agree to 5e-15" result does not cover it.
+> Worth re-checking `lag_subspaces` before its numbers are cited.
+
 **Nothing is running. No finding changes — this is the method layer only.**
 
 `StriatumACC/Striatum project/tcca` (`striatum_tcca`) is a port of this package frozen on
