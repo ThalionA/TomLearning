@@ -1,6 +1,6 @@
 # STATE — Tom-learning CCA project
 
-**Last updated:** 2026-08-28 (finding 2 rewritten: connection-specific Gini re-test). This is the entry point. It reconciles the three analysis
+**Last updated:** 2026-08-29 (finding 7b added: contribution × spatial reliability). This is the entry point. It reconciles the three analysis
 arms, names the canonical configs, and states the findings honestly. `README.md` is
 quick-start; `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` are the design specs;
 `PROJECT_LOG.md` is the state of play; `NOTES.md` is the older chronological log. When they
@@ -172,6 +172,16 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
 6. **Nonlinearity: largely absent.** Kernel CCA edges linear in 58–66 % of cells but the
    median KCCA − linear gap is only +0.015, and CA3-DG (the strongest pair) is ≈ linear. The
    subspace is largely linear.
+7b. **Contributing units ARE spatially special — on the cortical side (NEW 2026-08-29).**
+   Per-unit connection-specific contribution (`contrib_conn`, epoch pCCA) correlates with
+   spatial reliability (mean ±2-trial map correlation, epoch-matched trials). Animals-as-n,
+   Fisher-z over epochs; full tables `results/contrib_reliability_tables.md`. Rate predicts
+   reliability at rho ≈ +0.4–0.5 everywhere, so the claim is made on the **rate-partialled**
+   correlation; FS-robust survivors: **CA1-RSC RSC side** (+0.26 both FS, W p = 0.016),
+   **CA1-V1 V1 side** (+0.26/+0.17, W p = 0.002/0.037), **V1-RSC RSC side** (+0.31/+0.41,
+   W p = 0.031). The CA1-side link never survives the rate partial, and the area-intrinsic
+   `contrib` control is n.s. nearly everywhere — communication-specific, not "loud units".
+   Epoch-resolved link is roughly stable (descriptive; CA1-CA3 CA3-side grows with experience).
 
 **Headline (Contested — and now under review).** Over the task the hippocampal–cortical
 communication subspace **broadens** — recruiting more neurons (Gini↓, CA1-RSC/CA1-DG, LMM

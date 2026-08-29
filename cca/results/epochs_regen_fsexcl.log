@@ -1,0 +1,16 @@
+Epochs (naive/intermediate/expert) | bin=10ms K=20 pCCA | FS excluded
+
+  animal 28: lp=69 12 rows
+  animal 34: lp=48 6 rows
+  animal 36: lp=28 3 rows
+  animal 41: lp=29 4 rows
+  animal 52: lp=36 18 rows
+  animal 61: lp=88 18 rows
+  animal 63: lp=107 3 rows
+  animal 66: lp=28 18 rows
+  animal 68: lp=42 12 rows
+  animal 73: lp=59 18 rows
+  animal 75: lp=31 18 rows
+  animal 77: lp=49 18 rows
+
+wrote /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/epoch_metrics_bin10.csv (148 rows) + /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/epoch_dims_bin10.csv (2302 dim-rows) + /Users/theoamvr/Desktop/Experiments/TomLearning/cca/results/epoch_weights_bin10.csv (12817 weight-rows). Analyse: analyze_epochs / analyze_dims_as_n

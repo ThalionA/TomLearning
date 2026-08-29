@@ -12,8 +12,8 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-20) — trial-1-vs-2 built and answered (no surviving communication
-## difference; the robust difference is behavioural); ➜ READ `HANDOFF.md` FIRST
+## CURRENT STATE (2026-08-29) — contributing units ARE spatially special (cortical side,
+## rate-partialled, FS-robust); trial-1-vs-2 answered 08-20; ➜ READ `HANDOFF.md` FIRST
 
 **Nothing is running.** Newest work is the 2026-08-20 entry directly below: `run_trial12.py` /
 `analyze_trial12.py` compare trials 1 and 2 through a frozen subspace fit on ordinals 11+.
@@ -34,6 +34,55 @@ See the entry directly below; `STATE.md` §3.0 finding 2 is rewritten. (b) Metho
 StriatumACC `striatum_tcca` port, which also took `core.cca_fit`'s covariance route, `lagpairs`,
 the per-dim held-out lag curve + `perdim_significance`, and `paired_stats.paired_t` / `welch_t`
 from here.
+
+---
+
+## (2026-08-29) — reliability × subspace membership: contributing units are spatially special on the CORTICAL side
+
+**Nothing is running.** Tom's Fig. 5 second half ("link neuronal contribution to the subspace
+with spatial representational changes") — the reliability leg, spec'd by Theo as: reliability =
+mean trial-to-trial Pearson correlation of the spatially-binned map within **±2 trials**, edges
+clipped.
+
+**New (TDD, 11 tests → 546 total):** `src/tom_cca/spatial_reliability.py` —
+`trial_map_reliability` (pairwise-complete over finite bins; silent trials NaN and excluded, not
+zero; edges clipped) + `epoch_mean_reliability` (temporal trial ids are **1-based** — measured on
+TF073, ids 1..214 for 214 spatial rows — the function subtracts 1 and the test pins it).
+Computed from `Animal.spatial_fr` (`freq`) directly, NOT the export's precomputed
+`analysis_spatial/reliability` (provenance unverifiable).
+
+**Regenerated:** `run_epochs.py --bin-ms 10 --smooth-ms 2.5` both FS (~50 min each, 2 procs) —
+the June epoch CSVs predated `contrib_conn` (per-neuron, 2026-07-28) and the 2026-08-19
+preprocess refactor. June versions archived to `results/_archive/*_2026-06-17.csv`. New:
+148/153 metric rows, 12 817/14 445 weight rows (June: 12 818/14 446 — one CA1-CA3 edge row
+fewer; not chased).
+
+**New driver:** `scripts/analyze_contrib_reliability.py` — joins per-neuron `contrib_conn` to
+epoch-matched reliability (same trials the epoch's CCA was fit on; join via
+`dataio.select_units` position→raw-index, FS condition enforced to match the CSV). Per
+(animal, pair, epoch, area) Spearman across units; Fisher-z over epochs within animal;
+animals-as-n t + Wilcoxon per (pair, area). Controls: (1) log-rate rank-partialled out of both
+(rate–reliability rho ≈ +0.4–0.5 in EVERY area — half the raw link is rate); (2) the
+partner-invariant `contrib` as specificity control.
+
+**Finding (STATE §3.0 finding 7b; tables `results/contrib_reliability_tables.md`):** raw
+`contrib_conn`–reliability correlation is positive nearly everywhere (strongest on the
+second-named/cortical side). After rate-partialling, FS-robust: **CA1-RSC RSC side**
+(+0.256/+0.255, W p = 0.016 both FS), **CA1-V1 V1 side** (+0.258/+0.170, W p = 0.002/0.037),
+**V1-RSC RSC side** (+0.312/+0.411, W p = 0.031 both; V1 side 6/6 positive, t starred both).
+The CA1-side link never survives the rate partial; the intrinsic-`contrib` control is n.s.
+nearly everywhere → the association is communication-specific. n = 4 pairs are on the Wilcoxon
+floor (descriptive only). Epoch-resolved correlations are roughly stable; CA1-CA3 CA3-side
+grows naive→expert (−0.03 → +0.42 FS-excl, descriptive).
+
+**Caveat for any write-up:** reliability and the CCA input are the same spikes; log-rate
+partialling handles the SNR confound only as far as log-rate proxies SNR. A weight-shuffle null
+(reliability of top-contribution units vs contribution-shuffled draws) is the natural
+strengthening if this goes in a figure.
+
+**Next:** tuning-score and COM-shift legs of the same join (loader for
+`analysis_spatial/tuning_score/score` + shuffles still unwritten); figure panel (scatter +
+per-pair rho forest) if Tom wants it in Fig. 5.
 
 ---
 
