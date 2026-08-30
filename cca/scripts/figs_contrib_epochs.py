@@ -111,6 +111,18 @@ def main():
                      "Epoch change — pooled contribution vs reliability / tuning "
                      "(rate-partialled)")
 
+        ev = {m: epoch_values(pooled, m, ["area"])
+              for m in ("rho_pooled", "rho_pooled_tune")}
+        specs = ([(f"rel · {a}", "rho_pooled", a, AREA_COL[a]) for a in AREAS]
+                 + [None]
+                 + [(f"tune · {a}", "rho_pooled_tune", a, AREA_COL[a])
+                    for a in AREAS])
+        delta_forest(plt.subplots(1, 3, figsize=(12.0, 4.6), sharey=True,
+                                  constrained_layout=True),
+                     ev, specs, "HCV1_contribepochs_delta_pooled_raw", fs,
+                     "Epoch change — pooled contribution vs reliability / tuning "
+                     "(RAW, no rate partial)")
+
         ev = {m: epoch_values(overlap, m, ["area"])
               for m in ("rho_conn", "rho_resid", "jaccard_excess")}
         specs = ([(f"ρ_conn · {a}", "rho_conn", a, AREA_COL[a]) for a in AREAS]
@@ -123,6 +135,22 @@ def main():
                                   constrained_layout=True),
                      ev, specs, "HCV1_contribepochs_delta_overlap", fs,
                      "Epoch change — cross-partner overlap (Δz; Jaccard raw Δ)")
+
+        ev = {"rel_raw": epoch_values(rel, "rho_contrib_conn", ["pair", "area"])}
+        specs = []
+        for row in pair_rows({}):
+            if row is None:
+                specs.append(None)
+            else:
+                label = row[0]
+                pair, area = label.split()
+                specs.append((label, "rel_raw", (pair, area),
+                              COL_X if area == pair.split("-")[0] else COL_Y))
+        delta_forest(plt.subplots(1, 3, figsize=(12.0, 6.6), sharey=True,
+                                  constrained_layout=True),
+                     ev, specs, "HCV1_contribepochs_delta_pairs_raw", fs,
+                     "Epoch change — per-pair contribution vs reliability "
+                     "(RAW, no rate partial)")
 
         ev = {"rel": epoch_values(rel, "rho_contrib_conn_ratepart",
                                   ["pair", "area"])}
@@ -141,7 +169,7 @@ def main():
                      ev, specs, "HCV1_contribepochs_delta_pairs", fs,
                      "Epoch change — per-pair contribution vs reliability "
                      "(rate-partialled)")
-        print(f"{fs}: 4 figures written")
+        print(f"{fs}: 6 figures written")
 
 
 if __name__ == "__main__":

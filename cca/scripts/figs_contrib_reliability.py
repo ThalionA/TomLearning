@@ -178,6 +178,12 @@ def main():
                          ("rho_contrib_conn_tune_ratepart", "rate-partialled")],
                         suptitle="Unit contribution to the communication subspace "
                                  "vs spatial tuning (z vs shuffle null)")
+        if "rho_contrib_conn_tomrel" in fit.columns:
+            make_forest(fit, fs, "HCV1_contribtomrel_forest",
+                        [("rho_contrib_conn_tomrel", "raw"),
+                         ("rho_contrib_conn_tomrel_ratepart", "rate-partialled")],
+                        suptitle="Unit contribution vs Tom's precomputed "
+                                 "reliability (moving window, z vs shuffle null)")
         make_scatter(units, fit, fs)
         make_epochs(fit, fs)
         print(f"{fs}: 5 figures written")

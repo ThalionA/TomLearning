@@ -183,7 +183,11 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    `contrib` control is n.s. nearly everywhere — communication-specific, not "loud units".
    Epoch-resolved stability is now TESTED (2026-08-30): 3/318 (FS-excl) and 7/318 (FS-incl)
    epoch contrasts star — below chance; only cross-FS repeat is pooled-DG reliability
-   naive→intermediate (weak). The links are standing properties, not learning products.
+   naive→intermediate (weak). Raw (un-partialled) metrics are equally stable (594 tests/FS,
+   10 starred, chance ≈ 30). The links are standing properties, not learning products.
+   **Tom's precomputed moving-window reliability replicates the finding** (agreement with
+   ours ρ ≈ +0.67…+0.89 per cell): same three rate-partialled cells plus **CA1-DG DG**
+   (both FS) — RSC/V1 metric-robust, DG-side definition-sensitive.
    **Extensions (2026-08-30):** (a) **tuning dissociates from reliability** — contribution vs
    spatial tuning (z vs the export's shuffle null) is broadly positive raw but has NO FS-robust
    rate-partialled survivor (FS-excl leaves CA1-RSC RSC / CA1-DG DG; both die FS-incl): what is

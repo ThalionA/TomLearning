@@ -41,9 +41,13 @@ EPOCHS = ["naive", "intermediate", "expert"]
 CONTRASTS = [("expert", "naive"), ("intermediate", "naive"),
              ("expert", "intermediate")]
 PAIR_METRICS = ["rho_contrib_conn", "rho_contrib_conn_ratepart",
-                "rho_contrib_conn_tune", "rho_contrib_conn_tune_ratepart"]
+                "rho_contrib_conn_tune", "rho_contrib_conn_tune_ratepart",
+                "rho_contrib_conn_tomrel", "rho_contrib_conn_tomrel_ratepart",
+                # the confounds themselves — does rate's grip change?
+                "rho_rate_rel", "rho_rate_tune", "rho_rate_tomrel"]
 POOLED_METRICS = ["rho_pooled", "rho_pooled_ratepart",
-                  "rho_pooled_tune", "rho_pooled_tune_ratepart"]
+                  "rho_pooled_tune", "rho_pooled_tune_ratepart",
+                  "rho_pooled_tomrel", "rho_pooled_tomrel_ratepart"]
 OVERLAP_METRICS = ["rho_conn", "rho_resid", "jaccard_excess"]
 
 

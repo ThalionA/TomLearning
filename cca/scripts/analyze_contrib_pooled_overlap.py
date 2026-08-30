@@ -83,7 +83,7 @@ def pooled_contrib(sub):
     pooled = pd.Series(np.nanmean(np.vstack(cols), axis=0), index=piv.index,
                        name="pooled_conn")
     per_unit = sub.groupby("raw_unit")[["reliability", "tuning_z",
-                                        "mean_rate"]].mean()
+                                        "reliability_tom_z", "mean_rate"]].mean()
     return per_unit.join(pooled)
 
 
@@ -140,7 +140,10 @@ def main():
                     pc, per_unit["reliability"].to_numpy(), logr),
                 rho_pooled_tune=spear(pc, per_unit["tuning_z"].to_numpy()),
                 rho_pooled_tune_ratepart=rank_partial_rho(
-                    pc, per_unit["tuning_z"].to_numpy(), logr)))
+                    pc, per_unit["tuning_z"].to_numpy(), logr),
+                rho_pooled_tomrel=spear(pc, per_unit["reliability_tom_z"].to_numpy()),
+                rho_pooled_tomrel_ratepart=rank_partial_rho(
+                    pc, per_unit["reliability_tom_z"].to_numpy(), logr)))
 
         # -- 2. cross-partner overlap ---------------------------------------
         if len(partners) < 2:
@@ -175,7 +178,9 @@ def main():
     for col, label in [("rho_pooled", "POOLED contrib (all partners) vs reliability, raw"),
                        ("rho_pooled_ratepart", "POOLED contrib vs reliability, rate-partialled"),
                        ("rho_pooled_tune", "POOLED contrib vs tuning z, raw"),
-                       ("rho_pooled_tune_ratepart", "POOLED contrib vs tuning z, rate-partialled")]:
+                       ("rho_pooled_tune_ratepart", "POOLED contrib vs tuning z, rate-partialled"),
+                       ("rho_pooled_tomrel", "POOLED contrib vs Tom's reliability z, raw"),
+                       ("rho_pooled_tomrel_ratepart", "POOLED contrib vs Tom's reliability z, rate-partialled")]:
         animals_as_n(pooled, col, ["area"], label)
     for col, label in [("rho_conn", "OVERLAP: contrib_conn cross-partner Spearman"),
                        ("rho_intr", "OVERLAP ceiling: intrinsic contrib cross-partner"),

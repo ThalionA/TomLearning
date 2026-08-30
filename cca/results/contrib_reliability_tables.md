@@ -241,3 +241,18 @@ expert−naive echo) — a weak candidate, not a finding. Verdict: the contribut
 links and the cross-partner overlap are STABLE across learning epochs — a standing property of
 the circuit, not something that develops.** Caveat: n = 4–12/cell and naive fits rest on the
 fewest running bins, so these nulls are weak evidence of stability, not proof.
+
+**Raw (un-partialled) epoch contrasts + Tom's precomputed reliability** (2026-08-31;
+`analyze_contrib_epochs.py` now covers 594 tests/FS incl. raw metrics, the rate confounds and
+Tom's reliability; figures `HCV1_contribtomrel_forest_*`, `HCV1_contribepochs_delta_*_raw_*`):
+(1) **Raw metrics are as stable as the partialled ones** — 10/594 stars per FS vs ~30 expected
+by chance; no raw contribution-link contrast repeats across FS. The two cross-FS repeats are
+pooled-DG reliability naive→intermediate (as before) and the rate–reliability CONFOUND weakening
+naive→intermediate in V1-RSC RSC (−0.15 Δz both FS) — a confound shift, not a link shift.
+(2) **Tom's moving-window reliability (z vs his shuffle null) replicates the finding**: our
+±2-trial metric and his agree at ρ ≈ +0.67…+0.89 across units in every cell; rate-partialled
+survivors on his metric are CA1-RSC RSC, CA1-V1 V1, V1-RSC both sides — the same cells — **plus
+CA1-DG DG (W p = 0.023/0.0078, both FS)**, which our metric leaves n.s.; pooled per area his
+metric adds **DG** to RSC + V1 (all three W-starred both FS). Read: RSC/V1 links are
+metric-robust; the DG-side link is real but sensitive to the reliability definition (his longer
+moving window vs our ±2 trials).

@@ -279,6 +279,33 @@ def load_tuning_scores(path: str | Path) -> dict:
     return {"score": score, "z": z}
 
 
+def load_reliability_tom(path: str | Path) -> dict:
+    """Tom's precomputed moving-window spatial reliability from a TF*_export.
+
+    Reads ``analysis_spatial/reliability/units/reliability_moving_window`` and
+    its shuffled mean/sd, and returns ``{"rel": (n_trials, n_units), "z":
+    same}`` with ``z = (rel - shuffle_mean) / shuffle_sd`` (NaN where the
+    shuffle sd is 0). Orientation is (trials, units) — the SAME as
+    :mod:`tom_cca.spatial_reliability` outputs (and transposed relative to
+    ``tuning_score``), so ``epoch_mean_reliability`` applies directly. The
+    moving-window length is Tom's, not ours — provenance is his pipeline;
+    treat it as a companion metric to our own ±2-trial map correlation, not a
+    replacement.
+    """
+    with h5py.File(Path(path), "r") as f:
+        spatial = f["analysis_spatial"]
+        if "reliability" not in spatial or "units" not in spatial["reliability"]:
+            raise KeyError(f"{Path(path).name}: analysis_spatial/reliability/"
+                           f"units not found")
+        g = spatial["reliability"]["units"]
+        rel = np.asarray(g["reliability_moving_window"], dtype=float)
+        mu = np.asarray(g["reliability_moving_window_shuffled_mean"], dtype=float)
+        sd = np.asarray(g["reliability_moving_window_shuffled_sd"], dtype=float)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        z = np.where(sd > 0, (rel - mu) / sd, np.nan)
+    return {"rel": rel, "z": z}
+
+
 def load_learning_points(data_dir: Path | None = None) -> dict:
     """Per-animal learning points from ``<data_dir>/animal_behaviour.mat`` (or its JSON
     companion). Returns ``{('period_experienced', animal_id): int LP}`` — the lookup

@@ -12,7 +12,7 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-30) — contributing units ARE spatially special (cortical side,
+## CURRENT STATE (2026-08-31) — contributing units ARE spatially special (cortical side,
 ## rate-partialled, FS-robust); trial-1-vs-2 answered 08-20; ➜ READ `HANDOFF.md` FIRST
 
 **Nothing is running.** Newest work is the 2026-08-20 entry directly below: `run_trial12.py` /
@@ -34,6 +34,31 @@ See the entry directly below; `STATE.md` §3.0 finding 2 is rewritten. (b) Metho
 StriatumACC `striatum_tcca` port, which also took `core.cca_fit`'s covariance route, `lagpairs`,
 the per-dim held-out lag curve + `perdim_significance`, and `paired_stats.paired_t` / `welch_t`
 from here.
+
+---
+
+## (2026-08-31) — raw-metric epoch contrasts + Tom's precomputed reliability; SI leftover dropped
+
+**Nothing is running.** Three asks closed in one pass (Theo: "what if it's not the
+rate-partialled metrics?", "drop anything unused", "use Tom's precomputed measures too").
+
+**1. Raw metrics: just as stable.** `analyze_contrib_epochs.py` now also contrasts the raw
+links, the rate confounds themselves and the tomrel metrics — 594 tests/FS, 10 starred each
+(chance ≈ 30). No raw contribution-link contrast repeats across FS. New cross-FS repeat worth
+knowing: the rate–reliability confound weakens naive→intermediate in V1-RSC RSC (−0.15 Δz both
+FS) — a confound drift, not a link drift. Figures `HCV1_contribepochs_delta_{pooled,pairs}_raw_*`.
+
+**2. Tom's precomputed reliability wired in** (`dataio.load_reliability_tom`, TDD 4 tests → 554;
+`analysis_spatial/reliability/units/reliability_moving_window` + shuffle mean/sd → z; (trials,
+units), no transpose). Agreement with our ±2-trial metric: ρ ≈ +0.67…+0.89 across units, every
+cell. Rate-partialled survivors on his metric: **the same three cells** (CA1-RSC RSC, CA1-V1 V1,
+V1-RSC both) **plus CA1-DG DG both FS**; pooled adds **DG** to RSC + V1. So RSC/V1 are
+metric-robust, the DG-side link is definition-sensitive (his longer window). Columns
+`reliability_tom_z`, `rho_*_tomrel*` in the reliability CSVs; `rho_pooled_tomrel*` in the pooled
+CSV; forest `HCV1_contribtomrel_forest_*`.
+
+**3. Unused Skaggs-SI leftover dropped** (`trial_spatial_info` reverted, stray root tests
+removed) per Theo. The tuning construct of record stays Tom's shuffle-normalised tuning score.
 
 ---
 

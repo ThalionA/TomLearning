@@ -227,6 +227,86 @@ rho_rate_tune: per-(pair, area) one-sample test of per-animal Fisher-z mean rho 
   V1-RSC    RSC  n=6  mean_rho= +0.666 med= +0.719 up=6/6 | t p=0.000295* | W p=0.0312*
 
 ==============================================================================
+rho_contrib_conn_tomrel: per-(pair, area) one-sample test of per-animal Fisher-z mean rho vs 0
+==============================================================================
+  CA1-RSC   CA1  n=8  mean_rho= +0.232 med= +0.322 up=6/8 | t p=0.0217* | W p=0.0781 
+  CA1-RSC   RSC  n=8  mean_rho= +0.310 med= +0.370 up=8/8 | t p=0.00173* | W p=0.00781*
+  CA1-CA3   CA1  n=7  mean_rho= +0.243 med= +0.341 up=6/7 | t p=0.0498* | W p=0.0781 
+  CA1-CA3   CA3  n=7  mean_rho= +0.339 med= +0.391 up=6/7 | t p=0.0156* | W p=0.0312*
+  CA1-DG    CA1  n=8  mean_rho= +0.227 med= +0.316 up=7/8 | t p=0.0064* | W p=0.0156*
+  CA1-DG    DG   n=8  mean_rho= +0.474 med= +0.543 up=7/8 | t p=0.00246* | W p=0.0156*
+  CA1-V1    CA1  n=10 mean_rho= +0.323 med= +0.399 up=9/10 | t p=0.00511* | W p=0.0137*
+  CA1-V1    V1   n=10 mean_rho= +0.217 med= +0.218 up=9/10 | t p=0.0141* | W p=0.0195*
+  CA3-DG    CA3  n=4  mean_rho= +0.223 med= +0.288 up=3/4 | t p=0.192  | W p=0.25 
+  CA3-DG    DG   n=4  mean_rho= +0.590 med= +0.578 up=4/4 | t p=0.000645* | W p=0.125 
+  CA1-SUB   CA1  n=4  mean_rho= +0.256 med= +0.468 up=3/4 | t p=0.421  | W p=0.625 
+  CA1-SUB   SUB  n=4  mean_rho= +0.424 med= +0.367 up=4/4 | t p=0.0121* | W p=0.125 
+  RSC-SUB   RSC  n=4  mean_rho= +0.426 med= +0.417 up=4/4 | t p=0.00179* | W p=0.125 
+  RSC-SUB   SUB  n=4  mean_rho= +0.487 med= +0.517 up=4/4 | t p=0.00894* | W p=0.125 
+  V1-RSC    V1   n=6  mean_rho= +0.217 med= +0.193 up=6/6 | t p=0.00188* | W p=0.0312*
+  V1-RSC    RSC  n=6  mean_rho= +0.530 med= +0.567 up=6/6 | t p=7.67e-05* | W p=0.0312*
+
+==============================================================================
+rho_contrib_conn_tomrel_ratepart: per-(pair, area) one-sample test of per-animal Fisher-z mean rho vs 0
+==============================================================================
+  CA1-RSC   CA1  n=8  mean_rho= +0.070 med= +0.132 up=5/8 | t p=0.298  | W p=0.25 
+  CA1-RSC   RSC  n=8  mean_rho= +0.187 med= +0.224 up=7/8 | t p=0.0182* | W p=0.0391*
+  CA1-CA3   CA1  n=7  mean_rho= -0.140 med= -0.249 up=3/7 | t p=0.155  | W p=0.219 
+  CA1-CA3   CA3  n=7  mean_rho= +0.089 med= +0.005 up=4/7 | t p=0.498  | W p=0.688 
+  CA1-DG    CA1  n=8  mean_rho= -0.084 med= -0.039 up=2/8 | t p=0.126  | W p=0.148 
+  CA1-DG    DG   n=8  mean_rho= +0.214 med= +0.144 up=8/8 | t p=0.00219* | W p=0.00781*
+  CA1-V1    CA1  n=10 mean_rho= +0.172 med= +0.153 up=9/10 | t p=0.0437* | W p=0.0273*
+  CA1-V1    V1   n=10 mean_rho= +0.122 med= +0.180 up=8/10 | t p=0.0315* | W p=0.0273*
+  CA3-DG    CA3  n=4  mean_rho= -0.092 med= -0.122 up=1/4 | t p=0.572  | W p=0.625 
+  CA3-DG    DG   n=4  mean_rho= +0.185 med= +0.178 up=4/4 | t p=0.0551  | W p=0.125 
+  CA1-SUB   CA1  n=4  mean_rho= +0.097 med= +0.111 up=2/4 | t p=0.585  | W p=0.875 
+  CA1-SUB   SUB  n=4  mean_rho= +0.259 med= +0.258 up=3/4 | t p=0.195  | W p=0.25 
+  RSC-SUB   RSC  n=4  mean_rho= +0.228 med= +0.233 up=4/4 | t p=0.00439* | W p=0.125 
+  RSC-SUB   SUB  n=4  mean_rho= +0.334 med= +0.348 up=4/4 | t p=0.0377* | W p=0.125 
+  V1-RSC    V1   n=6  mean_rho= +0.130 med= +0.121 up=6/6 | t p=0.0037* | W p=0.0312*
+  V1-RSC    RSC  n=6  mean_rho= +0.404 med= +0.392 up=6/6 | t p=0.000943* | W p=0.0312*
+
+==============================================================================
+rho_rate_tomrel: per-(pair, area) one-sample test of per-animal Fisher-z mean rho vs 0
+==============================================================================
+  CA1-RSC   CA1  n=8  mean_rho= +0.469 med= +0.501 up=8/8 | t p=0.000142* | W p=0.00781*
+  CA1-RSC   RSC  n=8  mean_rho= +0.415 med= +0.468 up=7/8 | t p=0.00219* | W p=0.0156*
+  CA1-CA3   CA1  n=7  mean_rho= +0.463 med= +0.536 up=7/7 | t p=0.00141* | W p=0.0156*
+  CA1-CA3   CA3  n=7  mean_rho= +0.489 med= +0.482 up=7/7 | t p=0.000188* | W p=0.0156*
+  CA1-DG    CA1  n=8  mean_rho= +0.451 med= +0.501 up=8/8 | t p=0.000308* | W p=0.00781*
+  CA1-DG    DG   n=8  mean_rho= +0.707 med= +0.675 up=8/8 | t p=6.21e-07* | W p=0.00781*
+  CA1-V1    CA1  n=10 mean_rho= +0.541 med= +0.547 up=10/10 | t p=3.31e-07* | W p=0.00195*
+  CA1-V1    V1   n=10 mean_rho= +0.439 med= +0.466 up=10/10 | t p=3.67e-06* | W p=0.00195*
+  CA3-DG    CA3  n=4  mean_rho= +0.510 med= +0.526 up=4/4 | t p=0.00183* | W p=0.125 
+  CA3-DG    DG   n=4  mean_rho= +0.653 med= +0.650 up=4/4 | t p=0.000867* | W p=0.125 
+  CA1-SUB   CA1  n=4  mean_rho= +0.563 med= +0.536 up=4/4 | t p=0.00129* | W p=0.125 
+  CA1-SUB   SUB  n=4  mean_rho= +0.430 med= +0.267 up=4/4 | t p=0.0982  | W p=0.125 
+  RSC-SUB   RSC  n=4  mean_rho= +0.572 med= +0.578 up=4/4 | t p=0.00252* | W p=0.125 
+  RSC-SUB   SUB  n=4  mean_rho= +0.430 med= +0.267 up=4/4 | t p=0.0982  | W p=0.125 
+  V1-RSC    V1   n=6  mean_rho= +0.396 med= +0.404 up=6/6 | t p=0.000467* | W p=0.0312*
+  V1-RSC    RSC  n=6  mean_rho= +0.477 med= +0.468 up=6/6 | t p=0.00126* | W p=0.0312*
+
+==============================================================================
+rho_rel_tomrel: per-(pair, area) one-sample test of per-animal Fisher-z mean rho vs 0
+==============================================================================
+  CA1-RSC   CA1  n=8  mean_rho= +0.800 med= +0.819 up=8/8 | t p=2.99e-08* | W p=0.00781*
+  CA1-RSC   RSC  n=8  mean_rho= +0.894 med= +0.900 up=8/8 | t p=4.8e-12* | W p=0.00781*
+  CA1-CA3   CA1  n=7  mean_rho= +0.809 med= +0.843 up=7/7 | t p=1.83e-07* | W p=0.0156*
+  CA1-CA3   CA3  n=7  mean_rho= +0.759 med= +0.756 up=7/7 | t p=2.31e-07* | W p=0.0156*
+  CA1-DG    CA1  n=8  mean_rho= +0.799 med= +0.819 up=8/8 | t p=2.84e-08* | W p=0.00781*
+  CA1-DG    DG   n=8  mean_rho= +0.766 med= +0.757 up=8/8 | t p=2.37e-07* | W p=0.00781*
+  CA1-V1    CA1  n=10 mean_rho= +0.825 med= +0.833 up=10/10 | t p=2.81e-12* | W p=0.00195*
+  CA1-V1    V1   n=10 mean_rho= +0.900 med= +0.906 up=10/10 | t p=5.32e-14* | W p=0.00195*
+  CA3-DG    CA3  n=4  mean_rho= +0.783 med= +0.802 up=4/4 | t p=0.000419* | W p=0.125 
+  CA3-DG    DG   n=4  mean_rho= +0.723 med= +0.732 up=4/4 | t p=6.55e-05* | W p=0.125 
+  CA1-SUB   CA1  n=4  mean_rho= +0.807 med= +0.812 up=4/4 | t p=0.000254* | W p=0.125 
+  CA1-SUB   SUB  n=4  mean_rho= +0.857 med= +0.851 up=4/4 | t p=0.000189* | W p=0.125 
+  RSC-SUB   RSC  n=4  mean_rho= +0.884 med= +0.886 up=4/4 | t p=1.67e-05* | W p=0.125 
+  RSC-SUB   SUB  n=4  mean_rho= +0.857 med= +0.851 up=4/4 | t p=0.000189* | W p=0.125 
+  V1-RSC    V1   n=6  mean_rho= +0.890 med= +0.896 up=6/6 | t p=8.04e-08* | W p=0.0312*
+  V1-RSC    RSC  n=6  mean_rho= +0.891 med= +0.900 up=6/6 | t p=9.36e-09* | W p=0.0312*
+
+==============================================================================
 rho_contrib_conn by epoch (per-animal value, then mean±sem across animals)
 ==============================================================================
   CA1-RSC   CA1  +0.170±0.126(n=8)  +0.291±0.064(n=8)  +0.280±0.120(n=8)

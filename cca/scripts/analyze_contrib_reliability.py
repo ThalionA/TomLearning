@@ -117,10 +117,15 @@ def main():
         # SAME trials. Tuning z is (n_units, n_trials) — transposed (see
         # dataio.load_tuning_scores) — so hand epoch_mean_reliability its .T.
         tuning_z = dataio.load_tuning_scores(a.streams_path)["z"]
+        # Tom's precomputed moving-window reliability, z vs HIS shuffle null;
+        # (trials, units) orientation, so no transpose (unlike tuning_z)
+        tomrel_z = dataio.load_reliability_tom(a.streams_path)["z"]
         rel_by_epoch = {e: spatial_reliability.epoch_mean_reliability(rel, t)
                         for e, t in trial_sets.items()}
         tune_by_epoch = {e: spatial_reliability.epoch_mean_reliability(tuning_z.T, t)
                          for e, t in trial_sets.items()}
+        tomrel_by_epoch = {e: spatial_reliability.epoch_mean_reliability(tomrel_z, t)
+                           for e, t in trial_sets.items()}
         rate_by_epoch = {}
         for e, t in trial_sets.items():
             with np.errstate(invalid="ignore"):
@@ -131,6 +136,7 @@ def main():
             raw_idx = sel[area][g["unit"].to_numpy()]
             r_ep = rel_by_epoch[epoch][raw_idx]
             t_ep = tune_by_epoch[epoch][raw_idx]
+            tr_ep = tomrel_by_epoch[epoch][raw_idx]
             rate = rate_by_epoch[epoch][raw_idx]
             for u, ridx in enumerate(raw_idx):
                 unit_rows.append({
@@ -140,6 +146,7 @@ def main():
                     "contrib_conn": g["contrib_conn"].iloc[u],
                     "reliability": round(float(r_ep[u]), 6),
                     "tuning_z": round(float(t_ep[u]), 6),
+                    "reliability_tom_z": round(float(tr_ep[u]), 6),
                     "mean_rate": round(float(rate[u]), 6)})
             ok = (np.isfinite(r_ep) & np.isfinite(rate)
                   & np.isfinite(g["contrib_conn"].to_numpy()))
@@ -168,6 +175,21 @@ def main():
                         partial_spearman(c, t_ep[okt], lograte_t), 4)
                 row["rho_rate_tune"] = round(
                     float(stats.spearmanr(lograte_t, t_ep[okt]).statistic), 4)
+            okr = (np.isfinite(tr_ep) & np.isfinite(rate)
+                   & np.isfinite(g["contrib_conn"].to_numpy()))
+            if okr.sum() >= MIN_UNITS_CORR:
+                lograte_r = np.log10(rate[okr] + 1e-3)
+                c = g["contrib_conn"].to_numpy()[okr]
+                row["rho_contrib_conn_tomrel"] = round(
+                    float(stats.spearmanr(c, tr_ep[okr]).statistic), 4)
+                row["rho_contrib_conn_tomrel_ratepart"] = round(
+                    partial_spearman(c, tr_ep[okr], lograte_r), 4)
+                row["rho_rate_tomrel"] = round(
+                    float(stats.spearmanr(lograte_r, tr_ep[okr]).statistic), 4)
+                both = okr & np.isfinite(r_ep)
+                if both.sum() >= MIN_UNITS_CORR:
+                    row["rho_rel_tomrel"] = round(float(stats.spearmanr(
+                        r_ep[both], tr_ep[both]).statistic), 4)
             corr_rows.append(row)
 
     udf = pd.DataFrame(unit_rows)
@@ -209,7 +231,9 @@ def main():
     for col in ("rho_contrib_conn", "rho_contrib_conn_ratepart",
                 "rho_contrib", "rho_contrib_ratepart", "rho_rate_rel",
                 "rho_contrib_conn_tune", "rho_contrib_conn_tune_ratepart",
-                "rho_contrib_tune", "rho_contrib_tune_ratepart", "rho_rate_tune"):
+                "rho_contrib_tune", "rho_contrib_tune_ratepart", "rho_rate_tune",
+                "rho_contrib_conn_tomrel", "rho_contrib_conn_tomrel_ratepart",
+                "rho_rate_tomrel", "rho_rel_tomrel"):
         animals_as_n(col)
 
     # ---- per-epoch means (descriptive): does the link move with experience? ----

@@ -12,6 +12,10 @@
   for key, g in per_an.groupby(level=list(range(len(group_cols)))):
 /Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
   for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
 pooled: 147 rows | overlap: 231 rows (FS incl)
 
 ==============================================================================
@@ -53,6 +57,26 @@ POOLED contrib vs tuning z, rate-partialled — per-animal Fisher-z mean, one-sa
   RSC              n=8  mean= +0.153 med= +0.130 | t p=0.0847  | W p=0.0391*
   SUB              n=4  mean= +0.258 med= +0.331 | t p=0.275  | W p=0.375 
   V1               n=10 mean= +0.047 med= +0.015 | t p=0.176  | W p=0.375 
+
+==============================================================================
+POOLED contrib vs Tom's reliability z, raw — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=12 mean= +0.289 med= +0.370 | t p=0.00156* | W p=0.00488*
+  CA3              n=7  mean= +0.361 med= +0.459 | t p=0.0136* | W p=0.0312*
+  DG               n=8  mean= +0.497 med= +0.568 | t p=0.00203* | W p=0.0156*
+  RSC              n=8  mean= +0.373 med= +0.470 | t p=0.000966* | W p=0.00781*
+  SUB              n=4  mean= +0.519 med= +0.541 | t p=0.0067* | W p=0.125 
+  V1               n=10 mean= +0.258 med= +0.259 | t p=0.00147* | W p=0.00586*
+
+==============================================================================
+POOLED contrib vs Tom's reliability z, rate-partialled — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=12 mean= +0.015 med= +0.059 | t p=0.781  | W p=0.791 
+  CA3              n=7  mean= +0.089 med= -0.014 | t p=0.554  | W p=0.812 
+  DG               n=8  mean= +0.214 med= +0.184 | t p=0.000429* | W p=0.00781*
+  RSC              n=8  mean= +0.232 med= +0.263 | t p=0.00971* | W p=0.0234*
+  SUB              n=4  mean= +0.380 med= +0.360 | t p=0.0447* | W p=0.125 
+  V1               n=10 mean= +0.153 med= +0.182 | t p=0.00162* | W p=0.00977*
 
 ==============================================================================
 OVERLAP: contrib_conn cross-partner Spearman — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
