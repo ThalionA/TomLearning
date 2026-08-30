@@ -51,36 +51,50 @@ def cells(pair):
     return [(pair, pair.split("-")[0], COL_X), (pair, pair.split("-")[1], COL_Y)]
 
 
-def forest_axis(ax, vals, title):
-    """vals: {(pair, area): per-animal array}. One row per cell, dots + mean±SEM + star."""
+def forest_axis(ax, rows, title, xlim=(-1, 1)):
+    """Generic per-animal forest. ``rows``: list of None (gap) or
+    (label, per-animal-values array, colour). Dots + mean±SEM + Wilcoxon star."""
     ypos, labels = [], []
-    y = 0
-    for pair in PAIRS:
-        for _, area, col in cells(pair):
-            v = np.asarray(vals.get((pair, area), []), float)
-            v = v[np.isfinite(v)]
-            ypos.append(y); labels.append(f"{pair}  {area}")
-            if v.size:
-                ax.scatter(v, np.full(v.size, y), s=14, color=col, alpha=0.55, zorder=3)
-                ax.errorbar(v.mean(), y, xerr=v.std(ddof=1) / np.sqrt(v.size), fmt="o",
-                            ms=6, color=col, mec="black", mew=0.6, capsize=3, zorder=4)
-                _, _, _, p = paired_stats.wilcoxon_signed(v.tolist())
-                # figstyle.star() offsets upward for bar charts; on this inverted
-                # categorical axis that lands between rows, so anchor va=center
-                if np.isfinite(p) and p < 0.05:
-                    ax.annotate("*", (0.88, y), ha="center", va="center",
-                                fontsize=15, fontweight="bold",
-                                color=figstyle.STAR_COLOR, zorder=20)
-                ax.text(1.02, y, f"n={v.size}", transform=ax.get_yaxis_transform(),
-                        va="center", fontsize=7, color="0.45")
-            y += 1
-        y += 0.6                                   # gap between pairs
+    y = 0.0
+    for row in rows:
+        if row is None:
+            y += 0.6                               # gap between groups
+            continue
+        label, v, col = row
+        v = np.asarray(v, float)
+        v = v[np.isfinite(v)]
+        ypos.append(y); labels.append(label)
+        if v.size:
+            ax.scatter(v, np.full(v.size, y), s=14, color=col, alpha=0.55, zorder=3)
+            ax.errorbar(v.mean(), y, xerr=v.std(ddof=1) / np.sqrt(v.size), fmt="o",
+                        ms=6, color=col, mec="black", mew=0.6, capsize=3, zorder=4)
+            _, _, _, p = paired_stats.wilcoxon_signed(v.tolist())
+            # figstyle.star() offsets upward for bar charts; on this inverted
+            # categorical axis that lands between rows, so anchor va=center.
+            # x in AXES fraction (get_yaxis_transform) so any xlim works.
+            if np.isfinite(p) and p < 0.05:
+                ax.text(0.93, y, "*", transform=ax.get_yaxis_transform(),
+                        ha="center", va="center", fontsize=15, fontweight="bold",
+                        color=figstyle.STAR_COLOR, zorder=20)
+            ax.text(1.02, y, f"n={v.size}", transform=ax.get_yaxis_transform(),
+                    va="center", fontsize=7, color="0.45")
+        y += 1
     ax.axvline(0, color="0.6", lw=0.8, zorder=1)
     ax.set_yticks(ypos, labels, fontsize=8)
-    ax.set_ylim(y - 1.1, -0.9)
-    ax.set_xlim(-1, 1)
+    ax.set_ylim(y - 0.5, -0.9)
+    ax.set_xlim(*xlim)
     ax.set_xlabel("Spearman ρ (per-animal Fisher-z mean)")
     ax.set_title(title, fontsize=10)
+
+
+def pair_rows(vals):
+    """rows for the 16 (pair, area) cells with a gap between pairs."""
+    rows = []
+    for pair in PAIRS:
+        for _, area, col in cells(pair):
+            rows.append((f"{pair}  {area}", vals.get((pair, area), []), col))
+        rows.append(None)
+    return rows[:-1]
 
 
 def make_forest(fit, fs, stem, cols_titles):
@@ -90,7 +104,7 @@ def make_forest(fit, fs, stem, cols_titles):
         pa = per_animal(fit, col)
         vals = {(p, a): g[col].to_numpy()
                 for (p, a), g in pa.groupby(["pair", "area"])}
-        forest_axis(ax, vals, title)
+        forest_axis(ax, pair_rows(vals), title)
     for ax in axes:
         h = [plt.Line2D([], [], marker="o", ls="", color=c, label=l)
              for c, l in [(COL_X, "first-named area (X)"), (COL_Y, "second-named area (Y)")]]

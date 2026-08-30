@@ -1,0 +1,71 @@
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+pooled: 142 rows | overlap: 226 rows (FS excl)
+
+==============================================================================
+POOLED contrib (all partners) vs reliability, raw — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=12 mean= +0.140 med= +0.126 | t p=0.111  | W p=0.176 
+  CA3              n=6  mean= +0.257 med= +0.289 | t p=0.0124* | W p=0.0625 
+  DG               n=8  mean= +0.327 med= +0.379 | t p=0.013* | W p=0.0391*
+  RSC              n=8  mean= +0.399 med= +0.433 | t p=0.000646* | W p=0.00781*
+  SUB              n=4  mean= +0.434 med= +0.441 | t p=0.0515  | W p=0.125 
+  V1               n=10 mean= +0.353 med= +0.355 | t p=0.000111* | W p=0.00195*
+
+==============================================================================
+POOLED contrib vs reliability, rate-partialled — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=12 mean= -0.011 med= +0.028 | t p=0.828  | W p=0.91 
+  CA3              n=6  mean= +0.008 med= -0.046 | t p=0.925  | W p=1 
+  DG               n=8  mean= +0.092 med= +0.094 | t p=0.0959  | W p=0.109 
+  RSC              n=8  mean= +0.297 med= +0.286 | t p=0.00674* | W p=0.0156*
+  SUB              n=4  mean= +0.321 med= +0.401 | t p=0.231  | W p=0.25 
+  V1               n=10 mean= +0.247 med= +0.239 | t p=0.000136* | W p=0.00195*
+
+==============================================================================
+OVERLAP: contrib_conn cross-partner Spearman — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=10 mean= +0.444 med= +0.458 | t p=0.00269* | W p=0.00977*
+  CA3              n=4  mean= +0.713 med= +0.697 | t p=0.000118* | W p=0.125 
+  DG               n=4  mean= +0.620 med= +0.625 | t p=0.0051* | W p=0.125 
+  RSC              n=6  mean= +0.689 med= +0.771 | t p=0.00221* | W p=0.0312*
+  SUB              n=4  mean= +0.488 med= +0.444 | t p=0.00338* | W p=0.125 
+  V1               n=6  mean= +0.593 med= +0.651 | t p=0.00195* | W p=0.0312*
+
+==============================================================================
+OVERLAP ceiling: intrinsic contrib cross-partner — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=10 mean= +0.858 med= +0.971 | t p=9.2e-08* | W p=0.00195*
+  CA3              n=4  mean= +0.980 med= +0.981 | t p=1.19e-06* | W p=0.125 
+  DG               n=4  mean= +0.900 med= +0.954 | t p=0.000862* | W p=0.125 
+  RSC              n=6  mean= +0.989 med= +0.995 | t p=1.17e-10* | W p=0.0312*
+  SUB              n=4  mean= +0.997 med= +0.998 | t p=9.06e-09* | W p=0.125 
+  V1               n=6  mean= +0.822 med= +0.936 | t p=0.000316* | W p=0.0312*
+
+==============================================================================
+OVERLAP partner-specific: residual cross-partner — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=10 mean= +0.168 med= +0.198 | t p=0.0184* | W p=0.0371*
+  CA3              n=4  mean= +0.486 med= +0.497 | t p=0.00624* | W p=0.125 
+  DG               n=4  mean= +0.499 med= +0.476 | t p=0.00991* | W p=0.125 
+  RSC              n=6  mean= +0.175 med= +0.143 | t p=0.0398* | W p=0.0312*
+  SUB              n=4  mean= +0.314 med= +0.358 | t p=0.0149* | W p=0.125 
+  V1               n=6  mean= +0.311 med= +0.350 | t p=0.0231* | W p=0.0625 
+
+==============================================================================
+MEMBER-SET overlap: top-quartile Jaccard, excess over independent-draw chance
+==============================================================================
+  CA1   n=10 J=0.301 excess=+0.149 med=+0.160 | t p=0.00532* | W p=0.00977*
+  CA3   n=4  J=0.506 excess=+0.350 med=+0.343 | t p=0.0307* | W p=0.125 
+  DG    n=4  J=0.399 excess=+0.238 med=+0.152 | t p=0.127  | W p=0.125 
+  RSC   n=6  J=0.478 excess=+0.330 med=+0.316 | t p=0.00348* | W p=0.0312*
+  SUB   n=4  J=0.330 excess=+0.159 med=+0.157 | t p=0.0356* | W p=0.125 
+  V1    n=6  J=0.430 excess=+0.281 med=+0.288 | t p=0.00392* | W p=0.0312*
