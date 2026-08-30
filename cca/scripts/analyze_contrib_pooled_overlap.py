@@ -82,7 +82,8 @@ def pooled_contrib(sub):
         return None
     pooled = pd.Series(np.nanmean(np.vstack(cols), axis=0), index=piv.index,
                        name="pooled_conn")
-    per_unit = sub.groupby("raw_unit")[["reliability", "mean_rate"]].mean()
+    per_unit = sub.groupby("raw_unit")[["reliability", "tuning_z",
+                                        "mean_rate"]].mean()
     return per_unit.join(pooled)
 
 
@@ -130,14 +131,16 @@ def main():
         per_unit = pooled_contrib(sub)
         if per_unit is not None and len(per_unit) >= MIN_UNITS:
             logr = np.log(per_unit["mean_rate"].to_numpy() + 1e-6)
+            pc = per_unit["pooled_conn"].to_numpy()
             pooled_rows.append(dict(
                 animal=an, area=area, epoch=epoch, n_units=len(per_unit),
                 n_partners=len(partners),
-                rho_pooled=spear(per_unit["pooled_conn"].to_numpy(),
-                                 per_unit["reliability"].to_numpy()),
+                rho_pooled=spear(pc, per_unit["reliability"].to_numpy()),
                 rho_pooled_ratepart=rank_partial_rho(
-                    per_unit["pooled_conn"].to_numpy(),
-                    per_unit["reliability"].to_numpy(), logr)))
+                    pc, per_unit["reliability"].to_numpy(), logr),
+                rho_pooled_tune=spear(pc, per_unit["tuning_z"].to_numpy()),
+                rho_pooled_tune_ratepart=rank_partial_rho(
+                    pc, per_unit["tuning_z"].to_numpy(), logr)))
 
         # -- 2. cross-partner overlap ---------------------------------------
         if len(partners) < 2:
@@ -170,7 +173,9 @@ def main():
           f"({'FS incl' if args.include_fs else 'FS excl'})\n")
 
     for col, label in [("rho_pooled", "POOLED contrib (all partners) vs reliability, raw"),
-                       ("rho_pooled_ratepart", "POOLED contrib vs reliability, rate-partialled")]:
+                       ("rho_pooled_ratepart", "POOLED contrib vs reliability, rate-partialled"),
+                       ("rho_pooled_tune", "POOLED contrib vs tuning z, raw"),
+                       ("rho_pooled_tune_ratepart", "POOLED contrib vs tuning z, rate-partialled")]:
         animals_as_n(pooled, col, ["area"], label)
     for col, label in [("rho_conn", "OVERLAP: contrib_conn cross-partner Spearman"),
                        ("rho_intr", "OVERLAP ceiling: intrinsic contrib cross-partner"),

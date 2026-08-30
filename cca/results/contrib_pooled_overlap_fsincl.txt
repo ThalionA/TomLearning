@@ -1,12 +1,16 @@
-/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
   for key, g in per_an.groupby(level=list(range(len(group_cols)))):
-/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
   for key, g in per_an.groupby(level=list(range(len(group_cols)))):
-/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
   for key, g in per_an.groupby(level=list(range(len(group_cols)))):
-/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
   for key, g in per_an.groupby(level=list(range(len(group_cols)))):
-/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:102: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
+  for key, g in per_an.groupby(level=list(range(len(group_cols)))):
+/Users/theoamvr/Desktop/Experiments/TomLearning/cca/scripts/analyze_contrib_pooled_overlap.py:103: FutureWarning: Creating a Groupby object with a length-1 list-like level parameter will yield indexes as tuples in a future version. To keep indexes as scalars, create Groupby objects with a scalar level parameter instead.
   for key, g in per_an.groupby(level=list(range(len(group_cols)))):
 pooled: 147 rows | overlap: 231 rows (FS incl)
 
@@ -29,6 +33,26 @@ POOLED contrib vs reliability, rate-partialled — per-animal Fisher-z mean, one
   RSC              n=8  mean= +0.294 med= +0.316 | t p=0.00162* | W p=0.0156*
   SUB              n=4  mean= +0.404 med= +0.445 | t p=0.1  | W p=0.25 
   V1               n=10 mean= +0.208 med= +0.252 | t p=0.00268* | W p=0.00977*
+
+==============================================================================
+POOLED contrib vs tuning z, raw — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=12 mean= +0.332 med= +0.419 | t p=0.000845* | W p=0.00342*
+  CA3              n=7  mean= +0.521 med= +0.586 | t p=5.06e-05* | W p=0.0156*
+  DG               n=8  mean= +0.452 med= +0.579 | t p=0.0191* | W p=0.0547 
+  RSC              n=8  mean= +0.366 med= +0.352 | t p=0.000702* | W p=0.00781*
+  SUB              n=4  mean= +0.355 med= +0.400 | t p=0.0978  | W p=0.25 
+  V1               n=10 mean= +0.229 med= +0.225 | t p=0.000121* | W p=0.00195*
+
+==============================================================================
+POOLED contrib vs tuning z, rate-partialled — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0
+==============================================================================
+  CA1              n=12 mean= -0.137 med= -0.074 | t p=0.00942* | W p=0.00928*
+  CA3              n=7  mean= +0.224 med= +0.304 | t p=0.0715  | W p=0.219 
+  DG               n=8  mean= +0.097 med= +0.148 | t p=0.369  | W p=0.25 
+  RSC              n=8  mean= +0.153 med= +0.130 | t p=0.0847  | W p=0.0391*
+  SUB              n=4  mean= +0.258 med= +0.331 | t p=0.275  | W p=0.375 
+  V1               n=10 mean= +0.047 med= +0.015 | t p=0.176  | W p=0.375 
 
 ==============================================================================
 OVERLAP: contrib_conn cross-partner Spearman — per-animal Fisher-z mean, one-sample t + Wilcoxon vs 0

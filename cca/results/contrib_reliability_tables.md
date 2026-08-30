@@ -223,3 +223,10 @@ and top-quartile member sets share +0.15…+0.35 more Jaccard than independent s
 (CA1 W p = 0.0098, RSC/V1 W p = 0.031, both FS). **Verdict: overlapping-but-differentiated —
 a shared backbone of multi-subspace units, with genuine partner-specific reordering on top
 (observed ρ sits well below the geometry ceiling).**
+
+**Pooled contribution vs tuning** (2026-08-30, later; figure
+`HCV1_contribpool_tune_forest_*`): raw links starred in 5/6 areas, but rate-partialled only
+**RSC** stars on Wilcoxon in both FS (+0.131/+0.153, W p = 0.023/0.039; t only FS-excl). DG is
+FS-excl-only; CA1 flips significantly NEGATIVE with FS units in (−0.137, W p = 0.0093) —
+single-FS, not headlined. Same verdict as per-pair: the tuning link is rate-carried; reliability
+(RSC + V1 robust) is the property that separates contributing units.

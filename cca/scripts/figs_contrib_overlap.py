@@ -53,18 +53,17 @@ def area_rows(vals):
     return [(a, vals.get(a, []), AREA_COL[a]) for a in AREAS]
 
 
-def make_pooled(pooled, fs):
+def make_pooled(pooled, fs, cols, stem, target):
     fig, axes = plt.subplots(1, 2, figsize=(9.0, 3.4), sharey=True,
                              constrained_layout=True)
-    for ax, col, title in [(axes[0], "rho_pooled", "raw"),
-                           (axes[1], "rho_pooled_ratepart", "rate-partialled")]:
+    for ax, (col, title) in zip(axes, cols):
         forest_axis(ax, area_rows(per_animal_by_area(pooled, col)), title)
     h = [plt.Line2D([], [], marker="o", ls="", color=c, label=l)
          for c, l in [(COL_X, "hippocampal formation"), (COL_Y, "cortex")]]
     axes[0].legend(handles=h, loc="lower left", fontsize=7, framealpha=0.9)
-    fig.suptitle(f"Pooled contribution (mean over ALL partners) vs spatial reliability "
+    fig.suptitle(f"Pooled contribution (mean over ALL partners) vs {target} "
                  f"({'FS excluded' if fs == 'fsexcl' else 'FS included'})", fontsize=11)
-    figstyle.save(fig, f"HCV1_contribpool_forest_{fs}_bin10")
+    figstyle.save(fig, f"{stem}_{fs}_bin10")
 
 
 def make_overlap(overlap, fs):
@@ -121,10 +120,18 @@ def main():
     for fs, tag in [("fsexcl", ""), ("fsincl", "_fsincl")]:
         pooled = pd.read_csv(RES / f"contrib_pooled_bin10{tag}.csv")
         overlap = pd.read_csv(RES / f"contrib_overlap_bin10{tag}.csv")
-        make_pooled(pooled, fs)
+        make_pooled(pooled, fs,
+                    [("rho_pooled", "raw"), ("rho_pooled_ratepart", "rate-partialled")],
+                    "HCV1_contribpool_forest", "spatial reliability")
+        if "rho_pooled_tune" in pooled.columns:
+            make_pooled(pooled, fs,
+                        [("rho_pooled_tune", "raw"),
+                         ("rho_pooled_tune_ratepart", "rate-partialled")],
+                        "HCV1_contribpool_tune_forest",
+                        "spatial tuning (z vs shuffle null)")
         make_overlap(overlap, fs)
         make_ca1_matrix(overlap, fs)
-        print(f"{fs}: 3 figures written")
+        print(f"{fs}: 4 figures written")
 
 
 if __name__ == "__main__":

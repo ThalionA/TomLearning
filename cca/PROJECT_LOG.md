@@ -37,6 +37,23 @@ from here.
 
 ---
 
+## (2026-08-30, later still) — pooled contribution vs tuning (Theo's clarified ask)
+
+**Nothing is running.** "Tuning analysed similarly to the reliability" = the POOLED analysis
+(unit's contrib_conn averaged over all partners) against tuning_z, not a new in-house tuning
+metric. `analyze_contrib_pooled_overlap.py` gains `rho_pooled_tune{,_ratepart}`; figure
+`HCV1_contribpool_tune_forest_*`. **Raw starred in 5/6 areas; rate-partialled only RSC survives
+both FS on Wilcoxon (+0.131/+0.153); DG FS-excl-only; CA1 flips negative FS-incl (single-FS).**
+Confirms the per-pair dissociation at the whole-area level: reliability, not tuning, is what
+separates contributing units beyond rate.
+
+⚠ Working-tree leftover, deliberately uncommitted pending Theo: a `trial_spatial_info` (Skaggs
+SI, ±2-trial window) helper in `spatial_reliability.py` plus its 7 tests accidentally written to
+the repo-root `tests/test_spatial_reliability.py` (untracked) — built for a misread of the ask
+before Theo clarified. Keep (move tests into `cca/tests/`) or drop (revert both).
+
+---
+
 ## (2026-08-30, later) — tuning leg + pooled contribution + cross-partner overlap (all with figures)
 
 **Nothing is running.** Three additions on top of the morning's figure pass, all off the existing
