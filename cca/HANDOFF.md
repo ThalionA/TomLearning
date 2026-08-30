@@ -52,7 +52,7 @@ CSVs reproduce — the cap is now printed at start and exposed as `--max-samples
 | — | Cosine of each CC to itself across lags | `run_lag_cosine.py` → `lag_cosine_bin10*.csv` | (inline) | `figs_lag_cosine.py` → `HCV1_lag_cosine_*`, `HCV1_lag_cosine_swap_*` |
 | 4 | Integration window vs IFI, naive vs exp | *(reuses item 2's CSV)* | `analyze_ifi_windows_epochs.py` → `ifi_windows_epochs_*` | `figs_ifi_windows_epochs.py` |
 | 5/6/7 | One CC lagged across time; windows; fixed subspace naive vs exp | `run_fixed_subspace.py` → `fixed_subspace_bin10*.csv` | `analyze_fixed_subspace.py` → `fixed_subspace_epoch_*`, `_stats_*` | `figs_fixed_subspace.py`, `figs_integration_windows.py` |
-| Fig5 | Are contributing units spatially special? (reliability × `contrib_conn`) | `run_epochs.py` → `epoch_weights_bin10*.csv` (per-neuron contributions) | `analyze_contrib_reliability.py` → `contrib_reliability_bin10*.csv`, `_units_*.csv`, `contrib_reliability_tables.md` (+ printed animals-as-n tables in `contrib_reliability_fs*.txt`) | — |
+| Fig5 | Are contributing units spatially special? (reliability × `contrib_conn`) | `run_epochs.py` → `epoch_weights_bin10*.csv` (per-neuron contributions) | `analyze_contrib_reliability.py` → `contrib_reliability_bin10*.csv`, `_units_*.csv`, `contrib_reliability_tables.md` (+ printed animals-as-n tables in `contrib_reliability_fs*.txt`) | `figs_contrib_reliability.py` → `HCV1_contribrel_{forest,controls,scatter,epochs}_*` |
 
 **Written write-up of items 1–7:** `results/MEETING_2026-08-07.md` (methods + numbers +
 caveats, one section per item). ⚠ It predates the four follow-ups and the significance

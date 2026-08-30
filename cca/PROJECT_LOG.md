@@ -12,7 +12,7 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-29) — contributing units ARE spatially special (cortical side,
+## CURRENT STATE (2026-08-30) — contributing units ARE spatially special (cortical side,
 ## rate-partialled, FS-robust); trial-1-vs-2 answered 08-20; ➜ READ `HANDOFF.md` FIRST
 
 **Nothing is running.** Newest work is the 2026-08-20 entry directly below: `run_trial12.py` /
@@ -34,6 +34,22 @@ See the entry directly below; `STATE.md` §3.0 finding 2 is rewritten. (b) Metho
 StriatumACC `striatum_tcca` port, which also took `core.cca_fit`'s covariance route, `lagpairs`,
 the per-dim held-out lag curve + `perdim_significance`, and `paired_stats.paired_t` / `welch_t`
 from here.
+
+---
+
+## (2026-08-30) — figures for the contribution × reliability finding (and a standing rule)
+
+**Nothing is running.** `scripts/figs_contrib_reliability.py` (new) renders the 2026-08-29
+finding, both FS: `HCV1_contribrel_forest_*` (16-cell forest, raw vs rate-partialled, Wilcoxon
+stars), `_controls_*` (intrinsic-contrib control + rate–reliability confound), `_scatter_*`
+(per-unit scatters, median animal per robust cell), `_epochs_*` (rate-partialled ρ across
+epochs). One placement bug caught by looking at the render: `figstyle.star`'s 5-pt upward offset
+lands between rows on an inverted categorical axis — stars are drawn va=center directly there.
+
+**Standing rule (Theo, exasperated repeat — logged in ~/.claude/MISTAKES.md as `re-explained`):**
+an analysis in this project is DONE only when its `figs_*.py` exists, the render has been looked
+at, and the figure ships with a legend + method summary. Tables in `results/*_tables.md` are the
+appendix, never the deliverable.
 
 ---
 
