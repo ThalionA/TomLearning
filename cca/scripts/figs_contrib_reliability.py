@@ -97,7 +97,8 @@ def pair_rows(vals):
     return rows[:-1]
 
 
-def make_forest(fit, fs, stem, cols_titles):
+def make_forest(fit, fs, stem, cols_titles, suptitle="Unit contribution to the "
+                "communication subspace vs spatial reliability"):
     fig, axes = plt.subplots(1, 2, figsize=(9.6, 6.4), sharey=True,
                              constrained_layout=True)
     for ax, (col, title) in zip(axes, cols_titles):
@@ -105,13 +106,11 @@ def make_forest(fit, fs, stem, cols_titles):
         vals = {(p, a): g[col].to_numpy()
                 for (p, a), g in pa.groupby(["pair", "area"])}
         forest_axis(ax, pair_rows(vals), title)
-    for ax in axes:
-        h = [plt.Line2D([], [], marker="o", ls="", color=c, label=l)
-             for c, l in [(COL_X, "first-named area (X)"), (COL_Y, "second-named area (Y)")]]
-        ax.legend(handles=h, loc="lower left", fontsize=7, framealpha=0.9)
-        break
-    fig.suptitle(f"Unit contribution to the communication subspace vs spatial reliability "
-                 f"({'FS excluded' if fs == 'fsexcl' else 'FS included'})", fontsize=11)
+    h = [plt.Line2D([], [], marker="o", ls="", color=c, label=l)
+         for c, l in [(COL_X, "first-named area (X)"), (COL_Y, "second-named area (Y)")]]
+    axes[0].legend(handles=h, loc="lower left", fontsize=7, framealpha=0.9)
+    fig.suptitle(f"{suptitle} ({'FS excluded' if fs == 'fsexcl' else 'FS included'})",
+                 fontsize=11)
     figstyle.save(fig, f"{stem}_{fs}_bin10")
 
 
@@ -173,9 +172,15 @@ def main():
         make_forest(fit, fs, "HCV1_contribrel_controls",
                     [("rho_contrib", "area-intrinsic contribution (control)"),
                      ("rho_rate_rel", "mean rate vs reliability (confound)")])
+        if "rho_contrib_conn_tune" in fit.columns:
+            make_forest(fit, fs, "HCV1_contribtune_forest",
+                        [("rho_contrib_conn_tune", "raw"),
+                         ("rho_contrib_conn_tune_ratepart", "rate-partialled")],
+                        suptitle="Unit contribution to the communication subspace "
+                                 "vs spatial tuning (z vs shuffle null)")
         make_scatter(units, fit, fs)
         make_epochs(fit, fs)
-        print(f"{fs}: 4 figures written")
+        print(f"{fs}: 5 figures written")
 
 
 if __name__ == "__main__":

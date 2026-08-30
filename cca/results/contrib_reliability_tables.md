@@ -196,3 +196,30 @@ contribution; the CA1-side link never survives the rate partial.
   V1-RSC    RSC  n=6  mean_rho= +0.500 med= +0.508 up=6/6 | t p=0.000144* | W p=0.0312*
 ```
 
+
+---
+
+## Addendum 2026-08-30 — tuning leg, pooled contribution, cross-partner overlap
+
+**Tuning** (`analysis_spatial/tuning_score/score` z-scored against its own 1000-shuffle null,
+epoch-matched trials; `dataio.load_tuning_scores`; full prints in `contrib_reliability_fs*.txt`,
+figure `HCV1_contribtune_forest_*`): raw contrib_conn–tuning correlations are positive nearly
+everywhere (+0.14…+0.56), but after rate-partialling **no cell survives in both FS conditions** —
+FS-excl leaves CA1-RSC RSC (+0.140, W p = 0.0078) and CA1-DG DG (+0.155, W p = 0.0078), and both
+are n.s. FS-included. Contrast with reliability (three FS-robust survivors): **what is special
+about contributing units is trial-to-trial reliability, not tuning strength — the two spatial
+properties dissociate.**
+
+**Pooled contribution** (partner-averaged, `analyze_contrib_pooled_overlap.py`, figure
+`HCV1_contribpool_forest_*`): rate-partialled survivors are **RSC** (+0.297/+0.294, W p = 0.016
+both FS) and **V1** (+0.247/+0.208, W p = 0.002/0.010) only — the per-pair cortical-side story
+holds at the whole-area level.
+
+**Cross-partner overlap** (figure `HCV1_contriboverlap_*`, CA1 matrix
+`HCV1_contriboverlap_ca1matrix_*`): observed contrib_conn cross-partner ρ = +0.44…+0.71, but the
+intrinsic-geometry ceiling is +0.82…+1.0, so most of that is the area's own loading geometry.
+The partner-specific residual is still positive everywhere (+0.17…+0.50; starred where n permits)
+and top-quartile member sets share +0.15…+0.35 more Jaccard than independent same-size draws
+(CA1 W p = 0.0098, RSC/V1 W p = 0.031, both FS). **Verdict: overlapping-but-differentiated —
+a shared backbone of multi-subspace units, with genuine partner-specific reordering on top
+(observed ρ sits well below the geometry ceiling).**

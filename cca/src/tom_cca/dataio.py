@@ -246,6 +246,39 @@ def _read_companion(data_dir: str | Path) -> dict | None:
     return {"regions": regions, "lp": lp}
 
 
+def load_tuning_scores(path: str | Path) -> dict:
+    """Per-unit per-trial spatial tuning score from a ``TF*_export.mat``.
+
+    Reads ``analysis_spatial/tuning_score/score`` (n_units, n_trials) and its
+    ``shuffled`` null (n_units, n_trials, n_shuffles), and returns
+    ``{"score": (n_units, n_trials), "z": same}`` with
+    ``z = (score - mean(shuffled)) / sd(shuffled)`` (NaN where the shuffle sd
+    is 0). ⚠ Orientation is (units, trials) — TRANSPOSED relative to the
+    reliability fields and to ``Animal.spatial_fr``'s trial axis; trial columns
+    align with ``spatial_fr`` rows (same ``analysis_spatial`` trial set, so the
+    1-based temporal trial id ``t`` maps to column ``t - 1``). The shuffle
+    array is read per unit to keep memory bounded (~1.7 MB per unit-slice
+    instead of ~290 MB per animal).
+    """
+    with h5py.File(Path(path), "r") as f:
+        spatial = f["analysis_spatial"]
+        if "tuning_score" not in spatial:
+            raise KeyError(f"{Path(path).name}: analysis_spatial/tuning_score "
+                           f"not found")
+        g = spatial["tuning_score"]
+        score = np.asarray(g["score"], dtype=float)
+        shuf = g["shuffled"]
+        mu = np.empty_like(score)
+        sd = np.empty_like(score)
+        for u in range(score.shape[0]):
+            s = np.asarray(shuf[u], dtype=float)          # (n_trials, n_shuffles)
+            mu[u] = s.mean(axis=1)
+            sd[u] = s.std(axis=1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        z = np.where(sd > 0, (score - mu) / sd, np.nan)
+    return {"score": score, "z": z}
+
+
 def load_learning_points(data_dir: Path | None = None) -> dict:
     """Per-animal learning points from ``<data_dir>/animal_behaviour.mat`` (or its JSON
     companion). Returns ``{('period_experienced', animal_id): int LP}`` — the lookup

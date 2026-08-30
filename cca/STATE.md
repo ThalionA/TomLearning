@@ -1,6 +1,6 @@
 # STATE — Tom-learning CCA project
 
-**Last updated:** 2026-08-29 (finding 7b added: contribution × spatial reliability). This is the entry point. It reconciles the three analysis
+**Last updated:** 2026-08-30 (7b extended: tuning dissociation, pooled contribution, cross-partner overlap). This is the entry point. It reconciles the three analysis
 arms, names the canonical configs, and states the findings honestly. `README.md` is
 quick-start; `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` are the design specs;
 `PROJECT_LOG.md` is the state of play; `NOTES.md` is the older chronological log. When they
@@ -182,6 +182,18 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    W p = 0.031). The CA1-side link never survives the rate partial, and the area-intrinsic
    `contrib` control is n.s. nearly everywhere — communication-specific, not "loud units".
    Epoch-resolved link is roughly stable (descriptive; CA1-CA3 CA3-side grows with experience).
+   **Extensions (2026-08-30):** (a) **tuning dissociates from reliability** — contribution vs
+   spatial tuning (z vs the export's shuffle null) is broadly positive raw but has NO FS-robust
+   rate-partialled survivor (FS-excl leaves CA1-RSC RSC / CA1-DG DG; both die FS-incl): what is
+   special about contributing units is trial-to-trial reliability, not tuning strength.
+   (b) **Pooled over all partners**, the rate-partialled link survives for RSC and V1 only
+   (both FS) — the cortical-side story at whole-area level. (c) **The same units serve several
+   subspaces, with partner-specific differentiation on top:** cross-partner contribution ρ
+   +0.44…+0.71 vs an intrinsic-geometry ceiling of +0.82…+1.0; the geometry-partialled residual
+   stays positive (+0.17…+0.50) and top-quartile member sets beat independent-draw Jaccard by
+   +0.15…+0.35 (CA1/RSC/V1 starred, both FS). Tables `results/contrib_reliability_tables.md`
+   (addendum); figures `HCV1_contribtune_forest_*`, `HCV1_contribpool_forest_*`,
+   `HCV1_contriboverlap_*`.
 
 **Headline (Contested — and now under review).** Over the task the hippocampal–cortical
 communication subspace **broadens** — recruiting more neurons (Gini↓, CA1-RSC/CA1-DG, LMM

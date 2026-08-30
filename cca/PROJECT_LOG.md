@@ -37,6 +37,41 @@ from here.
 
 ---
 
+## (2026-08-30, later) — tuning leg + pooled contribution + cross-partner overlap (all with figures)
+
+**Nothing is running.** Three additions on top of the morning's figure pass, all off the existing
+epoch CSVs (no CCA refits).
+
+**1. Tuning leg.** `dataio.load_tuning_scores` (TDD, 4 tests → 550 total) reads
+`analysis_spatial/tuning_score/{score,shuffled}` — orientation (units, trials), TRANSPOSED
+relative to the reliability fields; z = (score − shuffle mean)/shuffle sd, shuffle read per unit
+(~290 MB per animal otherwise). `analyze_contrib_reliability.py` now also exports `tuning_z` per
+unit and `rho_*_tune{,_ratepart}` + `rho_rate_tune` per fit (~12 min per FS — the shuffle reads
+dominate). **Finding: the raw tuning link is broad but rate-carried; NO cell survives
+rate-partialling in both FS** (FS-excl leaves CA1-RSC RSC and CA1-DG DG, both n.s. FS-incl).
+Reliability (3 FS-robust cells) vs tuning (0) = the two spatial properties **dissociate**;
+STATE 7b updated. Figure: `HCV1_contribtune_forest_*`.
+
+**2. Pooled contribution** (`analyze_contrib_pooled_overlap.py`): each unit's contrib_conn
+averaged over ALL partners (per-partner unit-sum normalisation, the figs_area_gini aggregation),
+vs reliability per area. Rate-partialled survivors: **RSC and V1 only**, both FS — the
+cortical-side story holds at the whole-area level. Figure: `HCV1_contribpool_forest_*`.
+
+**3. Cross-partner overlap** (same script): do the same units serve several subspaces?
+⚠ Designed around the partner-invariance trap: observed cross-partner ρ (+0.44…+0.71) is
+benchmarked against the intrinsic-contribution ceiling (+0.82…+1.0) and the partner-specific
+residual (mean intrinsic rank-partialled out of both), which stays positive (+0.17…+0.50);
+top-quartile member Jaccard exceeds independent-draw chance by +0.15…+0.35 (CA1 p = 0.0098,
+RSC/V1 p = 0.031, both FS). **Verdict: overlapping-but-differentiated** — a shared backbone of
+multi-subspace units plus genuine partner-specific reordering (observed ρ well below ceiling).
+Figures: `HCV1_contriboverlap_*`, `HCV1_contriboverlap_ca1matrix_*`.
+
+`figs_contrib_reliability.forest_axis` hoisted to a generic row API (imported by
+`figs_contrib_overlap.py`, no duplication); stars moved to an axes-fraction transform after a
+clipped-star bug under a custom xlim. Tables addendum in `contrib_reliability_tables.md`.
+
+---
+
 ## (2026-08-30) — figures for the contribution × reliability finding (and a standing rule)
 
 **Nothing is running.** `scripts/figs_contrib_reliability.py` (new) renders the 2026-08-29
