@@ -37,6 +37,27 @@ from here.
 
 ---
 
+## (2026-08-30, evening) — epoch contrasts: the contribution links do NOT change with experience
+
+**Nothing is running.** Theo asked whether any of the thread's metrics move across naive (first
+10 running trials) / intermediate (10 at LP) / expert (10 after LP) — the CSVs already carried
+per-epoch values, so `analyze_contrib_epochs.py` just adds within-animal Δ Fisher-z contrasts
+(paired t + Wilcoxon, animals-as-n) for all 11 metrics × 22 cells × 3 contrasts, both FS.
+`figs_contrib_epochs.py` renders trajectories + three delta forests (imports the delta
+computation from the analyzer — no duplication).
+
+**Result: 3/318 (FS-excl) and 7/318 (FS-incl) starred, below the ~16 chance expectation;
+the only cross-FS repeat is pooled-DG reliability naive→intermediate (Δz ≈ −0.4, W p = 0.039
+both, no expert−naive echo). Verdict: stable — the reliability/tuning links and the
+overlapping-member structure are standing properties, not learning products.** Consistent with
+finding 1 (strength null) and the trial-1-vs-2 null (2026-08-20). Caveat: n = 4–12 and the naive
+epoch has the fewest running bins; weak evidence of stability, not proof.
+
+Tables: `contrib_epochs_deltas_bin10*.csv`, prints in `contrib_epochs_fs*.txt`, addendum in
+`contrib_reliability_tables.md`. STATE 7b updated (stability now TESTED, was descriptive).
+
+---
+
 ## (2026-08-30, later still) — pooled contribution vs tuning (Theo's clarified ask)
 
 **Nothing is running.** "Tuning analysed similarly to the reliability" = the POOLED analysis

@@ -1,0 +1,319 @@
+family,metric,cell,contrast,n,med_delta,t_p,w_p
+pair,rho_contrib_conn,CA1-CA3 CA1,expert-naive,7,0.0265,0.2872,0.57812
+pair,rho_contrib_conn,CA1-CA3 CA1,intermediate-naive,7,0.1336,0.18804,0.29688
+pair,rho_contrib_conn,CA1-CA3 CA1,expert-intermediate,7,0.0218,0.78255,0.9375
+pair,rho_contrib_conn,CA1-CA3 CA3,expert-naive,7,0.0081,0.63543,0.6875
+pair,rho_contrib_conn,CA1-CA3 CA3,intermediate-naive,7,-0.0231,0.63966,0.9375
+pair,rho_contrib_conn,CA1-CA3 CA3,expert-intermediate,7,-0.0734,0.76822,0.6875
+pair,rho_contrib_conn,CA1-DG CA1,expert-naive,8,0.1045,0.1444,0.19531
+pair,rho_contrib_conn,CA1-DG CA1,intermediate-naive,8,-0.013,0.47761,0.84375
+pair,rho_contrib_conn,CA1-DG CA1,expert-intermediate,8,0.1246,0.36366,0.25
+pair,rho_contrib_conn,CA1-DG DG,expert-naive,8,-0.1583,0.26557,0.38281
+pair,rho_contrib_conn,CA1-DG DG,intermediate-naive,8,-0.0922,0.83105,0.74219
+pair,rho_contrib_conn,CA1-DG DG,expert-intermediate,8,-0.1106,0.19388,0.25
+pair,rho_contrib_conn,CA1-RSC CA1,expert-naive,8,0.0877,0.3826,0.54688
+pair,rho_contrib_conn,CA1-RSC CA1,intermediate-naive,8,0.0437,0.22817,0.38281
+pair,rho_contrib_conn,CA1-RSC CA1,expert-intermediate,8,-0.0992,0.93825,0.84375
+pair,rho_contrib_conn,CA1-RSC RSC,expert-naive,8,-0.2201,0.19169,0.25
+pair,rho_contrib_conn,CA1-RSC RSC,intermediate-naive,8,-0.0017,0.78178,1.0
+pair,rho_contrib_conn,CA1-RSC RSC,expert-intermediate,8,-0.1763,0.2186,0.19531
+pair,rho_contrib_conn,CA1-SUB CA1,expert-naive,4,0.0782,0.34922,0.625
+pair,rho_contrib_conn,CA1-SUB CA1,intermediate-naive,4,0.2502,0.3515,0.375
+pair,rho_contrib_conn,CA1-SUB CA1,expert-intermediate,4,-0.1287,0.582,0.625
+pair,rho_contrib_conn,CA1-SUB SUB,expert-naive,4,0.0463,0.95019,0.875
+pair,rho_contrib_conn,CA1-SUB SUB,intermediate-naive,4,-0.058,0.82556,0.875
+pair,rho_contrib_conn,CA1-SUB SUB,expert-intermediate,4,-0.1153,0.82358,1.0
+pair,rho_contrib_conn,CA1-V1 CA1,expert-naive,10,-0.0605,0.23394,0.27539
+pair,rho_contrib_conn,CA1-V1 CA1,intermediate-naive,10,0.1396,0.31546,0.49219
+pair,rho_contrib_conn,CA1-V1 CA1,expert-intermediate,10,-0.144,0.15951,0.06445
+pair,rho_contrib_conn,CA1-V1 V1,expert-naive,10,0.0742,0.4327,0.76953
+pair,rho_contrib_conn,CA1-V1 V1,intermediate-naive,10,-0.0089,0.71591,1.0
+pair,rho_contrib_conn,CA1-V1 V1,expert-intermediate,10,0.0474,0.46698,1.0
+pair,rho_contrib_conn,CA3-DG CA3,expert-naive,4,-0.0163,0.48177,1.0
+pair,rho_contrib_conn,CA3-DG CA3,intermediate-naive,4,0.1718,0.88931,0.875
+pair,rho_contrib_conn,CA3-DG CA3,expert-intermediate,4,0.088,0.62152,0.875
+pair,rho_contrib_conn,CA3-DG DG,expert-naive,4,0.0201,0.95462,1.0
+pair,rho_contrib_conn,CA3-DG DG,intermediate-naive,4,-0.1081,0.1356,0.125
+pair,rho_contrib_conn,CA3-DG DG,expert-intermediate,4,0.068,0.36635,0.375
+pair,rho_contrib_conn,RSC-SUB RSC,expert-naive,4,-0.0424,0.64204,0.625
+pair,rho_contrib_conn,RSC-SUB RSC,intermediate-naive,4,-0.1865,0.12506,0.125
+pair,rho_contrib_conn,RSC-SUB RSC,expert-intermediate,4,0.0236,0.49243,0.625
+pair,rho_contrib_conn,RSC-SUB SUB,expert-naive,4,0.0894,0.81299,1.0
+pair,rho_contrib_conn,RSC-SUB SUB,intermediate-naive,4,-0.122,0.42987,0.625
+pair,rho_contrib_conn,RSC-SUB SUB,expert-intermediate,4,0.0598,0.72357,0.875
+pair,rho_contrib_conn,V1-RSC V1,expert-naive,6,0.0269,0.51806,0.84375
+pair,rho_contrib_conn,V1-RSC V1,intermediate-naive,6,0.0093,0.675,0.6875
+pair,rho_contrib_conn,V1-RSC V1,expert-intermediate,6,-0.0708,0.52515,0.6875
+pair,rho_contrib_conn,V1-RSC RSC,expert-naive,6,-0.1253,0.4044,0.4375
+pair,rho_contrib_conn,V1-RSC RSC,intermediate-naive,6,0.0327,0.51787,0.6875
+pair,rho_contrib_conn,V1-RSC RSC,expert-intermediate,6,-0.2209,0.21904,0.3125
+pair,rho_contrib_conn_ratepart,CA1-CA3 CA1,expert-naive,7,0.1805,0.21387,0.375
+pair,rho_contrib_conn_ratepart,CA1-CA3 CA1,intermediate-naive,7,0.1523,0.2119,0.29688
+pair,rho_contrib_conn_ratepart,CA1-CA3 CA1,expert-intermediate,7,-0.0105,0.78225,0.57812
+pair,rho_contrib_conn_ratepart,CA1-CA3 CA3,expert-naive,7,0.0258,0.60467,0.46875
+pair,rho_contrib_conn_ratepart,CA1-CA3 CA3,intermediate-naive,7,-0.0063,0.80157,0.9375
+pair,rho_contrib_conn_ratepart,CA1-CA3 CA3,expert-intermediate,7,-0.1072,0.54105,0.6875
+pair,rho_contrib_conn_ratepart,CA1-DG CA1,expert-naive,8,0.0462,0.52732,0.64062
+pair,rho_contrib_conn_ratepart,CA1-DG CA1,intermediate-naive,8,-0.0249,0.73507,1.0
+pair,rho_contrib_conn_ratepart,CA1-DG CA1,expert-intermediate,8,0.1097,0.55295,0.3125
+pair,rho_contrib_conn_ratepart,CA1-DG DG,expert-naive,8,-0.5386,0.1348,0.14844
+pair,rho_contrib_conn_ratepart,CA1-DG DG,intermediate-naive,8,-0.3374,0.08027,0.10938
+pair,rho_contrib_conn_ratepart,CA1-DG DG,expert-intermediate,8,-0.1724,0.44917,0.54688
+pair,rho_contrib_conn_ratepart,CA1-RSC CA1,expert-naive,8,0.1064,0.94361,1.0
+pair,rho_contrib_conn_ratepart,CA1-RSC CA1,intermediate-naive,8,-0.032,0.47971,0.74219
+pair,rho_contrib_conn_ratepart,CA1-RSC CA1,expert-intermediate,8,-0.1019,0.60804,0.54688
+pair,rho_contrib_conn_ratepart,CA1-RSC RSC,expert-naive,8,-0.104,0.36417,0.54688
+pair,rho_contrib_conn_ratepart,CA1-RSC RSC,intermediate-naive,8,0.0096,0.55428,0.74219
+pair,rho_contrib_conn_ratepart,CA1-RSC RSC,expert-intermediate,8,-0.1375,0.2599,0.25
+pair,rho_contrib_conn_ratepart,CA1-SUB CA1,expert-naive,4,-0.2524,0.32038,0.375
+pair,rho_contrib_conn_ratepart,CA1-SUB CA1,intermediate-naive,4,-0.0515,0.72177,0.875
+pair,rho_contrib_conn_ratepart,CA1-SUB CA1,expert-intermediate,4,-0.3139,0.17397,0.25
+pair,rho_contrib_conn_ratepart,CA1-SUB SUB,expert-naive,4,0.1047,0.69218,1.0
+pair,rho_contrib_conn_ratepart,CA1-SUB SUB,intermediate-naive,4,-0.0798,0.50619,0.625
+pair,rho_contrib_conn_ratepart,CA1-SUB SUB,expert-intermediate,4,0.2276,0.3514,0.375
+pair,rho_contrib_conn_ratepart,CA1-V1 CA1,expert-naive,10,-0.2123,0.19109,0.16016
+pair,rho_contrib_conn_ratepart,CA1-V1 CA1,intermediate-naive,10,-0.0166,0.8332,1.0
+pair,rho_contrib_conn_ratepart,CA1-V1 CA1,expert-intermediate,10,-0.0729,0.15872,0.10547
+pair,rho_contrib_conn_ratepart,CA1-V1 V1,expert-naive,10,-0.0375,0.17076,0.375
+pair,rho_contrib_conn_ratepart,CA1-V1 V1,intermediate-naive,10,-0.0323,0.7565,0.8457
+pair,rho_contrib_conn_ratepart,CA1-V1 V1,expert-intermediate,10,-0.0051,0.35644,0.625
+pair,rho_contrib_conn_ratepart,CA3-DG CA3,expert-naive,4,-0.0166,0.54703,1.0
+pair,rho_contrib_conn_ratepart,CA3-DG CA3,intermediate-naive,4,-0.0096,0.58018,0.875
+pair,rho_contrib_conn_ratepart,CA3-DG CA3,expert-intermediate,4,0.205,0.38103,0.625
+pair,rho_contrib_conn_ratepart,CA3-DG DG,expert-naive,4,-0.1056,0.30349,0.625
+pair,rho_contrib_conn_ratepart,CA3-DG DG,intermediate-naive,4,-0.3826,0.0663,0.125
+pair,rho_contrib_conn_ratepart,CA3-DG DG,expert-intermediate,4,0.1732,0.02863,0.125
+pair,rho_contrib_conn_ratepart,RSC-SUB RSC,expert-naive,4,-0.0002,0.82856,0.875
+pair,rho_contrib_conn_ratepart,RSC-SUB RSC,intermediate-naive,4,-0.0517,0.32576,0.375
+pair,rho_contrib_conn_ratepart,RSC-SUB RSC,expert-intermediate,4,0.0005,0.57471,0.875
+pair,rho_contrib_conn_ratepart,RSC-SUB SUB,expert-naive,4,0.2407,0.9472,0.875
+pair,rho_contrib_conn_ratepart,RSC-SUB SUB,intermediate-naive,4,-0.2633,0.25197,0.375
+pair,rho_contrib_conn_ratepart,RSC-SUB SUB,expert-intermediate,4,0.2894,0.32301,0.375
+pair,rho_contrib_conn_ratepart,V1-RSC V1,expert-naive,6,-0.0934,0.20317,0.21875
+pair,rho_contrib_conn_ratepart,V1-RSC V1,intermediate-naive,6,0.0268,0.98177,0.84375
+pair,rho_contrib_conn_ratepart,V1-RSC V1,expert-intermediate,6,-0.1421,0.3898,0.3125
+pair,rho_contrib_conn_ratepart,V1-RSC RSC,expert-naive,6,-0.0729,0.26545,0.21875
+pair,rho_contrib_conn_ratepart,V1-RSC RSC,intermediate-naive,6,0.0197,0.39584,0.6875
+pair,rho_contrib_conn_ratepart,V1-RSC RSC,expert-intermediate,6,-0.1227,0.21958,0.21875
+pair,rho_contrib_conn_tune,CA1-CA3 CA1,expert-naive,7,0.1845,0.26363,0.375
+pair,rho_contrib_conn_tune,CA1-CA3 CA1,intermediate-naive,7,0.089,0.2452,0.29688
+pair,rho_contrib_conn_tune,CA1-CA3 CA1,expert-intermediate,7,0.0175,0.63689,0.6875
+pair,rho_contrib_conn_tune,CA1-CA3 CA3,expert-naive,7,-0.1005,0.50323,0.46875
+pair,rho_contrib_conn_tune,CA1-CA3 CA3,intermediate-naive,7,0.0165,0.84578,1.0
+pair,rho_contrib_conn_tune,CA1-CA3 CA3,expert-intermediate,7,-0.0083,0.71151,0.9375
+pair,rho_contrib_conn_tune,CA1-DG CA1,expert-naive,8,0.1875,0.10423,0.14844
+pair,rho_contrib_conn_tune,CA1-DG CA1,intermediate-naive,8,0.1161,0.17096,0.19531
+pair,rho_contrib_conn_tune,CA1-DG CA1,expert-intermediate,8,-0.0218,0.75671,0.84375
+pair,rho_contrib_conn_tune,CA1-DG DG,expert-naive,8,-0.0444,0.24506,0.54688
+pair,rho_contrib_conn_tune,CA1-DG DG,intermediate-naive,8,0.1003,0.5833,0.54688
+pair,rho_contrib_conn_tune,CA1-DG DG,expert-intermediate,8,-0.3812,0.06251,0.3125
+pair,rho_contrib_conn_tune,CA1-RSC CA1,expert-naive,8,0.0361,0.86639,0.64062
+pair,rho_contrib_conn_tune,CA1-RSC CA1,intermediate-naive,8,-0.041,0.9448,0.64062
+pair,rho_contrib_conn_tune,CA1-RSC CA1,expert-intermediate,8,0.0896,0.92801,0.54688
+pair,rho_contrib_conn_tune,CA1-RSC RSC,expert-naive,8,-0.1817,0.60347,0.38281
+pair,rho_contrib_conn_tune,CA1-RSC RSC,intermediate-naive,8,-0.0216,0.50515,1.0
+pair,rho_contrib_conn_tune,CA1-RSC RSC,expert-intermediate,8,-0.022,0.33875,0.74219
+pair,rho_contrib_conn_tune,CA1-SUB CA1,expert-naive,4,0.3001,0.0956,0.125
+pair,rho_contrib_conn_tune,CA1-SUB CA1,intermediate-naive,4,0.0799,0.38201,0.625
+pair,rho_contrib_conn_tune,CA1-SUB CA1,expert-intermediate,4,0.1516,0.72997,0.875
+pair,rho_contrib_conn_tune,CA1-SUB SUB,expert-naive,4,0.1588,0.05631,0.125
+pair,rho_contrib_conn_tune,CA1-SUB SUB,intermediate-naive,4,0.2429,0.38595,0.625
+pair,rho_contrib_conn_tune,CA1-SUB SUB,expert-intermediate,4,-0.176,0.92754,0.875
+pair,rho_contrib_conn_tune,CA1-V1 CA1,expert-naive,10,0.1349,0.35158,0.27539
+pair,rho_contrib_conn_tune,CA1-V1 CA1,intermediate-naive,10,0.1319,0.25566,0.23242
+pair,rho_contrib_conn_tune,CA1-V1 CA1,expert-intermediate,10,-0.0404,0.74151,0.76953
+pair,rho_contrib_conn_tune,CA1-V1 V1,expert-naive,10,0.1109,0.6474,0.43164
+pair,rho_contrib_conn_tune,CA1-V1 V1,intermediate-naive,10,0.1457,0.30158,0.23242
+pair,rho_contrib_conn_tune,CA1-V1 V1,expert-intermediate,10,0.0199,0.49467,1.0
+pair,rho_contrib_conn_tune,CA3-DG CA3,expert-naive,4,-0.035,0.92691,0.875
+pair,rho_contrib_conn_tune,CA3-DG CA3,intermediate-naive,4,0.0436,0.54489,0.875
+pair,rho_contrib_conn_tune,CA3-DG CA3,expert-intermediate,4,0.0754,0.47452,0.875
+pair,rho_contrib_conn_tune,CA3-DG DG,expert-naive,4,-0.0395,0.68182,1.0
+pair,rho_contrib_conn_tune,CA3-DG DG,intermediate-naive,4,-0.1638,0.71998,0.875
+pair,rho_contrib_conn_tune,CA3-DG DG,expert-intermediate,4,0.1889,0.15411,0.25
+pair,rho_contrib_conn_tune,RSC-SUB RSC,expert-naive,4,-0.0423,0.61359,0.625
+pair,rho_contrib_conn_tune,RSC-SUB RSC,intermediate-naive,4,-0.2378,0.08858,0.125
+pair,rho_contrib_conn_tune,RSC-SUB RSC,expert-intermediate,4,0.1206,0.21376,0.25
+pair,rho_contrib_conn_tune,RSC-SUB SUB,expert-naive,4,0.3712,0.57589,0.625
+pair,rho_contrib_conn_tune,RSC-SUB SUB,intermediate-naive,4,0.1811,0.52556,0.625
+pair,rho_contrib_conn_tune,RSC-SUB SUB,expert-intermediate,4,0.1091,0.74344,0.875
+pair,rho_contrib_conn_tune,V1-RSC V1,expert-naive,6,0.1261,0.90134,0.84375
+pair,rho_contrib_conn_tune,V1-RSC V1,intermediate-naive,6,0.2186,0.02145,0.03125
+pair,rho_contrib_conn_tune,V1-RSC V1,expert-intermediate,6,-0.0735,0.39531,0.6875
+pair,rho_contrib_conn_tune,V1-RSC RSC,expert-naive,6,-0.1375,0.59093,0.6875
+pair,rho_contrib_conn_tune,V1-RSC RSC,intermediate-naive,6,-0.0616,0.95761,1.0
+pair,rho_contrib_conn_tune,V1-RSC RSC,expert-intermediate,6,-0.0725,0.55866,0.84375
+pair,rho_contrib_conn_tune_ratepart,CA1-CA3 CA1,expert-naive,7,0.03,0.70879,0.6875
+pair,rho_contrib_conn_tune_ratepart,CA1-CA3 CA1,intermediate-naive,7,-0.0595,0.62292,0.6875
+pair,rho_contrib_conn_tune_ratepart,CA1-CA3 CA1,expert-intermediate,7,0.0853,0.40156,0.46875
+pair,rho_contrib_conn_tune_ratepart,CA1-CA3 CA3,expert-naive,7,-0.0336,0.58753,0.9375
+pair,rho_contrib_conn_tune_ratepart,CA1-CA3 CA3,intermediate-naive,7,-0.2076,0.22268,0.21875
+pair,rho_contrib_conn_tune_ratepart,CA1-CA3 CA3,expert-intermediate,7,0.174,0.85528,0.57812
+pair,rho_contrib_conn_tune_ratepart,CA1-DG CA1,expert-naive,8,0.084,0.36362,0.46094
+pair,rho_contrib_conn_tune_ratepart,CA1-DG CA1,intermediate-naive,8,0.0066,0.3816,0.54688
+pair,rho_contrib_conn_tune_ratepart,CA1-DG CA1,expert-intermediate,8,0.016,0.96753,0.94531
+pair,rho_contrib_conn_tune_ratepart,CA1-DG DG,expert-naive,8,-0.1713,0.1475,0.3125
+pair,rho_contrib_conn_tune_ratepart,CA1-DG DG,intermediate-naive,8,-0.0497,0.23582,0.38281
+pair,rho_contrib_conn_tune_ratepart,CA1-DG DG,expert-intermediate,8,-0.2027,0.14109,0.19531
+pair,rho_contrib_conn_tune_ratepart,CA1-RSC CA1,expert-naive,8,0.0721,0.3642,0.74219
+pair,rho_contrib_conn_tune_ratepart,CA1-RSC CA1,intermediate-naive,8,-0.1695,0.137,0.10938
+pair,rho_contrib_conn_tune_ratepart,CA1-RSC CA1,expert-intermediate,8,0.0147,0.76119,1.0
+pair,rho_contrib_conn_tune_ratepart,CA1-RSC RSC,expert-naive,8,-0.1288,0.6775,0.54688
+pair,rho_contrib_conn_tune_ratepart,CA1-RSC RSC,intermediate-naive,8,0.0406,0.36468,0.74219
+pair,rho_contrib_conn_tune_ratepart,CA1-RSC RSC,expert-intermediate,8,-0.0646,0.28909,0.25
+pair,rho_contrib_conn_tune_ratepart,CA1-SUB CA1,expert-naive,4,0.0001,0.77282,0.875
+pair,rho_contrib_conn_tune_ratepart,CA1-SUB CA1,intermediate-naive,4,0.0171,0.95387,1.0
+pair,rho_contrib_conn_tune_ratepart,CA1-SUB CA1,expert-intermediate,4,0.053,0.52067,0.875
+pair,rho_contrib_conn_tune_ratepart,CA1-SUB SUB,expert-naive,4,0.1236,0.15939,0.25
+pair,rho_contrib_conn_tune_ratepart,CA1-SUB SUB,intermediate-naive,4,0.256,0.38585,0.375
+pair,rho_contrib_conn_tune_ratepart,CA1-SUB SUB,expert-intermediate,4,-0.1324,0.82493,0.875
+pair,rho_contrib_conn_tune_ratepart,CA1-V1 CA1,expert-naive,10,0.0229,0.36693,0.43164
+pair,rho_contrib_conn_tune_ratepart,CA1-V1 CA1,intermediate-naive,10,0.1194,0.04101,0.04883
+pair,rho_contrib_conn_tune_ratepart,CA1-V1 CA1,expert-intermediate,10,-0.0307,0.74641,0.76953
+pair,rho_contrib_conn_tune_ratepart,CA1-V1 V1,expert-naive,10,0.0396,0.83065,0.375
+pair,rho_contrib_conn_tune_ratepart,CA1-V1 V1,intermediate-naive,10,0.154,0.1116,0.13086
+pair,rho_contrib_conn_tune_ratepart,CA1-V1 V1,expert-intermediate,10,-0.0143,0.29792,0.49219
+pair,rho_contrib_conn_tune_ratepart,CA3-DG CA3,expert-naive,4,-0.0649,0.37412,0.375
+pair,rho_contrib_conn_tune_ratepart,CA3-DG CA3,intermediate-naive,4,-0.2692,0.25084,0.25
+pair,rho_contrib_conn_tune_ratepart,CA3-DG CA3,expert-intermediate,4,0.2043,0.18681,0.25
+pair,rho_contrib_conn_tune_ratepart,CA3-DG DG,expert-naive,4,-0.2146,0.70625,0.875
+pair,rho_contrib_conn_tune_ratepart,CA3-DG DG,intermediate-naive,4,-0.2341,0.15362,0.25
+pair,rho_contrib_conn_tune_ratepart,CA3-DG DG,expert-intermediate,4,0.2386,0.16579,0.25
+pair,rho_contrib_conn_tune_ratepart,RSC-SUB RSC,expert-naive,4,-0.021,0.61223,0.625
+pair,rho_contrib_conn_tune_ratepart,RSC-SUB RSC,intermediate-naive,4,-0.0708,0.26049,0.25
+pair,rho_contrib_conn_tune_ratepart,RSC-SUB RSC,expert-intermediate,4,0.0208,0.42893,0.625
+pair,rho_contrib_conn_tune_ratepart,RSC-SUB SUB,expert-naive,4,0.3504,0.67131,0.875
+pair,rho_contrib_conn_tune_ratepart,RSC-SUB SUB,intermediate-naive,4,0.1335,0.535,0.625
+pair,rho_contrib_conn_tune_ratepart,RSC-SUB SUB,expert-intermediate,4,-0.0654,0.74102,0.875
+pair,rho_contrib_conn_tune_ratepart,V1-RSC V1,expert-naive,6,-0.0363,0.50452,0.6875
+pair,rho_contrib_conn_tune_ratepart,V1-RSC V1,intermediate-naive,6,0.1488,0.08363,0.03125
+pair,rho_contrib_conn_tune_ratepart,V1-RSC V1,expert-intermediate,6,-0.1706,0.19219,0.15625
+pair,rho_contrib_conn_tune_ratepart,V1-RSC RSC,expert-naive,6,-0.1525,0.07443,0.09375
+pair,rho_contrib_conn_tune_ratepart,V1-RSC RSC,intermediate-naive,6,-0.0309,0.40161,0.84375
+pair,rho_contrib_conn_tune_ratepart,V1-RSC RSC,expert-intermediate,6,-0.1025,0.17703,0.21875
+pooled,rho_pooled,CA1,expert-naive,12,-0.0318,0.49649,0.7334
+pooled,rho_pooled,CA1,intermediate-naive,12,0.04,0.1646,0.17627
+pooled,rho_pooled,CA1,expert-intermediate,12,-0.0473,0.17378,0.20361
+pooled,rho_pooled,CA3,expert-naive,7,-0.0569,0.79097,1.0
+pooled,rho_pooled,CA3,intermediate-naive,7,-0.0231,0.9226,1.0
+pooled,rho_pooled,CA3,expert-intermediate,7,-0.0735,0.82282,0.9375
+pooled,rho_pooled,DG,expert-naive,8,-0.1715,0.26594,0.3125
+pooled,rho_pooled,DG,intermediate-naive,8,-0.1818,0.77282,0.74219
+pooled,rho_pooled,DG,expert-intermediate,8,-0.1094,0.31216,0.25
+pooled,rho_pooled,SUB,expert-naive,4,-0.1114,0.95587,1.0
+pooled,rho_pooled,SUB,intermediate-naive,4,0.0304,0.80365,0.875
+pooled,rho_pooled,SUB,expert-intermediate,4,-0.076,0.96897,1.0
+pooled,rho_pooled,RSC,expert-naive,8,-0.2104,0.29295,0.25
+pooled,rho_pooled,RSC,intermediate-naive,8,-0.0527,0.88862,0.94531
+pooled,rho_pooled,RSC,expert-intermediate,8,-0.1545,0.34391,0.3125
+pooled,rho_pooled,V1,expert-naive,10,0.0477,0.29497,0.625
+pooled,rho_pooled,V1,intermediate-naive,10,-0.0647,0.74984,0.69531
+pooled,rho_pooled,V1,expert-intermediate,10,0.0489,0.45053,1.0
+pooled,rho_pooled_ratepart,CA1,expert-naive,12,-0.0697,0.54969,0.51855
+pooled,rho_pooled_ratepart,CA1,intermediate-naive,12,0.0272,0.41974,0.62207
+pooled,rho_pooled_ratepart,CA1,expert-intermediate,12,-0.0875,0.06506,0.03418
+pooled,rho_pooled_ratepart,CA3,expert-naive,7,-0.0493,0.71941,0.9375
+pooled,rho_pooled_ratepart,CA3,intermediate-naive,7,-0.0062,0.70797,0.8125
+pooled,rho_pooled_ratepart,CA3,expert-intermediate,7,0.2564,0.48653,0.57812
+pooled,rho_pooled_ratepart,DG,expert-naive,8,-0.4905,0.08844,0.10938
+pooled,rho_pooled_ratepart,DG,intermediate-naive,8,-0.3895,0.02997,0.03906
+pooled,rho_pooled_ratepart,DG,expert-intermediate,8,0.0371,0.8156,0.94531
+pooled,rho_pooled_ratepart,SUB,expert-naive,4,-0.1001,0.94534,1.0
+pooled,rho_pooled_ratepart,SUB,intermediate-naive,4,0.0291,0.52151,1.0
+pooled,rho_pooled_ratepart,SUB,expert-intermediate,4,0.2633,0.43448,0.375
+pooled,rho_pooled_ratepart,RSC,expert-naive,8,-0.124,0.33757,0.46094
+pooled,rho_pooled_ratepart,RSC,intermediate-naive,8,0.002,0.77179,0.94531
+pooled,rho_pooled_ratepart,RSC,expert-intermediate,8,-0.1476,0.36301,0.3125
+pooled,rho_pooled_ratepart,V1,expert-naive,10,-0.0281,0.17002,0.13086
+pooled,rho_pooled_ratepart,V1,intermediate-naive,10,-0.0386,0.53842,0.55664
+pooled,rho_pooled_ratepart,V1,expert-intermediate,10,-0.016,0.35688,0.625
+pooled,rho_pooled_tune,CA1,expert-naive,12,0.0913,0.26382,0.38037
+pooled,rho_pooled_tune,CA1,intermediate-naive,12,0.0849,0.21189,0.2334
+pooled,rho_pooled_tune,CA1,expert-intermediate,12,-0.0707,0.60908,0.62207
+pooled,rho_pooled_tune,CA3,expert-naive,7,-0.1004,0.41023,0.29688
+pooled,rho_pooled_tune,CA3,intermediate-naive,7,0.0165,0.86502,0.9375
+pooled,rho_pooled_tune,CA3,expert-intermediate,7,-0.0248,0.60647,0.57812
+pooled,rho_pooled_tune,DG,expert-naive,8,-0.0694,0.2653,0.38281
+pooled,rho_pooled_tune,DG,intermediate-naive,8,0.0488,0.55023,0.64062
+pooled,rho_pooled_tune,DG,expert-intermediate,8,-0.1744,0.11088,0.19531
+pooled,rho_pooled_tune,SUB,expert-naive,4,0.36,0.3251,0.375
+pooled,rho_pooled_tune,SUB,intermediate-naive,4,0.1151,0.28463,0.375
+pooled,rho_pooled_tune,SUB,expert-intermediate,4,0.05,0.71247,0.75
+pooled,rho_pooled_tune,RSC,expert-naive,8,-0.1492,0.90702,0.3125
+pooled,rho_pooled_tune,RSC,intermediate-naive,8,-0.0792,0.64371,0.74219
+pooled,rho_pooled_tune,RSC,expert-intermediate,8,-0.0128,0.45829,0.84375
+pooled,rho_pooled_tune,V1,expert-naive,10,0.1003,0.91752,0.92188
+pooled,rho_pooled_tune,V1,intermediate-naive,10,0.0949,0.33537,0.23242
+pooled,rho_pooled_tune,V1,expert-intermediate,10,0.0695,0.47346,1.0
+pooled,rho_pooled_tune_ratepart,CA1,expert-naive,12,0.0014,0.61164,0.96973
+pooled,rho_pooled_tune_ratepart,CA1,intermediate-naive,12,0.0666,0.57995,0.67725
+pooled,rho_pooled_tune_ratepart,CA1,expert-intermediate,12,-0.04,0.31083,0.33936
+pooled,rho_pooled_tune_ratepart,CA3,expert-naive,7,-0.0762,0.5079,0.8125
+pooled,rho_pooled_tune_ratepart,CA3,intermediate-naive,7,-0.2207,0.17513,0.21875
+pooled,rho_pooled_tune_ratepart,CA3,expert-intermediate,7,0.1445,0.84047,0.57812
+pooled,rho_pooled_tune_ratepart,DG,expert-naive,8,-0.2289,0.13822,0.19531
+pooled,rho_pooled_tune_ratepart,DG,intermediate-naive,8,-0.0887,0.22245,0.38281
+pooled,rho_pooled_tune_ratepart,DG,expert-intermediate,8,-0.1499,0.19431,0.25
+pooled,rho_pooled_tune_ratepart,SUB,expert-naive,4,0.1689,0.48531,0.625
+pooled,rho_pooled_tune_ratepart,SUB,intermediate-naive,4,0.075,0.29231,0.375
+pooled,rho_pooled_tune_ratepart,SUB,expert-intermediate,4,-0.0818,0.8774,1.0
+pooled,rho_pooled_tune_ratepart,RSC,expert-naive,8,-0.1129,0.51165,0.3125
+pooled,rho_pooled_tune_ratepart,RSC,intermediate-naive,8,-0.037,0.65576,0.94531
+pooled,rho_pooled_tune_ratepart,RSC,expert-intermediate,8,-0.0612,0.31305,0.38281
+pooled,rho_pooled_tune_ratepart,V1,expert-naive,10,0.0878,0.6311,0.92188
+pooled,rho_pooled_tune_ratepart,V1,intermediate-naive,10,0.107,0.10304,0.10547
+pooled,rho_pooled_tune_ratepart,V1,expert-intermediate,10,-0.0256,0.28283,0.43164
+overlap,rho_conn,CA1,expert-naive,11,-0.1285,0.61347,0.89844
+overlap,rho_conn,CA1,intermediate-naive,11,-0.0723,0.02181,0.01367
+overlap,rho_conn,CA1,expert-intermediate,11,0.0572,0.57935,0.6377
+overlap,rho_conn,CA3,expert-naive,4,-0.107,0.39269,0.625
+overlap,rho_conn,CA3,intermediate-naive,4,-0.1635,0.29809,0.625
+overlap,rho_conn,CA3,expert-intermediate,4,0.1653,0.28772,0.375
+overlap,rho_conn,DG,expert-naive,4,0.0463,0.7489,0.875
+overlap,rho_conn,DG,intermediate-naive,4,0.0604,0.93547,1.0
+overlap,rho_conn,DG,expert-intermediate,4,-0.1998,0.70859,0.875
+overlap,rho_conn,SUB,expert-naive,4,0.0371,0.74476,1.0
+overlap,rho_conn,SUB,intermediate-naive,4,0.0385,0.59571,0.875
+overlap,rho_conn,SUB,expert-intermediate,4,0.1409,0.61966,1.0
+overlap,rho_conn,RSC,expert-naive,6,-0.2931,0.06902,0.09375
+overlap,rho_conn,RSC,intermediate-naive,6,-0.308,0.49816,0.5625
+overlap,rho_conn,RSC,expert-intermediate,6,0.0014,0.61796,1.0
+overlap,rho_conn,V1,expert-naive,6,0.0986,0.97741,1.0
+overlap,rho_conn,V1,intermediate-naive,6,-0.2388,0.93125,1.0
+overlap,rho_conn,V1,expert-intermediate,6,0.0306,0.9287,1.0
+overlap,rho_resid,CA1,expert-naive,11,-0.0328,0.77783,0.83105
+overlap,rho_resid,CA1,intermediate-naive,11,0.0919,0.49681,0.20605
+overlap,rho_resid,CA1,expert-intermediate,11,-0.0032,0.403,0.51953
+overlap,rho_resid,CA3,expert-naive,4,-0.07,0.65779,0.625
+overlap,rho_resid,CA3,intermediate-naive,4,-0.1964,0.463,0.625
+overlap,rho_resid,CA3,expert-intermediate,4,0.1958,0.43472,0.625
+overlap,rho_resid,DG,expert-naive,4,0.0947,0.96936,1.0
+overlap,rho_resid,DG,intermediate-naive,4,0.2436,0.82503,0.875
+overlap,rho_resid,DG,expert-intermediate,4,-0.1264,0.71911,0.875
+overlap,rho_resid,SUB,expert-naive,4,-0.1256,0.20497,0.25
+overlap,rho_resid,SUB,intermediate-naive,4,-0.0576,0.70957,0.875
+overlap,rho_resid,SUB,expert-intermediate,4,0.0231,0.58778,1.0
+overlap,rho_resid,RSC,expert-naive,6,-0.3341,0.12424,0.15625
+overlap,rho_resid,RSC,intermediate-naive,6,-0.3126,0.65977,0.84375
+overlap,rho_resid,RSC,expert-intermediate,6,-0.1395,0.23464,0.3125
+overlap,rho_resid,V1,expert-naive,6,0.0505,0.70439,0.5625
+overlap,rho_resid,V1,intermediate-naive,6,0.2366,0.20347,0.21875
+overlap,rho_resid,V1,expert-intermediate,6,-0.2345,0.32361,0.4375
+overlap,jaccard_excess,CA1,expert-naive,11,-0.0081,0.39514,0.49609
+overlap,jaccard_excess,CA1,intermediate-naive,11,-0.0595,0.01637,0.01953
+overlap,jaccard_excess,CA1,expert-intermediate,11,0.0633,0.23331,0.32031
+overlap,jaccard_excess,CA3,expert-naive,4,0.0,0.71173,
+overlap,jaccard_excess,CA3,intermediate-naive,4,0.0,0.91413,
+overlap,jaccard_excess,CA3,expert-intermediate,4,0.0,0.7162,
+overlap,jaccard_excess,DG,expert-naive,4,-0.0778,0.35881,0.5
+overlap,jaccard_excess,DG,intermediate-naive,4,-0.1414,0.37812,0.5
+overlap,jaccard_excess,DG,expert-intermediate,4,-0.0495,0.59381,0.75
+overlap,jaccard_excess,SUB,expert-naive,4,-0.1483,0.21448,0.25
+overlap,jaccard_excess,SUB,intermediate-naive,4,-0.0114,0.59843,1.0
+overlap,jaccard_excess,SUB,expert-intermediate,4,0.0,0.391,
+overlap,jaccard_excess,RSC,expert-naive,6,-0.0543,0.37804,0.4375
+overlap,jaccard_excess,RSC,intermediate-naive,6,-0.0998,0.61074,0.5625
+overlap,jaccard_excess,RSC,expert-intermediate,6,0.0261,0.88521,0.5625
+overlap,jaccard_excess,V1,expert-naive,6,-0.0258,0.11694,0.25
+overlap,jaccard_excess,V1,intermediate-naive,6,-0.121,0.52037,0.625
+overlap,jaccard_excess,V1,expert-intermediate,6,0.0,0.97055,1.0

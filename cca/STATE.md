@@ -181,7 +181,9 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    **CA1-V1 V1 side** (+0.26/+0.17, W p = 0.002/0.037), **V1-RSC RSC side** (+0.31/+0.41,
    W p = 0.031). The CA1-side link never survives the rate partial, and the area-intrinsic
    `contrib` control is n.s. nearly everywhere — communication-specific, not "loud units".
-   Epoch-resolved link is roughly stable (descriptive; CA1-CA3 CA3-side grows with experience).
+   Epoch-resolved stability is now TESTED (2026-08-30): 3/318 (FS-excl) and 7/318 (FS-incl)
+   epoch contrasts star — below chance; only cross-FS repeat is pooled-DG reliability
+   naive→intermediate (weak). The links are standing properties, not learning products.
    **Extensions (2026-08-30):** (a) **tuning dissociates from reliability** — contribution vs
    spatial tuning (z vs the export's shuffle null) is broadly positive raw but has NO FS-robust
    rate-partialled survivor (FS-excl leaves CA1-RSC RSC / CA1-DG DG; both die FS-incl): what is

@@ -230,3 +230,14 @@ a shared backbone of multi-subspace units, with genuine partner-specific reorder
 FS-excl-only; CA1 flips significantly NEGATIVE with FS units in (−0.137, W p = 0.0093) —
 single-FS, not headlined. Same verdict as per-pair: the tuning link is rate-carried; reliability
 (RSC + V1 robust) is the property that separates contributing units.
+
+**Epoch contrasts** (2026-08-30, evening; `analyze_contrib_epochs.py`, figures
+`HCV1_contribepochs_*`): within-animal Δ Fisher-z across naive (first 10 running trials) /
+intermediate (10 at LP) / expert (10 after LP) for all 11 metrics of this thread — per-pair
+rel/tune, pooled rel/tune, overlap ρ_conn/ρ_resid/Jaccard. **3/318 (FS-excl) and 7/318 (FS-incl)
+Wilcoxon-starred contrasts, BELOW the ~16 expected by chance at 5 %; the only cross-FS repeat is
+pooled DG reliability dropping naive→intermediate (Δz ≈ −0.4, W p = 0.039 both FS, no
+expert−naive echo) — a weak candidate, not a finding. Verdict: the contribution × spatial-property
+links and the cross-partner overlap are STABLE across learning epochs — a standing property of
+the circuit, not something that develops.** Caveat: n = 4–12/cell and naive fits rest on the
+fewest running bins, so these nulls are weak evidence of stability, not proof.

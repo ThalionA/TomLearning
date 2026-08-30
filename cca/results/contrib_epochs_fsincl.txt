@@ -1,0 +1,131 @@
+epoch contrasts (FS incl); naive = first 10 running trials, intermediate = 10 ending at LP, expert = 10 after LP
+
+[pair: rho_contrib_conn]  (Δ in Fisher-z units)
+  CA1-CA3 CA1    | exp-nai: n=7 med=+0.027 t 0.287 W 0.578 | int-nai: n=7 med=+0.134 t 0.188 W 0.297 | exp-int: n=7 med=+0.022 t 0.783 W 0.938
+  CA1-CA3 CA3    | exp-nai: n=7 med=+0.008 t 0.635 W 0.688 | int-nai: n=7 med=-0.023 t 0.64 W 0.938 | exp-int: n=7 med=-0.073 t 0.768 W 0.688
+  CA1-DG CA1     | exp-nai: n=8 med=+0.105 t 0.144 W 0.195 | int-nai: n=8 med=-0.013 t 0.478 W 0.844 | exp-int: n=8 med=+0.125 t 0.364 W 0.25
+  CA1-DG DG      | exp-nai: n=8 med=-0.158 t 0.266 W 0.383 | int-nai: n=8 med=-0.092 t 0.831 W 0.742 | exp-int: n=8 med=-0.111 t 0.194 W 0.25
+  CA1-RSC CA1    | exp-nai: n=8 med=+0.088 t 0.383 W 0.547 | int-nai: n=8 med=+0.044 t 0.228 W 0.383 | exp-int: n=8 med=-0.099 t 0.938 W 0.844
+  CA1-RSC RSC    | exp-nai: n=8 med=-0.220 t 0.192 W 0.25 | int-nai: n=8 med=-0.002 t 0.782 W 1 | exp-int: n=8 med=-0.176 t 0.219 W 0.195
+  CA1-SUB CA1    | exp-nai: n=4 med=+0.078 t 0.349 W 0.625 | int-nai: n=4 med=+0.250 t 0.351 W 0.375 | exp-int: n=4 med=-0.129 t 0.582 W 0.625
+  CA1-SUB SUB    | exp-nai: n=4 med=+0.046 t 0.95 W 0.875 | int-nai: n=4 med=-0.058 t 0.826 W 0.875 | exp-int: n=4 med=-0.115 t 0.824 W 1
+  CA1-V1 CA1     | exp-nai: n=10 med=-0.060 t 0.234 W 0.275 | int-nai: n=10 med=+0.140 t 0.315 W 0.492 | exp-int: n=10 med=-0.144 t 0.16 W 0.0645
+  CA1-V1 V1      | exp-nai: n=10 med=+0.074 t 0.433 W 0.77 | int-nai: n=10 med=-0.009 t 0.716 W 1 | exp-int: n=10 med=+0.047 t 0.467 W 1
+  CA3-DG CA3     | exp-nai: n=4 med=-0.016 t 0.482 W 1 | int-nai: n=4 med=+0.172 t 0.889 W 0.875 | exp-int: n=4 med=+0.088 t 0.622 W 0.875
+  CA3-DG DG      | exp-nai: n=4 med=+0.020 t 0.955 W 1 | int-nai: n=4 med=-0.108 t 0.136 W 0.125 | exp-int: n=4 med=+0.068 t 0.366 W 0.375
+  RSC-SUB RSC    | exp-nai: n=4 med=-0.042 t 0.642 W 0.625 | int-nai: n=4 med=-0.187 t 0.125 W 0.125 | exp-int: n=4 med=+0.024 t 0.492 W 0.625
+  RSC-SUB SUB    | exp-nai: n=4 med=+0.089 t 0.813 W 1 | int-nai: n=4 med=-0.122 t 0.43 W 0.625 | exp-int: n=4 med=+0.060 t 0.724 W 0.875
+  V1-RSC V1      | exp-nai: n=6 med=+0.027 t 0.518 W 0.844 | int-nai: n=6 med=+0.009 t 0.675 W 0.688 | exp-int: n=6 med=-0.071 t 0.525 W 0.688
+  V1-RSC RSC     | exp-nai: n=6 med=-0.125 t 0.404 W 0.438 | int-nai: n=6 med=+0.033 t 0.518 W 0.688 | exp-int: n=6 med=-0.221 t 0.219 W 0.312
+
+[pair: rho_contrib_conn_ratepart]  (Δ in Fisher-z units)
+  CA1-CA3 CA1    | exp-nai: n=7 med=+0.180 t 0.214 W 0.375 | int-nai: n=7 med=+0.152 t 0.212 W 0.297 | exp-int: n=7 med=-0.011 t 0.782 W 0.578
+  CA1-CA3 CA3    | exp-nai: n=7 med=+0.026 t 0.605 W 0.469 | int-nai: n=7 med=-0.006 t 0.802 W 0.938 | exp-int: n=7 med=-0.107 t 0.541 W 0.688
+  CA1-DG CA1     | exp-nai: n=8 med=+0.046 t 0.527 W 0.641 | int-nai: n=8 med=-0.025 t 0.735 W 1 | exp-int: n=8 med=+0.110 t 0.553 W 0.312
+  CA1-DG DG      | exp-nai: n=8 med=-0.539 t 0.135 W 0.148 | int-nai: n=8 med=-0.337 t 0.0803 W 0.109 | exp-int: n=8 med=-0.172 t 0.449 W 0.547
+  CA1-RSC CA1    | exp-nai: n=8 med=+0.106 t 0.944 W 1 | int-nai: n=8 med=-0.032 t 0.48 W 0.742 | exp-int: n=8 med=-0.102 t 0.608 W 0.547
+  CA1-RSC RSC    | exp-nai: n=8 med=-0.104 t 0.364 W 0.547 | int-nai: n=8 med=+0.010 t 0.554 W 0.742 | exp-int: n=8 med=-0.137 t 0.26 W 0.25
+  CA1-SUB CA1    | exp-nai: n=4 med=-0.252 t 0.32 W 0.375 | int-nai: n=4 med=-0.051 t 0.722 W 0.875 | exp-int: n=4 med=-0.314 t 0.174 W 0.25
+  CA1-SUB SUB    | exp-nai: n=4 med=+0.105 t 0.692 W 1 | int-nai: n=4 med=-0.080 t 0.506 W 0.625 | exp-int: n=4 med=+0.228 t 0.351 W 0.375
+  CA1-V1 CA1     | exp-nai: n=10 med=-0.212 t 0.191 W 0.16 | int-nai: n=10 med=-0.017 t 0.833 W 1 | exp-int: n=10 med=-0.073 t 0.159 W 0.105
+  CA1-V1 V1      | exp-nai: n=10 med=-0.037 t 0.171 W 0.375 | int-nai: n=10 med=-0.032 t 0.757 W 0.846 | exp-int: n=10 med=-0.005 t 0.356 W 0.625
+  CA3-DG CA3     | exp-nai: n=4 med=-0.017 t 0.547 W 1 | int-nai: n=4 med=-0.010 t 0.58 W 0.875 | exp-int: n=4 med=+0.205 t 0.381 W 0.625
+  CA3-DG DG      | exp-nai: n=4 med=-0.106 t 0.303 W 0.625 | int-nai: n=4 med=-0.383 t 0.0663 W 0.125 | exp-int: n=4 med=+0.173 t*0.0286 W 0.125
+  RSC-SUB RSC    | exp-nai: n=4 med=-0.000 t 0.829 W 0.875 | int-nai: n=4 med=-0.052 t 0.326 W 0.375 | exp-int: n=4 med=+0.000 t 0.575 W 0.875
+  RSC-SUB SUB    | exp-nai: n=4 med=+0.241 t 0.947 W 0.875 | int-nai: n=4 med=-0.263 t 0.252 W 0.375 | exp-int: n=4 med=+0.289 t 0.323 W 0.375
+  V1-RSC V1      | exp-nai: n=6 med=-0.093 t 0.203 W 0.219 | int-nai: n=6 med=+0.027 t 0.982 W 0.844 | exp-int: n=6 med=-0.142 t 0.39 W 0.312
+  V1-RSC RSC     | exp-nai: n=6 med=-0.073 t 0.265 W 0.219 | int-nai: n=6 med=+0.020 t 0.396 W 0.688 | exp-int: n=6 med=-0.123 t 0.22 W 0.219
+
+[pair: rho_contrib_conn_tune]  (Δ in Fisher-z units)
+  CA1-CA3 CA1    | exp-nai: n=7 med=+0.184 t 0.264 W 0.375 | int-nai: n=7 med=+0.089 t 0.245 W 0.297 | exp-int: n=7 med=+0.018 t 0.637 W 0.688
+  CA1-CA3 CA3    | exp-nai: n=7 med=-0.100 t 0.503 W 0.469 | int-nai: n=7 med=+0.016 t 0.846 W 1 | exp-int: n=7 med=-0.008 t 0.712 W 0.938
+  CA1-DG CA1     | exp-nai: n=8 med=+0.188 t 0.104 W 0.148 | int-nai: n=8 med=+0.116 t 0.171 W 0.195 | exp-int: n=8 med=-0.022 t 0.757 W 0.844
+  CA1-DG DG      | exp-nai: n=8 med=-0.044 t 0.245 W 0.547 | int-nai: n=8 med=+0.100 t 0.583 W 0.547 | exp-int: n=8 med=-0.381 t 0.0625 W 0.312
+  CA1-RSC CA1    | exp-nai: n=8 med=+0.036 t 0.866 W 0.641 | int-nai: n=8 med=-0.041 t 0.945 W 0.641 | exp-int: n=8 med=+0.090 t 0.928 W 0.547
+  CA1-RSC RSC    | exp-nai: n=8 med=-0.182 t 0.603 W 0.383 | int-nai: n=8 med=-0.022 t 0.505 W 1 | exp-int: n=8 med=-0.022 t 0.339 W 0.742
+  CA1-SUB CA1    | exp-nai: n=4 med=+0.300 t 0.0956 W 0.125 | int-nai: n=4 med=+0.080 t 0.382 W 0.625 | exp-int: n=4 med=+0.152 t 0.73 W 0.875
+  CA1-SUB SUB    | exp-nai: n=4 med=+0.159 t 0.0563 W 0.125 | int-nai: n=4 med=+0.243 t 0.386 W 0.625 | exp-int: n=4 med=-0.176 t 0.928 W 0.875
+  CA1-V1 CA1     | exp-nai: n=10 med=+0.135 t 0.352 W 0.275 | int-nai: n=10 med=+0.132 t 0.256 W 0.232 | exp-int: n=10 med=-0.040 t 0.742 W 0.77
+  CA1-V1 V1      | exp-nai: n=10 med=+0.111 t 0.647 W 0.432 | int-nai: n=10 med=+0.146 t 0.302 W 0.232 | exp-int: n=10 med=+0.020 t 0.495 W 1
+  CA3-DG CA3     | exp-nai: n=4 med=-0.035 t 0.927 W 0.875 | int-nai: n=4 med=+0.044 t 0.545 W 0.875 | exp-int: n=4 med=+0.075 t 0.475 W 0.875
+  CA3-DG DG      | exp-nai: n=4 med=-0.039 t 0.682 W 1 | int-nai: n=4 med=-0.164 t 0.72 W 0.875 | exp-int: n=4 med=+0.189 t 0.154 W 0.25
+  RSC-SUB RSC    | exp-nai: n=4 med=-0.042 t 0.614 W 0.625 | int-nai: n=4 med=-0.238 t 0.0886 W 0.125 | exp-int: n=4 med=+0.121 t 0.214 W 0.25
+  RSC-SUB SUB    | exp-nai: n=4 med=+0.371 t 0.576 W 0.625 | int-nai: n=4 med=+0.181 t 0.526 W 0.625 | exp-int: n=4 med=+0.109 t 0.743 W 0.875
+  V1-RSC V1      | exp-nai: n=6 med=+0.126 t 0.901 W 0.844 | int-nai: n=6 med=+0.219 t*0.0215 W*0.0312 | exp-int: n=6 med=-0.073 t 0.395 W 0.688
+  V1-RSC RSC     | exp-nai: n=6 med=-0.137 t 0.591 W 0.688 | int-nai: n=6 med=-0.062 t 0.958 W 1 | exp-int: n=6 med=-0.073 t 0.559 W 0.844
+
+[pair: rho_contrib_conn_tune_ratepart]  (Δ in Fisher-z units)
+  CA1-CA3 CA1    | exp-nai: n=7 med=+0.030 t 0.709 W 0.688 | int-nai: n=7 med=-0.060 t 0.623 W 0.688 | exp-int: n=7 med=+0.085 t 0.402 W 0.469
+  CA1-CA3 CA3    | exp-nai: n=7 med=-0.034 t 0.588 W 0.938 | int-nai: n=7 med=-0.208 t 0.223 W 0.219 | exp-int: n=7 med=+0.174 t 0.855 W 0.578
+  CA1-DG CA1     | exp-nai: n=8 med=+0.084 t 0.364 W 0.461 | int-nai: n=8 med=+0.007 t 0.382 W 0.547 | exp-int: n=8 med=+0.016 t 0.968 W 0.945
+  CA1-DG DG      | exp-nai: n=8 med=-0.171 t 0.147 W 0.312 | int-nai: n=8 med=-0.050 t 0.236 W 0.383 | exp-int: n=8 med=-0.203 t 0.141 W 0.195
+  CA1-RSC CA1    | exp-nai: n=8 med=+0.072 t 0.364 W 0.742 | int-nai: n=8 med=-0.170 t 0.137 W 0.109 | exp-int: n=8 med=+0.015 t 0.761 W 1
+  CA1-RSC RSC    | exp-nai: n=8 med=-0.129 t 0.677 W 0.547 | int-nai: n=8 med=+0.041 t 0.365 W 0.742 | exp-int: n=8 med=-0.065 t 0.289 W 0.25
+  CA1-SUB CA1    | exp-nai: n=4 med=+0.000 t 0.773 W 0.875 | int-nai: n=4 med=+0.017 t 0.954 W 1 | exp-int: n=4 med=+0.053 t 0.521 W 0.875
+  CA1-SUB SUB    | exp-nai: n=4 med=+0.124 t 0.159 W 0.25 | int-nai: n=4 med=+0.256 t 0.386 W 0.375 | exp-int: n=4 med=-0.132 t 0.825 W 0.875
+  CA1-V1 CA1     | exp-nai: n=10 med=+0.023 t 0.367 W 0.432 | int-nai: n=10 med=+0.119 t*0.041 W*0.0488 | exp-int: n=10 med=-0.031 t 0.746 W 0.77
+  CA1-V1 V1      | exp-nai: n=10 med=+0.040 t 0.831 W 0.375 | int-nai: n=10 med=+0.154 t 0.112 W 0.131 | exp-int: n=10 med=-0.014 t 0.298 W 0.492
+  CA3-DG CA3     | exp-nai: n=4 med=-0.065 t 0.374 W 0.375 | int-nai: n=4 med=-0.269 t 0.251 W 0.25 | exp-int: n=4 med=+0.204 t 0.187 W 0.25
+  CA3-DG DG      | exp-nai: n=4 med=-0.215 t 0.706 W 0.875 | int-nai: n=4 med=-0.234 t 0.154 W 0.25 | exp-int: n=4 med=+0.239 t 0.166 W 0.25
+  RSC-SUB RSC    | exp-nai: n=4 med=-0.021 t 0.612 W 0.625 | int-nai: n=4 med=-0.071 t 0.26 W 0.25 | exp-int: n=4 med=+0.021 t 0.429 W 0.625
+  RSC-SUB SUB    | exp-nai: n=4 med=+0.350 t 0.671 W 0.875 | int-nai: n=4 med=+0.134 t 0.535 W 0.625 | exp-int: n=4 med=-0.065 t 0.741 W 0.875
+  V1-RSC V1      | exp-nai: n=6 med=-0.036 t 0.505 W 0.688 | int-nai: n=6 med=+0.149 t 0.0836 W*0.0312 | exp-int: n=6 med=-0.171 t 0.192 W 0.156
+  V1-RSC RSC     | exp-nai: n=6 med=-0.152 t 0.0744 W 0.0938 | int-nai: n=6 med=-0.031 t 0.402 W 0.844 | exp-int: n=6 med=-0.103 t 0.177 W 0.219
+
+[pooled: rho_pooled]  (Δ in Fisher-z units)
+  CA1            | exp-nai: n=12 med=-0.032 t 0.496 W 0.733 | int-nai: n=12 med=+0.040 t 0.165 W 0.176 | exp-int: n=12 med=-0.047 t 0.174 W 0.204
+  CA3            | exp-nai: n=7 med=-0.057 t 0.791 W 1 | int-nai: n=7 med=-0.023 t 0.923 W 1 | exp-int: n=7 med=-0.073 t 0.823 W 0.938
+  DG             | exp-nai: n=8 med=-0.172 t 0.266 W 0.312 | int-nai: n=8 med=-0.182 t 0.773 W 0.742 | exp-int: n=8 med=-0.109 t 0.312 W 0.25
+  SUB            | exp-nai: n=4 med=-0.111 t 0.956 W 1 | int-nai: n=4 med=+0.030 t 0.804 W 0.875 | exp-int: n=4 med=-0.076 t 0.969 W 1
+  RSC            | exp-nai: n=8 med=-0.210 t 0.293 W 0.25 | int-nai: n=8 med=-0.053 t 0.889 W 0.945 | exp-int: n=8 med=-0.154 t 0.344 W 0.312
+  V1             | exp-nai: n=10 med=+0.048 t 0.295 W 0.625 | int-nai: n=10 med=-0.065 t 0.75 W 0.695 | exp-int: n=10 med=+0.049 t 0.451 W 1
+
+[pooled: rho_pooled_ratepart]  (Δ in Fisher-z units)
+  CA1            | exp-nai: n=12 med=-0.070 t 0.55 W 0.519 | int-nai: n=12 med=+0.027 t 0.42 W 0.622 | exp-int: n=12 med=-0.087 t 0.0651 W*0.0342
+  CA3            | exp-nai: n=7 med=-0.049 t 0.719 W 0.938 | int-nai: n=7 med=-0.006 t 0.708 W 0.812 | exp-int: n=7 med=+0.256 t 0.487 W 0.578
+  DG             | exp-nai: n=8 med=-0.490 t 0.0884 W 0.109 | int-nai: n=8 med=-0.389 t*0.03 W*0.0391 | exp-int: n=8 med=+0.037 t 0.816 W 0.945
+  SUB            | exp-nai: n=4 med=-0.100 t 0.945 W 1 | int-nai: n=4 med=+0.029 t 0.522 W 1 | exp-int: n=4 med=+0.263 t 0.434 W 0.375
+  RSC            | exp-nai: n=8 med=-0.124 t 0.338 W 0.461 | int-nai: n=8 med=+0.002 t 0.772 W 0.945 | exp-int: n=8 med=-0.148 t 0.363 W 0.312
+  V1             | exp-nai: n=10 med=-0.028 t 0.17 W 0.131 | int-nai: n=10 med=-0.039 t 0.538 W 0.557 | exp-int: n=10 med=-0.016 t 0.357 W 0.625
+
+[pooled: rho_pooled_tune]  (Δ in Fisher-z units)
+  CA1            | exp-nai: n=12 med=+0.091 t 0.264 W 0.38 | int-nai: n=12 med=+0.085 t 0.212 W 0.233 | exp-int: n=12 med=-0.071 t 0.609 W 0.622
+  CA3            | exp-nai: n=7 med=-0.100 t 0.41 W 0.297 | int-nai: n=7 med=+0.016 t 0.865 W 0.938 | exp-int: n=7 med=-0.025 t 0.606 W 0.578
+  DG             | exp-nai: n=8 med=-0.069 t 0.265 W 0.383 | int-nai: n=8 med=+0.049 t 0.55 W 0.641 | exp-int: n=8 med=-0.174 t 0.111 W 0.195
+  SUB            | exp-nai: n=4 med=+0.360 t 0.325 W 0.375 | int-nai: n=4 med=+0.115 t 0.285 W 0.375 | exp-int: n=4 med=+0.050 t 0.712 W 0.75
+  RSC            | exp-nai: n=8 med=-0.149 t 0.907 W 0.312 | int-nai: n=8 med=-0.079 t 0.644 W 0.742 | exp-int: n=8 med=-0.013 t 0.458 W 0.844
+  V1             | exp-nai: n=10 med=+0.100 t 0.918 W 0.922 | int-nai: n=10 med=+0.095 t 0.335 W 0.232 | exp-int: n=10 med=+0.070 t 0.473 W 1
+
+[pooled: rho_pooled_tune_ratepart]  (Δ in Fisher-z units)
+  CA1            | exp-nai: n=12 med=+0.001 t 0.612 W 0.97 | int-nai: n=12 med=+0.067 t 0.58 W 0.677 | exp-int: n=12 med=-0.040 t 0.311 W 0.339
+  CA3            | exp-nai: n=7 med=-0.076 t 0.508 W 0.812 | int-nai: n=7 med=-0.221 t 0.175 W 0.219 | exp-int: n=7 med=+0.144 t 0.84 W 0.578
+  DG             | exp-nai: n=8 med=-0.229 t 0.138 W 0.195 | int-nai: n=8 med=-0.089 t 0.222 W 0.383 | exp-int: n=8 med=-0.150 t 0.194 W 0.25
+  SUB            | exp-nai: n=4 med=+0.169 t 0.485 W 0.625 | int-nai: n=4 med=+0.075 t 0.292 W 0.375 | exp-int: n=4 med=-0.082 t 0.877 W 1
+  RSC            | exp-nai: n=8 med=-0.113 t 0.512 W 0.312 | int-nai: n=8 med=-0.037 t 0.656 W 0.945 | exp-int: n=8 med=-0.061 t 0.313 W 0.383
+  V1             | exp-nai: n=10 med=+0.088 t 0.631 W 0.922 | int-nai: n=10 med=+0.107 t 0.103 W 0.105 | exp-int: n=10 med=-0.026 t 0.283 W 0.432
+
+[overlap: rho_conn]  (Δ in Fisher-z units)
+  CA1            | exp-nai: n=11 med=-0.128 t 0.613 W 0.898 | int-nai: n=11 med=-0.072 t*0.0218 W*0.0137 | exp-int: n=11 med=+0.057 t 0.579 W 0.638
+  CA3            | exp-nai: n=4 med=-0.107 t 0.393 W 0.625 | int-nai: n=4 med=-0.164 t 0.298 W 0.625 | exp-int: n=4 med=+0.165 t 0.288 W 0.375
+  DG             | exp-nai: n=4 med=+0.046 t 0.749 W 0.875 | int-nai: n=4 med=+0.060 t 0.935 W 1 | exp-int: n=4 med=-0.200 t 0.709 W 0.875
+  SUB            | exp-nai: n=4 med=+0.037 t 0.745 W 1 | int-nai: n=4 med=+0.039 t 0.596 W 0.875 | exp-int: n=4 med=+0.141 t 0.62 W 1
+  RSC            | exp-nai: n=6 med=-0.293 t 0.069 W 0.0938 | int-nai: n=6 med=-0.308 t 0.498 W 0.562 | exp-int: n=6 med=+0.001 t 0.618 W 1
+  V1             | exp-nai: n=6 med=+0.099 t 0.977 W 1 | int-nai: n=6 med=-0.239 t 0.931 W 1 | exp-int: n=6 med=+0.031 t 0.929 W 1
+
+[overlap: rho_resid]  (Δ in Fisher-z units)
+  CA1            | exp-nai: n=11 med=-0.033 t 0.778 W 0.831 | int-nai: n=11 med=+0.092 t 0.497 W 0.206 | exp-int: n=11 med=-0.003 t 0.403 W 0.52
+  CA3            | exp-nai: n=4 med=-0.070 t 0.658 W 0.625 | int-nai: n=4 med=-0.196 t 0.463 W 0.625 | exp-int: n=4 med=+0.196 t 0.435 W 0.625
+  DG             | exp-nai: n=4 med=+0.095 t 0.969 W 1 | int-nai: n=4 med=+0.244 t 0.825 W 0.875 | exp-int: n=4 med=-0.126 t 0.719 W 0.875
+  SUB            | exp-nai: n=4 med=-0.126 t 0.205 W 0.25 | int-nai: n=4 med=-0.058 t 0.71 W 0.875 | exp-int: n=4 med=+0.023 t 0.588 W 1
+  RSC            | exp-nai: n=6 med=-0.334 t 0.124 W 0.156 | int-nai: n=6 med=-0.313 t 0.66 W 0.844 | exp-int: n=6 med=-0.140 t 0.235 W 0.312
+  V1             | exp-nai: n=6 med=+0.050 t 0.704 W 0.562 | int-nai: n=6 med=+0.237 t 0.203 W 0.219 | exp-int: n=6 med=-0.235 t 0.324 W 0.438
+
+[overlap: jaccard_excess]  (Δ in Fisher-z units — raw Δ)
+  CA1            | exp-nai: n=11 med=-0.008 t 0.395 W 0.496 | int-nai: n=11 med=-0.060 t*0.0164 W*0.0195 | exp-int: n=11 med=+0.063 t 0.233 W 0.32
+  CA3            | exp-nai: n=4 med=+0.000 t 0.712 W nan | int-nai: n=4 med=+0.000 t 0.914 W nan | exp-int: n=4 med=+0.000 t 0.716 W nan
+  DG             | exp-nai: n=4 med=-0.078 t 0.359 W 0.5 | int-nai: n=4 med=-0.141 t 0.378 W 0.5 | exp-int: n=4 med=-0.049 t 0.594 W 0.75
+  SUB            | exp-nai: n=4 med=-0.148 t 0.214 W 0.25 | int-nai: n=4 med=-0.011 t 0.598 W 1 | exp-int: n=4 med=+0.000 t 0.391 W nan
+  RSC            | exp-nai: n=6 med=-0.054 t 0.378 W 0.438 | int-nai: n=6 med=-0.100 t 0.611 W 0.562 | exp-int: n=6 med=+0.026 t 0.885 W 0.562
+  V1             | exp-nai: n=6 med=-0.026 t 0.117 W 0.25 | int-nai: n=6 med=-0.121 t 0.52 W 0.625 | exp-int: n=6 med=+0.000 t 0.971 W 1
+
+wrote contrib_epochs_deltas_bin10_fsincl.csv (318 contrast-rows; 7 with Wilcoxon p<0.05 of 318 tests, uncorrected)
