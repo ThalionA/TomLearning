@@ -38,6 +38,19 @@ from here.
 
 ---
 
+## (2026-08-31, late) — per-pair trial-1-vs-2 figures (all 8 pairs, V1-RSC layout)
+
+**Nothing is running.** Theo asked for the V1-RSC deep-dive layout for EVERY pair:
+`figs_trial12_pairs.py` renders 16 figures (`HCV1_trial12_pair_<PAIR>_<fs>_bin10`), 6 panels
+each — CC1 lag curve (1 vs 2 vs 3..10 band), strength across ordinals as all-sig-weighted AND
+CC1-only, IFI across ordinals, and paired-t 1v2 panels for strength and direction (paired t =
+one-sample t on within-animal deltas; Wilcoxon alongside; per-pair family, uncorrected — the
+0-BH verdict stands). Helpers hoisted from `figs_trial12_v1rsc.py` (`load_tables` gains a
+`pair` argument and returns the CC1-only trials frame; lag-curve lead label parameterised).
+Collector now carries all 8 pair stems (116 files in `figures/fig5_contrib/`).
+
+---
+
 ## (2026-08-31, evening) — V1-RSC deep-dive (a first-trial GAIN effect) + naive communication does not predict learning speed
 
 **Nothing is running.** Two asks from Theo, both figure-first.

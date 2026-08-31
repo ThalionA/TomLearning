@@ -75,6 +75,11 @@ STEMS = {
         "strength is the only repeatable lean (rho -0.69, p=0.058 both FS, "
         "leverage-sensitive).",
 }
+for _pair in ["CA1-CA3", "CA1-DG", "CA3-DG", "CA1-SUB", "CA1-RSC", "CA1-V1",
+              "RSC-SUB", "V1-RSC"]:
+    STEMS[f"HCV1_trial12_pair_{_pair}"] = (
+        f"{_pair} trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + "
+        f"CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.")
 
 
 def main():

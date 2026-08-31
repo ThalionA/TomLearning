@@ -23,3 +23,11 @@ Copied by `scripts/collect_fig5_figures.py` from the latest renders in `cca/figu
 - **HCV1_trial12_units_deltas** — Per-unit carrying, trial 1 vs 2: strength delta, profile stability vs adjacent band, convergence to the trained membership.
 - **HCV1_trial12_v1rsc** — V1-RSC deep-dive: trial 1's whole CC1 lag curve is depressed (level effect, all lags); direction delta FS/arm-fragile; all uncorrected at n=9.
 - **HCV1_connlearning** — Naive-epoch communication vs learning point: no survivor; CA1-DG strength is the only repeatable lean (rho -0.69, p=0.058 both FS, leverage-sensitive).
+- **HCV1_trial12_pair_CA1-CA3** — CA1-CA3 trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.
+- **HCV1_trial12_pair_CA1-DG** — CA1-DG trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.
+- **HCV1_trial12_pair_CA3-DG** — CA3-DG trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.
+- **HCV1_trial12_pair_CA1-SUB** — CA1-SUB trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.
+- **HCV1_trial12_pair_CA1-RSC** — CA1-RSC trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.
+- **HCV1_trial12_pair_CA1-V1** — CA1-V1 trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.
+- **HCV1_trial12_pair_RSC-SUB** — RSC-SUB trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.
+- **HCV1_trial12_pair_V1-RSC** — V1-RSC trial 1 vs 2: CC1 lag curve, strength (all-sig weighted + CC1-only) and IFI across ordinals 1-10, paired-t 1v2 panels.

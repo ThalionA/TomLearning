@@ -46,14 +46,14 @@ PAIR = "V1-RSC"
 C1, C2, CB = "#c8552c", "#3b6fb6", "0.55"      # trial 1 / trial 2 / band 3..10
 
 
-def load_tables(tag):
+def load_tables(tag, pair=PAIR):
     curves = pd.read_csv(RES / f"trial12_curves_bin{BIN_MS}{tag}.csv")
     trials = pd.read_csv(RES / f"trial12_trials_bin{BIN_MS}{tag}.csv")
     flags = degenerate_trials(trials)
     curves = drop_degenerate_trials(curves, flags)
     trials = drop_degenerate_trials(trials, flags)
-    curves = curves[curves["pair"] == PAIR]
-    trials = trials[trials["pair"] == PAIR]
+    curves = curves[curves["pair"] == pair]
+    trials = trials[trials["pair"] == pair]
     win = per_trial_windows(curves)
     # contrast frame: dims matched between ordinals 1 and 2 (the tested delta)
     allsig12 = cc_aggregate.per_animal_mean(
@@ -67,10 +67,13 @@ def load_tables(tag):
         weight="cc_peak")
     trials_allsig = cc_aggregate.per_animal_mean(
         trials, value="r0", by=["ordinal", "matched"], weight="r_frozen")
-    return curves, allsig12, allsig_all, trials_allsig
+    trials_cc1 = trials[trials["dim"] == 1][
+        ["animal", "ordinal", "matched", "r0"]].copy()
+    trials_cc1["r0"] = pd.to_numeric(trials_cc1["r0"], errors="coerce")
+    return curves, allsig12, allsig_all, trials_allsig, trials_cc1
 
 
-def panel_lagcurve(ax, curves):
+def panel_lagcurve(ax, curves, lead="V1"):
     cc1 = curves[(curves["dim"] == 1) & (curves["matched"] == 2)]
     for sel, col, label in [(cc1["ordinal"] == 1, C1, "trial 1"),
                             (cc1["ordinal"] == 2, C2, "trial 2"),
@@ -84,7 +87,7 @@ def panel_lagcurve(ax, curves):
                         color=col, alpha=0.25, lw=0)
     ax.axvline(0, color="0.7", lw=0.7)
     ax.axhline(0, color="0.7", lw=0.7)
-    ax.set_xlabel("lag (ms; +ve = V1 leads)")
+    ax.set_xlabel(f"lag (ms; +ve = {lead} leads)")
     ax.set_ylabel("frozen CC1 r (held out)")
     ax.set_title("A  CC1 lag curve (common-bin arm)", fontsize=9)
     ax.legend(fontsize=7)
@@ -124,7 +127,7 @@ def panel_paired(ax, pa, value, ylab, title):
     ax.axhline(0, color="0.7", lw=0.7)
     ax.set_ylabel(ylab)
     ax.set_title(f"{title}\nn={len(wide)}, Δmed={med:+.3f}, "
-                 f"t p={t_p:.3g}, W p={w_p:.3g}", fontsize=8)
+                 f"paired t p={t_p:.3g}, W p={w_p:.3g}", fontsize=8)
 
 
 def sides_and_sensitivity(curves, allsig12, trials_allsig, tag, fs):
@@ -172,7 +175,7 @@ def sides_and_sensitivity(curves, allsig12, trials_allsig, tag, fs):
 
 def main():
     for fs, tag in [("fsexcl", ""), ("fsincl", "_fsincl")]:
-        curves, allsig12, allsig_all, trials_allsig = load_tables(tag)
+        curves, allsig12, allsig_all, trials_allsig, _ = load_tables(tag)
         ifi12 = allsig12[allsig12["window_bins"] == HEADLINE_W]
         ifi_traj = allsig_all[allsig_all["window_bins"] == HEADLINE_W]
         fig, axes = plt.subplots(1, 4, figsize=(13.6, 3.6),
