@@ -1,6 +1,6 @@
 # STATE — Tom-learning CCA project
 
-**Last updated:** 2026-08-31 (7c added: trial-1→2 membership reordering; 7b extended 08-30). This is the entry point. It reconciles the three analysis
+**Last updated:** 2026-08-31 (7c/7d/7e added: membership reordering; V1-RSC gain-dip candidate; learning-speed null). This is the entry point. It reconciles the three analysis
 arms, names the canonical configs, and states the findings honestly. `README.md` is
 quick-start; `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` are the design specs;
 `PROJECT_LOG.md` is the state of play; `NOTES.md` is the older chronological log. When they
@@ -180,6 +180,14 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
    Uncorrelated with the trial-1 behaviour deltas. Convergence-to-trained-profile: null.
    Per-cell localisation underpowered (0 BH). `results/trial12_units_tables.md`;
    figure `HCV1_trial12_units_deltas_*`.
+7d. **First-trial V1-RSC gain dip (candidate, NOT a claim — 2026-08-31).** Trial 1's
+   frozen-CC1 lag curve is depressed at all lags in both FS (level effect; trial 2 already at
+   the trials-3..10 band); paired deltas sign-consistent in every arm × FS spec but none
+   W < 0.05 at n = 9; IFI delta FS/arm-fragile. Second-cohort question.
+   `results/trial12_v1rsc_tables.md`.
+7e. **Naive communication does not predict learning speed (exploratory NULL, 2026-08-31).**
+   Naive-epoch cc1/IFI vs LP, n = 12 learners: no BH survivor, global coupling n.s.; one
+   repeatable lean (CA1-DG strength ρ = −0.69, p = 0.058 both FS, leverage-sensitive).
 7b. **Contributing units ARE spatially special — on the cortical side (NEW 2026-08-29).**
    Per-unit connection-specific contribution (`contrib_conn`, epoch pCCA) correlates with
    spatial reliability (mean ±2-trial map correlation, epoch-matched trials). Animals-as-n,

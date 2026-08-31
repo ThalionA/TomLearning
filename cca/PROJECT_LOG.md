@@ -38,6 +38,35 @@ from here.
 
 ---
 
+## (2026-08-31, evening) — V1-RSC deep-dive (a first-trial GAIN effect) + naive communication does not predict learning speed
+
+**Nothing is running.** Two asks from Theo, both figure-first.
+
+**1. V1-RSC trial-1-vs-2, in full** (`figs_trial12_v1rsc.py`, reusing analyze_trial12's exact
+chain — degenerate-drop, dim-matching, cc_peak weighting; figure `HCV1_trial12_v1rsc_*`,
+summary `results/trial12_v1rsc_tables.md`, prints `trial12_v1rsc_sensitivity.txt`).
+**The robust picture is a LEVEL effect: trial 1's frozen-CC1 lag curve is depressed at ALL
+lags (~60-70 % of the trials-3..10 band) in both FS, and trial 2 already sits on the band.**
+Paired r0 deltas are negative in all 6 arm × FS specs but never W < 0.05 (n = 9; best 0.055).
+The IFI delta is FS/arm-fragile (FS-excl arms 1/2 starred, FS-incl null); side decomposition:
+FS-incl loses V1→RSC (positive-lag) mass on trial 1 (W 0.039). Reading: first-traversal
+V1-RSC communication runs at reduced gain, possibly without the V1-lead component —
+sign-consistent everywhere, robust nowhere; second-cohort question. ⚠ dim_matched keeps only
+ordinals 1-2 BY DESIGN — the deep-dive uses a separate non-matched frame for trajectory
+panels (first render had panel C truncated to 2 ordinals; caught on the render).
+
+**2. Naive communication vs learning speed: NULL** (`analyze_conn_learning.py` +
+`figs_conn_learning.py`; figure `HCV1_connlearning_*`; CSV `conn_learning_bin10*.csv`).
+Naive-epoch cc1/IFI per pair (measured before learning) vs LP, n = 12 learners (LP 28-107),
+per pair 5-10. No BH survivor; global within-pair-z coupling ρ = −0.24/−0.06 n.s.; IFI
+predicts nothing; naive running amount vs LP ρ = +0.39 n.s. Only repeatable lean: **CA1-DG
+strength ρ = −0.69, p = 0.058 in BOTH FS** (stronger naive CA1↔DG → earlier LP), but
+leverage-sensitive (without animal 75: ρ ≈ −0.6, p ≈ 0.16). Exploratory; log for cohort 2.
+
+Collector updated (84 files in `figures/fig5_contrib/`).
+
+---
+
 ## (2026-08-31, later) — trial 1 vs 2 revisited: figures for the 08-20 arm + per-unit carrying (membership reorders, strength does not)
 
 **Nothing is running.** Theo asked to close trial-1-vs-2 for strength, direction AND unit

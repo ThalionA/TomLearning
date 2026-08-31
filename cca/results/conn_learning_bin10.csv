@@ -1,0 +1,13 @@
+metric,pair,n,rho,p,bh_pass
+cc1,CA1-CA3,5,-0.7,0.18812,False
+cc1,CA1-DG,8,-0.6905,0.05799,False
+cc1,CA1-RSC,8,-0.2857,0.49273,False
+cc1,CA1-V1,10,0.2492,0.48741,False
+cc1,V1-RSC,6,-0.4286,0.3965,False
+ifi,CA1-CA3,5,-0.6,0.28476,False
+ifi,CA1-DG,8,0.4286,0.2894,False
+ifi,CA1-RSC,8,-0.0714,0.86653,False
+ifi,CA1-V1,10,0.4924,0.14823,False
+ifi,V1-RSC,6,0.2571,0.62279,False
+GLOBAL_cc1_z,ALL,12,-0.2347,0.46284,False
+CONFOUND_n_bins,ALL,12,0.3853,0.21615,False

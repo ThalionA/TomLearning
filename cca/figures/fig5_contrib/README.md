@@ -21,3 +21,5 @@ Copied by `scripts/collect_fig5_figures.py` from the latest renders in `cca/figu
 - **HCV1_trial12_deltas** — Trial 1 vs 2 (frozen subspace): strength and direction null, behaviour (bins, speed) robustly different.
 - **HCV1_trial12_control** — The 1->2 step vs the ordinal 3..10 adjacent-step band; V1-RSC is the (uncorrected) candidate.
 - **HCV1_trial12_units_deltas** — Per-unit carrying, trial 1 vs 2: strength delta, profile stability vs adjacent band, convergence to the trained membership.
+- **HCV1_trial12_v1rsc** — V1-RSC deep-dive: trial 1's whole CC1 lag curve is depressed (level effect, all lags); direction delta FS/arm-fragile; all uncorrected at n=9.
+- **HCV1_connlearning** — Naive-epoch communication vs learning point: no survivor; CA1-DG strength is the only repeatable lean (rho -0.69, p=0.058 both FS, leverage-sensitive).

@@ -1,0 +1,20 @@
+naive-epoch predictors vs LP (FS incl): 12 learners, LP range 28-107
+
+[naive cc1 vs LP]  (negative rho = stronger/more-directed -> FASTER learning)
+  CA1-CA3   n=7  rho=-0.464 p=0.294 
+  CA1-DG    n=8  rho=-0.690 p=0.058 
+  CA1-RSC   n=8  rho=+0.310 p=0.456 
+  CA1-V1    n=10 rho=+0.079 p=0.828 
+  V1-RSC    n=6  rho=+0.257 p=0.623 
+
+[naive ifi vs LP]  (negative rho = stronger/more-directed -> FASTER learning)
+  CA1-CA3   n=7  rho=-0.286 p=0.535 
+  CA1-DG    n=8  rho=+0.214 p=0.61 
+  CA1-RSC   n=8  rho=-0.167 p=0.693 
+  CA1-V1    n=10 rho=+0.468 p=0.172 
+  V1-RSC    n=6  rho=+0.143 p=0.787 
+
+[GLOBAL naive coupling (within-pair z of cc1, mean per animal) vs LP] n=12 rho=-0.063 p=0.846
+[CONFOUND naive n_bins (running amount) vs LP] n=12 rho=+0.385 p=0.216
+
+wrote conn_learning_bin10_fsincl.csv (12 rows; 0 BH/global survivors)

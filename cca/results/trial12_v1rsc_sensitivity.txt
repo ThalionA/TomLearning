@@ -1,0 +1,22 @@
+
+=== fsexcl: V1-RSC sensitivity ===
+  Δ(1−2) V1→RSC (positive-lag) mass: n=9 med=-0.0319 t p=0.32 W p=0.25
+  Δ(1−2) RSC→V1 (negative-lag) mass: n=9 med=-0.0371 t p=0.16 W p=0.129
+  IFI±50 arm=0: n=9 Δmed=-0.0304 t p=0.0595 W p=0.0742
+  IFI±50 arm=1: n=9 Δmed=-0.0244 t p=0.0298 W p=0.0391
+  IFI±50 arm=2: n=9 Δmed=-0.0487 t p=0.0119 W p=0.0195
+  r0 arm=0: n=9 Δmed=-0.0176 t p=0.128 W p=0.164
+  r0 arm=1: n=9 Δmed=-0.0166 t p=0.158 W p=0.129
+  r0 arm=2: n=9 Δmed=-0.0145 t p=0.208 W p=0.164
+fsexcl: figure written
+
+=== fsincl: V1-RSC sensitivity ===
+  Δ(1−2) V1→RSC (positive-lag) mass: n=9 med=-0.0723 t p=0.0376 W p=0.0391
+  Δ(1−2) RSC→V1 (negative-lag) mass: n=9 med=-0.0281 t p=0.0586 W p=0.0977
+  IFI±50 arm=0: n=9 Δmed=-0.0381 t p=0.0333 W p=0.0547
+  IFI±50 arm=1: n=9 Δmed=-0.0176 t p=0.173 W p=0.25
+  IFI±50 arm=2: n=9 Δmed=-0.0077 t p=0.232 W p=0.426
+  r0 arm=0: n=9 Δmed=-0.0207 t p=0.0427 W p=0.0547
+  r0 arm=1: n=9 Δmed=-0.0226 t p=0.0515 W p=0.0742
+  r0 arm=2: n=9 Δmed=-0.0226 t p=0.103 W p=0.129
+fsincl: figure written
