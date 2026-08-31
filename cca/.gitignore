@@ -17,3 +17,6 @@ figures/*.xlsx
 # Curated Fig-5 collection: plain copies of latest renders (see scripts/collect_fig5_figures.py)
 figures/fig5_contrib/*
 !figures/fig5_contrib/README.md
+# ~3 MB per FS, regenerable by scripts/run_trial12_units.py (~20 min); tests CSVs committed
+results/trial12_units_bin10*.csv
+results/trial12_units_fs*.log
