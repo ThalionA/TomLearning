@@ -276,3 +276,9 @@ One-line entries for non-obvious bugs, so they are not reintroduced.
   pooling windows within those same 4 animals. The LMM's random slope does not buy back animals
   that were never there. **At n = 4, treat any LMM p as descriptive only.** Found 2026-08-28.
 
+- **`analyze_trial12.dim_matched` keeps ONLY the contrast ordinals (default 1, 2) — by
+  design.** Any consumer that wants a per-ordinal trajectory (all ordinals 1..10) must build a
+  separate non-matched frame; feeding the dim-matched frame to a trajectory plot silently
+  truncates it to two ordinals (bit the first V1-RSC deep-dive render, panel C — caught only by
+  looking at the figure). Contrast frame = tests; non-matched frame = description. 2026-08-31.
+

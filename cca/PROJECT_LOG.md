@@ -12,9 +12,12 @@ narrative + state of play.**
 
 ---
 
-## CURRENT STATE (2026-08-31) — contributing units ARE spatially special (cortical side,
-## rate-partialled, FS-robust); trial-1-vs-2: channel stable but its MEMBERSHIP reorders 1→2
-## (global n=16, both FS); ➜ READ `HANDOFF.md` FIRST
+## CURRENT STATE (2026-08-31, session closed) — Fig-5 contribution thread COMPLETE bar the
+## shifting-responses leg. Contributing units are spatially RELIABLE (not tuned) beyond rate,
+## cortical side, FS-robust, stable across learning; same units serve several subspaces;
+## trial 1→2: channel stable, membership reorders (global n=16 both FS); V1-RSC first-trial
+## gain dip = candidate; naive communication does not predict learning speed. All figures in
+## `figures/fig5_contrib/`. ➜ the wrap entry below has the cold-start map; `HANDOFF.md` first.
 
 **Nothing is running.** Newest work is the 2026-08-20 entry directly below: `run_trial12.py` /
 `analyze_trial12.py` compare trials 1 and 2 through a frozen subspace fit on ordinals 11+.
@@ -35,6 +38,36 @@ See the entry directly below; `STATE.md` §3.0 finding 2 is rewritten. (b) Metho
 StriatumACC `striatum_tcca` port, which also took `core.cca_fit`'s covariance route, `lagpairs`,
 the per-dim held-out lag curve + `perdim_significance`, and `paired_stats.paired_t` / `welch_t`
 from here.
+
+---
+
+## (2026-08-31, wrap) — session close: Fig-5 contribution thread + trial-1-vs-2 complete
+
+**Nothing is running. Working tree clean, 15 commits pushed** (`74e0d8d..`). This session, in
+order: connection-specific Gini re-test (broadening: CA1-DG dead, CA1-RSC → performance axis,
+CA1-V1 new) → contribution × reliability (cortical-side, rate-partialled, FS-robust; replicated
+on Tom's precomputed reliability) → tuning dissociates (rate-carried) → pooled contribution +
+cross-partner overlap (shared backbone, partner-differentiated) → epoch contrasts (everything
+stable = standing property) → trial-1-vs-2 per-unit arm (membership reorders 1→2, global n=16
+both FS; strength/direction stay null) → V1-RSC deep-dive (first-trial GAIN dip, candidate
+only) → naive communication does not predict learning speed (null; CA1-DG lean p=0.058) →
+per-pair trial12 figures (all 8, paired-t panels, `mean Δ(1−2)` labels).
+
+**For a cold session picking this up:**
+- Findings of record: `STATE.md` §3.0 items 2 (rewritten), 7b–7e. Tables:
+  `results/contrib_reliability_tables.md` (+ addenda), `trial12_units_tables.md`,
+  `trial12_v1rsc_tables.md`, `gini_conn_retest_tables.md`.
+- Every figure of the thread: `figures/fig5_contrib/` (116 files + README manifest with
+  one-line legends); rebuild any figure with its `figs_*.py`, then
+  `scripts/collect_fig5_figures.py`. Pipeline map: `HANDOFF.md` §1 (rows Fig5, T12u, LP).
+- Regenerable-but-gitignored inputs: `trial12_units_bin10*.csv` (~20 min via
+  `run_trial12_units.py`), `trial12_curves_bin10*.csv` (~50 MB, `run_trial12.py`).
+- **NEXT (open):** (1) the last Fig-5 leg — SHIFTING RESPONSES (COM drift from
+  `analysis_spatial/reliability/corr/trial` or the maps) × contribution, per the 2026-08-29
+  plan; (2) a contribution-shuffle null to harden the reliability link beyond rate-partialling
+  if it goes in the paper; (3) second-cohort re-tests queued: V1-RSC first-trial gain dip,
+  CA1-DG naive-coupling → learning-speed lean, per-pair localisation of the 1→2 membership
+  reordering. 554 tests pass.
 
 ---
 
