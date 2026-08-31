@@ -13,7 +13,8 @@ narrative + state of play.**
 ---
 
 ## CURRENT STATE (2026-08-31) — contributing units ARE spatially special (cortical side,
-## rate-partialled, FS-robust); trial-1-vs-2 answered 08-20; ➜ READ `HANDOFF.md` FIRST
+## rate-partialled, FS-robust); trial-1-vs-2: channel stable but its MEMBERSHIP reorders 1→2
+## (global n=16, both FS); ➜ READ `HANDOFF.md` FIRST
 
 **Nothing is running.** Newest work is the 2026-08-20 entry directly below: `run_trial12.py` /
 `analyze_trial12.py` compare trials 1 and 2 through a frozen subspace fit on ordinals 11+.
@@ -34,6 +35,32 @@ See the entry directly below; `STATE.md` §3.0 finding 2 is rewritten. (b) Metho
 StriatumACC `striatum_tcca` port, which also took `core.cca_fit`'s covariance route, `lagpairs`,
 the per-dim held-out lag curve + `perdim_significance`, and `paired_stats.paired_t` / `welch_t`
 from here.
+
+---
+
+## (2026-08-31, later) — trial 1 vs 2 revisited: figures for the 08-20 arm + per-unit carrying (membership reorders, strength does not)
+
+**Nothing is running.** Theo asked to close trial-1-vs-2 for strength, direction AND unit
+contributions, with figures, and to curate the thread's final figures into one folder.
+
+**1. Figures for the answered part** (`figs_trial12.py`, from the 08-20 CSVs, no recompute):
+`HCV1_trial12_deltas_*` (strength/direction null beside the robust behavioural deltas) and
+`HCV1_trial12_control_*` (1→2 step vs adjacent band; V1-RSC the uncorrected candidate).
+
+**2. NEW per-unit arm** (`run_trial12_units.py` → `trial12_units_bin10*.csv`, ~155k/170k rows;
+`analyze_trial12_units.py`; summary `results/trial12_units_tables.md`; figure
+`HCV1_trial12_units_deltas_*`): carry_r = unit's correlation with the partner's frozen CC1 per
+early ordinal, two arms (raw / common-bin). **Carrying strength 1v2: null. Convergence to the
+trained profile: null. Membership REORDERS: sim(1,2) sits below the adjacent-step band in
+14/16 cells; global per-animal test (n=16) FS-excl W p = 3.1e-05, FS-incl W p = 0.021 (primary
+common-bin arm; raw arm FS-excl only); uncorrelated with Δspeed/Δbins.** So the first
+experience changes WHO carries the channel, not how much is carried — the one positive
+trial-1-vs-2 result in the project. Per-cell localisation underpowered (0 BH).
+
+**3. Curated folder** `figures/fig5_contrib/` (gitignored except README): final renders of the
+whole contribution + trial12 thread, rebuilt by `scripts/collect_fig5_figures.py` (72+ files,
+both FS, svg+png; README = manifest with one-line legends). Re-run the collector after any
+figure regen.
 
 ---
 

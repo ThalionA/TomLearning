@@ -1,0 +1,81 @@
+trial12 units (FS incl), arm matched=1: 170268 rows, 16 animals
+
+[carry_strength_d12] Δ mean |carry_r| (trial 1 − 2), Fisher-z
+  CA1-CA3   x n=9  med= +0.004 mean= +0.004 | t p=0.224 | W p=0.25 
+  CA1-CA3   y n=9  med= -0.000 mean= -0.002 | t p=0.492 | W p=0.734 
+  CA1-DG    x n=11 med= +0.002 mean= +0.130 | t p=0.341 | W p=0.7 
+  CA1-DG    y n=11 med= -0.001 mean= +0.184 | t p=0.342 | W p=0.966 
+  CA1-RSC   x n=12 med= -0.000 mean= -0.001 | t p=0.381 | W p=0.569 
+  CA1-RSC   y n=12 med= +0.000 mean= +0.001 | t p=0.504 | W p=0.622 
+  CA1-SUB   x n=7  med= -0.001 mean= +0.224 | t p=0.359 | W p=0.688 
+  CA1-SUB   y n=7  med= +0.005 mean= +0.204 | t p=0.35 | W p=0.109 
+  CA1-V1    x n=13 med= +0.001 mean= +0.114 | t p=0.342 | W p=0.893 
+  CA1-V1    y n=13 med= +0.002 mean= +0.099 | t p=0.335 | W p=0.244 
+  CA3-DG    x n=5  med= +0.005 mean= +0.004 | t p=0.0638 | W p=0.0625 
+  CA3-DG    y n=5  med= +0.009 mean= +0.010 | t p=0.00762 | W p=0.0625 
+  RSC-SUB   x n=7  med= +0.002 mean= +0.001 | t p=0.677 | W p=0.688 
+  RSC-SUB   y n=7  med= +0.006 mean= +0.007 | t p=0.26 | W p=0.219 
+  V1-RSC    x n=9  med= -0.004 mean= -0.006 | t p=0.198 | W p=0.25 
+  V1-RSC    y n=9  med= -0.003 mean= -0.001 | t p=0.809 | W p=0.734 
+
+[carry_strength_zadj] 1→2 strength step z-scored vs adjacent steps
+  CA1-CA3   x n=9  med= +0.970 mean= +0.718 | t p=0.138 | W p=0.203 
+  CA1-CA3   y n=9  med= +0.047 mean= -0.013 | t p=0.957 | W p=1 
+  CA1-DG    x n=11 med= +0.329 mean= +0.124 | t p=0.723 | W p=0.765 
+  CA1-DG    y n=11 med= -0.263 mean= -0.686 | t p=0.456 | W p=0.898 
+  CA1-RSC   x n=12 med= -0.035 mean= -0.177 | t p=0.46 | W p=0.519 
+  CA1-RSC   y n=12 med= +0.244 mean= +0.393 | t p=0.414 | W p=0.677 
+  CA1-SUB   x n=7  med= +0.064 mean= +0.086 | t p=0.798 | W p=0.938 
+  CA1-SUB   y n=7  med= +0.804 mean= +0.944 | t p=0.0949 | W p=0.109 
+  CA1-V1    x n=13 med= +0.011 mean= +0.270 | t p=0.487 | W p=0.588 
+  CA1-V1    y n=13 med= +0.316 mean= +0.744 | t p=0.197 | W p=0.127 
+  CA3-DG    x n=5  med= +0.571 mean= +0.525 | t p=0.105 | W p=0.125 
+  CA3-DG    y n=5  med= +1.282 mean= +1.130 | t p=0.0289 | W p=0.0625 
+  RSC-SUB   x n=7  med= +0.220 mean= +0.614 | t p=0.359 | W p=0.469 
+  RSC-SUB   y n=7  med= +0.587 mean= +1.138 | t p=0.189 | W p=0.297 
+  V1-RSC    x n=9  med= -0.951 mean= -0.850 | t p=0.227 | W p=0.164 
+  V1-RSC    y n=9  med= -0.736 mean= -0.265 | t p=0.611 | W p=0.652 
+
+[profile_sim12_excess] profile sim(1,2) − mean adjacent sim, Fisher-z
+  CA1-CA3   x n=9  med= -0.065 mean= -0.033 | t p=0.649 | W p=0.203 
+  CA1-CA3   y n=9  med= -0.165 mean= +0.011 | t p=0.97 | W p=0.301 
+  CA1-DG    x n=11 med= -0.035 mean= -0.114 | t p=0.261 | W p=0.413 
+  CA1-DG    y n=11 med= -0.021 mean= -0.181 | t p=0.193 | W p=0.638 
+  CA1-RSC   x n=12 med= -0.168 mean= -0.107 | t p=0.154 | W p=0.176 
+  CA1-RSC   y n=12 med= -0.028 mean= -0.031 | t p=0.26 | W p=0.38 
+  CA1-SUB   x n=7  med= -0.273 mean= -0.313 | t p=0.0164 | W p=0.0312*
+  CA1-SUB   y n=7  med= -0.182 mean= -0.050 | t p=0.547 | W p=0.938 
+  CA1-V1    x n=13 med= -0.101 mean= -0.076 | t p=0.405 | W p=0.305 
+  CA1-V1    y n=13 med= -0.120 mean= -0.235 | t p=0.0271 | W p=0.0171*
+  CA3-DG    x n=5  med= -0.058 mean= +0.002 | t p=0.985 | W p=1 
+  CA3-DG    y n=5  med= -0.061 mean= -0.048 | t p=0.538 | W p=0.812 
+  RSC-SUB   x n=7  med= +0.061 mean= +0.004 | t p=0.961 | W p=0.938 
+  RSC-SUB   y n=7  med= -0.146 mean= -0.182 | t p=0.316 | W p=0.297 
+  V1-RSC    x n=9  med= -0.116 mean= -0.039 | t p=0.708 | W p=0.57 
+  V1-RSC    y n=9  med= -0.096 mean= -0.104 | t p=0.118 | W p=0.164 
+
+[profile_convergence_d12] Δ sim-to-reference (trial 1 − 2), Fisher-z
+  CA1-CA3   x n=9  med= -0.033 mean= -0.085 | t p=0.0705 | W p=0.129 
+  CA1-CA3   y n=9  med= +0.000 mean= -0.037 | t p=0.397 | W p=0.641 
+  CA1-DG    x n=11 med= -0.116 mean= -0.105 | t p=0.395 | W p=0.278 
+  CA1-DG    y n=11 med= -0.150 mean= -0.060 | t p=0.732 | W p=0.278 
+  CA1-RSC   x n=12 med= +0.093 mean= +0.088 | t p=0.24 | W p=0.233 
+  CA1-RSC   y n=12 med= +0.026 mean= +0.004 | t p=0.931 | W p=0.622 
+  CA1-SUB   x n=7  med= -0.190 mean= +0.031 | t p=0.884 | W p=0.938 
+  CA1-SUB   y n=7  med= -0.141 mean= -0.185 | t p=0.0507 | W p=0.109 
+  CA1-V1    x n=13 med= -0.060 mean= -0.096 | t p=0.265 | W p=0.414 
+  CA1-V1    y n=13 med= -0.167 mean= -0.110 | t p=0.467 | W p=0.735 
+  CA3-DG    x n=5  med= +0.106 mean= +0.170 | t p=0.361 | W p=0.438 
+  CA3-DG    y n=5  med= +0.021 mean= +0.027 | t p=0.677 | W p=0.812 
+  RSC-SUB   x n=7  med= -0.028 mean= -0.011 | t p=0.775 | W p=0.812 
+  RSC-SUB   y n=7  med= -0.085 mean= -0.122 | t p=0.155 | W p=0.156 
+  V1-RSC    x n=9  med= -0.086 mean= -0.118 | t p=0.0797 | W p=0.129 
+  V1-RSC    y n=9  med= -0.195 mean= -0.096 | t p=0.222 | W p=0.426 
+
+[GLOBAL profile_sim12_excess] one value per animal (mean over its cells): n=16 med=-0.1036 mean=-0.0973 | t p=0.0787 | W p=0.0214*
+
+[GLOBAL profile_convergence_d12] one value per animal (mean over its cells): n=16 med=-0.0300 mean=-0.0394 | t p=0.246 | W p=0.231 
+
+[GLOBAL carry_strength_d12] one value per animal (mean over its cells): n=16 med=+0.0009 mean=+0.0483 | t p=0.331 | W p=0.348 
+
+wrote trial12_units_tests_bin10_fsincl.csv (67 cells; 3 W-starred, 1 BH survivors)

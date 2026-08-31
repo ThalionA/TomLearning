@@ -14,3 +14,6 @@ figures/*.csv
 figures/*.xlsx
 !results/.gitkeep
 !figures/.gitkeep
+# Curated Fig-5 collection: plain copies of latest renders (see scripts/collect_fig5_figures.py)
+figures/fig5_contrib/*
+!figures/fig5_contrib/README.md

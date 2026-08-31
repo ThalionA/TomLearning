@@ -1,6 +1,6 @@
 # STATE — Tom-learning CCA project
 
-**Last updated:** 2026-08-30 (7b extended: tuning dissociation, pooled contribution, cross-partner overlap). This is the entry point. It reconciles the three analysis
+**Last updated:** 2026-08-31 (7c added: trial-1→2 membership reordering; 7b extended 08-30). This is the entry point. It reconciles the three analysis
 arms, names the canonical configs, and states the findings honestly. `README.md` is
 quick-start; `UNDERSTANDING.md` / `UNDERSTANDING_temporal.md` are the design specs;
 `PROJECT_LOG.md` is the state of play; `NOTES.md` is the older chronological log. When they
@@ -172,6 +172,14 @@ hippocampal–cortical. `n_sig` ≈ 3.3–5.7 dims (FS-excl).
 6. **Nonlinearity: largely absent.** Kernel CCA edges linear in 58–66 % of cells but the
    median KCCA − linear gap is only +0.015, and CA3-DG (the strongest pair) is ≈ linear. The
    subspace is largely linear.
+7c. **Trial 1 → 2: the channel is stable but its membership reorders (NEW 2026-08-31).**
+   Frozen-subspace per-unit carrying (unit × partner-CC1 correlation, ordinals 1..10 leak-free,
+   common-bin arm): carrying strength 1v2 null and the 1→2 step is not special vs adjacent
+   steps — but the per-unit profile's sim(1,2) sits BELOW the adjacent-step band in 14/16
+   cells; global per-animal test (n = 16): FS-excl W p = 3.1×10⁻⁵, FS-incl W p = 0.021.
+   Uncorrelated with the trial-1 behaviour deltas. Convergence-to-trained-profile: null.
+   Per-cell localisation underpowered (0 BH). `results/trial12_units_tables.md`;
+   figure `HCV1_trial12_units_deltas_*`.
 7b. **Contributing units ARE spatially special — on the cortical side (NEW 2026-08-29).**
    Per-unit connection-specific contribution (`contrib_conn`, epoch pCCA) correlates with
    spatial reliability (mean ±2-trial map correlation, epoch-matched trials). Animals-as-n,
