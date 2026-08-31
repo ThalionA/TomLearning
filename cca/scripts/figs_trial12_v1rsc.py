@@ -127,7 +127,7 @@ def panel_paired(ax, pa, value, ylab, title):
     ax.set_xlim(-0.35, 1.35)
     ax.axhline(0, color="0.7", lw=0.7)
     ax.set_ylabel(ylab)
-    ax.set_title(f"{title}\nn={len(wide)}, Δmean={d.mean():+.3f}, "
+    ax.set_title(f"{title}\nn={len(wide)}, mean Δ(1−2)={d.mean():+.3f}\n"
                  f"paired t p={t_p:.3g}, W p={w_p:.3g}", fontsize=8)
 
 
