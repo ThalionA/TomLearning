@@ -120,13 +120,14 @@ def panel_paired(ax, pa, value, ylab, title):
         ax.plot([0, 1], [row[1], row[2]], color="0.6", lw=0.9, marker="o", ms=3)
     ax.plot([0, 1], [wide[1].mean(), wide[2].mean()], color="black", lw=2.2,
             marker="o", ms=6)
-    _, med, _, w_p = paired_stats.wilcoxon_signed((wide[1] - wide[2]).tolist())
-    t_p = float(stats.ttest_1samp((wide[1] - wide[2]).to_numpy(), 0.0).pvalue)
+    d = (wide[1] - wide[2]).to_numpy()
+    _, _, _, w_p = paired_stats.wilcoxon_signed(d.tolist())
+    t_p = float(stats.ttest_1samp(d, 0.0).pvalue)
     ax.set_xticks([0, 1], ["trial 1", "trial 2"])
     ax.set_xlim(-0.35, 1.35)
     ax.axhline(0, color="0.7", lw=0.7)
     ax.set_ylabel(ylab)
-    ax.set_title(f"{title}\nn={len(wide)}, Δmed={med:+.3f}, "
+    ax.set_title(f"{title}\nn={len(wide)}, Δmean={d.mean():+.3f}, "
                  f"paired t p={t_p:.3g}, W p={w_p:.3g}", fontsize=8)
 
 
